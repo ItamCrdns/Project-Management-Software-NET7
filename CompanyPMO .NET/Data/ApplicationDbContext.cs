@@ -14,6 +14,7 @@ namespace CompanyPMO_.NET.Data
         public DbSet<Company> Companies { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<EmployeeTask> EmployeeTasks { get; set; }
+        public DbSet<EmployeeProject> EmployeeProjects { get; set; }
         public DbSet<Issue> Issues { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Project> Projects { get; set; }
@@ -48,15 +49,10 @@ namespace CompanyPMO_.NET.Data
                 .WithMany()
                 .HasForeignKey(c => c.CompanyId);
 
-            modelBuilder.Entity<EmployeeProject>()
-                .HasOne(ep => ep.Employee)
-                .WithMany(p => p.EmployeeProjects)
-                .HasForeignKey(ep => ep.EmployeeId);
-
-            modelBuilder.Entity<EmployeeProject>()
-                .HasOne(ep => ep.Project)
-                .WithMany(p => p.EmployeeProjects)
-                .HasForeignKey(ep => ep.ProjectId);
+            modelBuilder.Entity<Employee>()
+                .HasMany(p => p.Projects)
+                .WithMany(e => e.Employees)
+                .UsingEntity<EmployeeProject>();
         }
     }
 }

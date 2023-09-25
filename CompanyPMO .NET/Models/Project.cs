@@ -14,7 +14,6 @@ namespace CompanyPMO_.NET.Models
         public int ProjectCreatorId { get; set; }
 
         // Navigation properties
-
-        public List<EmployeeProject> EmployeeProjects { get; set; }
+        public List<Employee> Employees { get; set; }
     }
 }

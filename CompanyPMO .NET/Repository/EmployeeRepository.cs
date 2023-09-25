@@ -64,6 +64,43 @@ namespace CompanyPMO_.NET.Repository
             return (false, "Something went wrong.", null);
         }
 
+        public async Task<Employee> GetEmployeeById(int employeeId)
+        {
+            var employee = await _context.Employees
+                .Where(e => e.EmployeeId.Equals(employeeId))
+                .Include(p => p.Projects)
+                .FirstOrDefaultAsync();
+
+            var employeeDto = new Employee
+            {
+                EmployeeId = employee.EmployeeId,
+                Username = employee.Username,
+                Role = employee.Role,
+                Email = employee.Email,
+                PhoneNumber = employee.PhoneNumber,
+                Password = employee.Password,
+                FirstName = employee.FirstName,
+                LastName = employee.LastName,
+                Gender = employee.Gender,
+                Created = employee.Created,
+                ProfilePicture = employee.ProfilePicture,
+                LastLogin = employee.LastLogin,
+                LockedEnabled = employee.LockedEnabled,
+                LoginAttempts = employee.LoginAttempts,
+                LockedUntil = employee.LockedUntil,
+                Projects = employee.Projects.Select(project => new Project
+                {
+                    ProjectId = project.ProjectId,
+                    Name = project.Name,
+                    Description = project.Description,
+                    Created = project.Created,
+                    Finalized = project.Finalized
+                }).ToList()
+            };
+
+            return employeeDto;
+        }
+
         public async Task<Employee?> GetEmployeeForClaims(string username)
         {
             return await _context.Employees

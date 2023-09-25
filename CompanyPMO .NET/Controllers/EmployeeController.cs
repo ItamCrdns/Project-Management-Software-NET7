@@ -74,5 +74,14 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(new { Created = newEmployee });
         }
+
+        [HttpGet("{employeeId}")]
+        [ProducesResponseType(200, Type = typeof(Employee))]
+        public async Task<IActionResult> GetEmployeeById(int employeeId)
+        {
+            Employee employee = await _employeeService.GetEmployeeById(employeeId);
+
+            return Ok(employee);
+        }
     }
 }
