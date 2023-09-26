@@ -39,5 +39,15 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(projectDto);
         }
+
+        [Authorize(Roles = "employee, supervisor")]
+        [HttpGet("{projectId}")]
+        [ProducesResponseType(200, Type = typeof(Project))]
+        public async Task<IActionResult> GetProjectById(int projectId)
+        {
+            var project = await _projectService.GetProjectById(projectId);
+
+            return Ok(project);
+        }
     }
 }

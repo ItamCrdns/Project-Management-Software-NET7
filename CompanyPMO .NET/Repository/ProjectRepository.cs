@@ -1,6 +1,7 @@
 ﻿using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -37,6 +38,27 @@ namespace CompanyPMO_.NET.Repository
             }
 
             return (newProject, imageCollection);
+        }
+
+        public async Task<Project?> GetProjectById(int projectId)
+        {
+            var project = await _context.Projects
+                .Where(p => p.ProjectId.Equals(projectId))
+                .Include(t => t.Images)
+                .FirstOrDefaultAsync();
+
+            var projectImages = project.Images.Select(i => new Image
+            {
+                ImageId = i.ImageId,
+                EntityType = i.EntityType,
+                EntityId = i.EntityId,
+                ImageUrl = i.ImageUrl,
+                PublicId = i.PublicId
+            }).ToList(); // Materialize the project
+
+            project.Images = projectImages;
+
+            return project;
         }
     }
 }
