@@ -47,7 +47,9 @@ namespace CompanyPMO_.NET.Repository
                 .Include(t => t.Images)
                 .FirstOrDefaultAsync();
 
-            var projectImages = project.Images.Select(i => new Image
+            var projectImages = project.Images
+                .Where(et => et.EntityType.Equals("Project")) // Client side filtering
+                .Select(i => new Image
             {
                 ImageId = i.ImageId,
                 EntityType = i.EntityType,
@@ -56,7 +58,9 @@ namespace CompanyPMO_.NET.Repository
                 PublicId = i.PublicId
             }).ToList(); // Materialize the project
 
-            project.Images = projectImages;
+            project.Images = projectImages
+                
+                .ToList();
 
             return project;
         }
