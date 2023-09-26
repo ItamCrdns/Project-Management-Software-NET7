@@ -15,6 +15,7 @@ namespace CompanyPMO_.NET.Data
         public DbSet<Employee> Employees { get; set; }
         public DbSet<EmployeeTask> EmployeeTasks { get; set; }
         public DbSet<EmployeeProject> EmployeeProjects { get; set; }
+        public DbSet<EmployeeIssue> EmployeeIssues { get; set; }
         public DbSet<Issue> Issues { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Project> Projects { get; set; }
@@ -30,6 +31,7 @@ namespace CompanyPMO_.NET.Data
             modelBuilder.Entity<Employee>().HasKey(e => e.EmployeeId);
             modelBuilder.Entity<EmployeeTask>().HasKey(t => t.RelationId);
             modelBuilder.Entity<EmployeeProject>().HasKey(p => p.RelationId);
+            modelBuilder.Entity<EmployeeIssue>().HasKey(i => i.RelationId);
             modelBuilder.Entity<Issue>().HasKey(i => i.IssueId);
             modelBuilder.Entity<Notification>().HasKey(n => n.NotificationId);
             modelBuilder.Entity<Project>().HasKey(p => p.ProjectId);
@@ -49,10 +51,22 @@ namespace CompanyPMO_.NET.Data
                 .WithMany()
                 .HasForeignKey(c => c.CompanyId);
 
+            // Junction table for many to many
+
             modelBuilder.Entity<Employee>()
                 .HasMany(p => p.Projects)
                 .WithMany(e => e.Employees)
                 .UsingEntity<EmployeeProject>();
+
+            modelBuilder.Entity<Employee>()
+                .HasMany(t => t.Tasks)
+                .WithMany(e => e.Employees)
+                .UsingEntity<EmployeeTask>();
+
+            modelBuilder.Entity<Employee>()
+                .HasMany(i => i.Issues)
+                .WithMany(e => e.Employees)
+                .UsingEntity<EmployeeIssue>();
         }
     }
 }

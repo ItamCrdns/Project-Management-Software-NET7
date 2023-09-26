@@ -38,5 +38,7 @@ namespace CompanyPMO_.NET.Models
         public Tier Tier { get; set; }
         public Company Company { get; set; }
         public List<Project> Projects { get; set; }
+        public List<Task> Tasks { get; set; }
+        public List<Issue> Issues { get; set; }
     }
 }

@@ -16,5 +16,9 @@ namespace CompanyPMO_.NET.Models
         public int IssueCreator { get; set; }
         [Column("task_id")]
         public int TaskId { get; set; }
+
+        // Navigation properties
+
+        public List<Employee> Employees { get; set; }
     }
 }

@@ -69,6 +69,10 @@ namespace CompanyPMO_.NET.Repository
             var employee = await _context.Employees
                 .Where(e => e.EmployeeId.Equals(employeeId))
                 .Include(p => p.Projects)
+                .Include(c => c.Company)
+                .Include(t => t.Tier)
+                .Include(t => t.Tasks)
+                .Include(i => i.Issues)
                 .FirstOrDefaultAsync();
 
             var employeeDto = new Employee
@@ -88,6 +92,8 @@ namespace CompanyPMO_.NET.Repository
                 LockedEnabled = employee.LockedEnabled,
                 LoginAttempts = employee.LoginAttempts,
                 LockedUntil = employee.LockedUntil,
+                Tier = employee.Tier,
+                Company = employee.Company,
                 Projects = employee.Projects.Select(project => new Project
                 {
                     ProjectId = project.ProjectId,
@@ -95,6 +101,26 @@ namespace CompanyPMO_.NET.Repository
                     Description = project.Description,
                     Created = project.Created,
                     Finalized = project.Finalized
+                }).ToList(),
+                Tasks = employee.Tasks.Select(task => new Models.Task
+                {
+                    TaskId = task.TaskId,
+                    Name = task.Name,
+                    Description = task.Description,
+                    Created = task.Created,
+                    StartedWorking = task.StartedWorking,
+                    Finished = task.Finished,
+                }).ToList(),
+                Issues = employee.Issues.Select(issue => new Issue
+                {
+                    IssueId = issue.IssueId,
+                    Name = issue.Name,
+                    Description = issue.Description,
+                    Created = issue.Created,
+                    StartedWorking = issue.StartedWorking,
+                    Fixed = issue.Fixed,
+                    IssueCreator = issue.IssueCreator,
+                    TaskId = issue.TaskId
                 }).ToList()
             };
 

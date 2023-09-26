@@ -14,5 +14,11 @@ namespace CompanyPMO_.NET.Models
         public DateTimeOffset? Finished { get; set; }
         [Column("task_creator_id")]
         public int TaskCreatorId { get; set; }
+        [Column("project_id")]
+        public int ProjectId { get; set; }
+
+        // Navigation properties
+
+        public List<Employee> Employees { get; set; }
     }
 }
