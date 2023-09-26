@@ -12,6 +12,7 @@ builder.Services.AddScoped<ICompany, CompanyRepository>();
 builder.Services.AddScoped<IEmployee, EmployeeRepository>();
 builder.Services.AddScoped<IImage, ImageRepository>();
 builder.Services.AddScoped<IProject, ProjectRepository>();
+builder.Services.AddScoped<ITask, TaskRepository>();
 
 // Add services to the container.
 

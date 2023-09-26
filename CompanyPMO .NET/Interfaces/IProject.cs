@@ -4,6 +4,6 @@ namespace CompanyPMO_.NET.Interfaces
 {
     public interface IProject
     {
-        Task<Project> CreateProject(Project project);
+        Task<(Project, List<Image>)> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images);
     }
 }

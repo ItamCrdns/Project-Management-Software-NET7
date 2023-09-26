@@ -22,6 +22,7 @@ namespace CompanyPMO_.NET.Data
         public DbSet<Models.Task> Tasks { get; set; }
         public DbSet<Tier> Tiers { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Image> Images { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -38,6 +39,7 @@ namespace CompanyPMO_.NET.Data
             modelBuilder.Entity<Models.Task>().HasKey(t => t.TaskId);
             modelBuilder.Entity<Tier>().HasKey(t => t.TierId);
             modelBuilder.Entity<User>().HasKey(u => u.UserId);
+            modelBuilder.Entity<Image>().HasKey(i => i.ImageId);
 
             // Relationships
 
@@ -67,6 +69,16 @@ namespace CompanyPMO_.NET.Data
                 .HasMany(i => i.Issues)
                 .WithMany(e => e.Employees)
                 .UsingEntity<EmployeeIssue>();
+
+            modelBuilder.Entity<Project>()
+                .HasMany(i => i.Images)
+                .WithOne(p => p.Project)
+                .HasForeignKey(i => i.EntityId);
+
+            modelBuilder.Entity<Models.Task>()
+                .HasMany(i => i.Images)
+                .WithOne(t => t.Task)
+                .HasForeignKey(i => i.EntityId);
         }
     }
 }

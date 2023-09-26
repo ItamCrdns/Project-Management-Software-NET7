@@ -3,6 +3,7 @@ using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -75,6 +76,7 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(new { Created = newEmployee });
         }
 
+        [Authorize(Roles = "supervisor")]
         [HttpGet("{employeeId}")]
         [ProducesResponseType(200, Type = typeof(Employee))]
         public async Task<IActionResult> GetEmployeeById(int employeeId)

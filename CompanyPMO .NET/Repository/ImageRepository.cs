@@ -2,6 +2,7 @@
 using CloudinaryDotNet;
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Models;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -14,6 +15,36 @@ namespace CompanyPMO_.NET.Repository
         {
             _context = context;
             _cloudinary = cloudinary;
+        }
+
+        public async Task<List<Image>> AddImagesToEntity(ICollection<IFormFile> images, int entityId, string entityType)
+        {
+            List<Image> imageCollection = new();
+            foreach (var image in images)
+            {
+                var (imageUrl, publicId) = await UploadToCloudinary(image, 0, 0);
+
+                var newImage = new Image
+                {
+                    EntityType = entityType,
+                    EntityId = entityId,
+                    ImageUrl = imageUrl,
+                    PublicId = publicId,
+                    Created = DateTimeOffset.UtcNow
+                };
+
+                _context.Add(newImage);
+                imageCollection.Add(newImage);
+                _ = await _context.SaveChangesAsync();
+            }
+
+            return imageCollection.Select(i => new Image
+            {
+                ImageId = i.ImageId,
+                EntityType = i.EntityType,
+                ImageUrl = i.ImageUrl,
+                PublicId = i.PublicId
+            }).ToList();
         }
 
         public async Task<(string imageUrl, string publicId)> UploadToCloudinary(IFormFile file, int width, int height)
