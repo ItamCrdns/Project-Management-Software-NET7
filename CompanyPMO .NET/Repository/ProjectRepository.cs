@@ -19,7 +19,6 @@ namespace CompanyPMO_.NET.Repository
         {
             var newProject = new Project
             {
-                ProjectId = project.ProjectId,
                 Name = project.Name,
                 Description = project.Description,
                 Created = DateTimeOffset.UtcNow,

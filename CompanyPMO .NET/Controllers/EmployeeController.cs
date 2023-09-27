@@ -20,6 +20,7 @@ namespace CompanyPMO_.NET.Controllers
             _employeeService = employeeService;
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         [ProducesResponseType(204)]
         [ProducesResponseType(401)]
@@ -67,6 +68,7 @@ namespace CompanyPMO_.NET.Controllers
             return NoContent();
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         [ProducesResponseType(200)]
         public async Task<IActionResult> RegisterEmployee([FromForm] EmployeeRegisterDto employee, [FromForm] IFormFile? profilePicture)
@@ -76,7 +78,7 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(new { Created = newEmployee });
         }
 
-        [Authorize(Roles = "supervisor")]
+        [Authorize(Policy = "SupervisorOnly")]
         [HttpGet("{employeeId}")]
         [ProducesResponseType(200, Type = typeof(Employee))]
         public async Task<IActionResult> GetEmployeeById(int employeeId)

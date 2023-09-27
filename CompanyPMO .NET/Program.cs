@@ -5,6 +5,7 @@ using CompanyPMO_.NET.Repository;
 using dotenv.net;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,7 @@ builder.Services.AddScoped<IEmployee, EmployeeRepository>();
 builder.Services.AddScoped<IImage, ImageRepository>();
 builder.Services.AddScoped<IProject, ProjectRepository>();
 builder.Services.AddScoped<ITask, TaskRepository>();
+builder.Services.AddScoped<IUserIdentity, UserIdentityRepository>();
 
 // Add services to the container.
 
@@ -34,6 +36,23 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.None;
     });
+
+// Claim based authorization
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("SupervisorOnly", policy => policy.RequireClaim(ClaimTypes.Role, "supervisor"));
+    options.AddPolicy("EmployeesAllowed", policy => policy.RequireClaim(ClaimTypes.Role, "employee", "supervisor"));
+
+    //var userIdClaimValue = "";
+    //var userIdClaim = ClaimsPrincipal.Current.FindFirst(ClaimTypes.NameIdentifier);
+
+    //if(userIdClaim is not null)
+    //{
+    //    userIdClaimValue = userIdClaim.Value;
+    //}
+
+    //options.
+});
 
 // Cloudinary
 DotEnv.Load(options: new DotEnvOptions(probeForEnv: true));

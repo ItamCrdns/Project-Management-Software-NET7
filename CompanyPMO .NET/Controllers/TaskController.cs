@@ -2,31 +2,40 @@
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace CompanyPMO_.NET.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = "EmployeesAllowed")]
     public class TaskController : ControllerBase
     {
         private readonly ITask _taskService;
+        private readonly IUserIdentity _userIdentityService;
+        private readonly Lazy<Task<int>> _lazyUserId;
 
-        public TaskController(ITask taskService)
+        public TaskController(ITask taskService, IUserIdentity userIdentityService)
         {
             _taskService = taskService;
+            _userIdentityService = userIdentityService;
+            _lazyUserId = new Lazy<Task<int>>(InitializeUserId); // Load the userId until we actually need it
         }
 
-        [Authorize(Roles = "supervisor, employee")]
+        private async Task<int> InitializeUserId()
+        {
+            return await _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+        }
+
+        private async Task<int> GetUserId()
+        {
+            return await _lazyUserId.Value;
+        }
+
         [HttpPost("new")]
         [ProducesResponseType(200, Type = typeof(Models.Task))]
         public async Task<IActionResult> NewTask([FromForm] Models.Task task, [FromForm] int projectId, [FromForm] List<IFormFile>? images)
         {
-            // * Access control
-            var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            _ = int.TryParse(userIdClaim, out int userId);
-
-            var (newTask, imageCollection) = await _taskService.CreateTask(task, userId, projectId, images);
+            var (newTask, imageCollection) = await _taskService.CreateTask(task, await GetUserId(), projectId, images);
 
             var taskDto = new Models.Task
             {
@@ -34,14 +43,13 @@ namespace CompanyPMO_.NET.Controllers
                 Name = newTask.Name,
                 Description = newTask.Description,
                 Created = DateTimeOffset.UtcNow,
-                TaskCreatorId = userId,
+                TaskCreatorId = await GetUserId(),
                 Images = imageCollection
             };
 
             return Ok(taskDto);
         }
 
-        [Authorize(Roles = "supervisor, employee")]
         [HttpGet("{taskId}")]
         [ProducesResponseType(200, Type = typeof(Models.Task))]
         public async Task<IActionResult> GetTaskById(int taskId)
@@ -51,7 +59,6 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(task);
         }
 
-        [Authorize(Roles = "supervisor, employee")]
         [HttpGet("project/{projectId}")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Models.Task>))]
         public async Task<IActionResult> GetTasksByProjectId(int projectId)
@@ -61,17 +68,12 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(tasks);
         }
 
-        [Authorize(Roles = "supervisor, employee")]
         [HttpPost("{taskId}/start")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         public async Task<IActionResult> StartTask(int taskId)
         {
-            // * Access control
-            var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            _ = int.TryParse(userIdClaim, out int userId);
-
-            bool taskStarted = await _taskService.StartingWorkingOnTask(userId, taskId);
+            bool taskStarted = await _taskService.StartingWorkingOnTask(await GetUserId(), taskId);
 
             if(!taskStarted)
             {
@@ -81,17 +83,12 @@ namespace CompanyPMO_.NET.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "supervisor, employee")]
         [HttpPost("{taskId}/finish")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         public async Task<IActionResult> FinishTask(int taskId)
         {
-            // * Access control
-            var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            _ = int.TryParse(userIdClaim, out int userId);
-
-            bool taskFinished = await _taskService.FinishedWorkingOnTask(userId, taskId);
+            bool taskFinished = await _taskService.FinishedWorkingOnTask(await GetUserId(), taskId);
 
             if (!taskFinished)
             {
@@ -101,7 +98,6 @@ namespace CompanyPMO_.NET.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "supervisor, employee")]
         [HttpGet("{taskId}/employees")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Employee>))]
         public async Task<IActionResult> GetEmployyesWorkingOnATask(int taskId)

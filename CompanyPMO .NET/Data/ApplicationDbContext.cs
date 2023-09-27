@@ -79,6 +79,11 @@ namespace CompanyPMO_.NET.Data
                 .HasMany(i => i.Images)
                 .WithOne(t => t.Task)
                 .HasForeignKey(i => i.EntityId);
+
+            modelBuilder.Entity<Company>()
+                .HasMany(i => i.Images)
+                .WithOne(c => c.Company)
+                .HasForeignKey(i => i.EntityId);
         }
     }
 }

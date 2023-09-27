@@ -2,7 +2,6 @@
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace CompanyPMO_.NET.Controllers
 {
@@ -11,22 +10,32 @@ namespace CompanyPMO_.NET.Controllers
     public class ProjectController : ControllerBase
     {
         private readonly IProject _projectService;
+        private readonly IUserIdentity _userIdentityService;
+        private readonly Lazy<Task<int>> _lazyUserId;
 
-        public ProjectController(IProject projectService)
+        public ProjectController(IProject projectService, IUserIdentity userIdentityService)
         {
             _projectService = projectService;
+            _userIdentityService = userIdentityService;
+            _lazyUserId = new Lazy<Task<int>>(InitializeUserId);
         }
 
-        [Authorize(Roles = "supervisor")]
+        private async Task<int> InitializeUserId()
+        {
+            return await _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+        }
+
+        private async Task<int> GetUserId()
+        {
+            return await _lazyUserId.Value;
+        }
+
+        [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("new")]
         [ProducesResponseType(200, Type = typeof(Project))]
         public async Task<IActionResult> NewProject([FromForm] Project project, [FromForm] List<IFormFile>? images)
         {
-            // * Access control
-            var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            _ = int.TryParse(userIdClaim, out int supervisorId);
-
-            var (newProject, imageCollection) = await _projectService.CreateProject(project, supervisorId, images);
+            var (newProject, imageCollection) = await _projectService.CreateProject(project, await GetUserId(), images);
 
             var projectDto = new Project
             {
@@ -40,7 +49,7 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(projectDto);
         }
 
-        [Authorize(Roles = "employee, supervisor")]
+        [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}")]
         [ProducesResponseType(200, Type = typeof(Project))]
         public async Task<IActionResult> GetProjectById(int projectId)

@@ -20,5 +20,6 @@ namespace CompanyPMO_.NET.Models
 
         public Project? Project { get; set; }
         public Task? Task { get; set; }
+        public Company? Company { get; set; }
     }
 }

@@ -20,7 +20,6 @@ namespace CompanyPMO_.NET.Repository
         {
             var newTask = new Models.Task
             {
-                TaskId = task.TaskId,
                 Name = task.Name,
                 Description = task.Description,
                 Created = DateTimeOffset.UtcNow,
@@ -79,6 +78,8 @@ namespace CompanyPMO_.NET.Repository
                 .Where(t => t.TaskId.Equals(taskId))
                 .Include(i => i.Images)
                 .FirstOrDefaultAsync();
+
+            //var tasksImages = task.Images
 
             return task;
         }

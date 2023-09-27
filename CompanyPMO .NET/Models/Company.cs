@@ -15,6 +15,11 @@ namespace CompanyPMO_.NET.Models
         public string ContactEmail { get; set; }
         [Column("contact_phone_number")]
         public string ContactPhoneNumber { get; set; }
+        [Column("added_by_id")]
+        public int AddedById { get; set; }
+
         // Navigation properties
+
+        public ICollection<Image>? Images { get; set; }
     }
 }
