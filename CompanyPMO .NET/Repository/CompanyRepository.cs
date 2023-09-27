@@ -88,15 +88,9 @@ namespace CompanyPMO_.NET.Repository
             return company;
         }
 
-        public async Task<(bool updated, Company)> UpdateCompany(int companyId, CompanyDto companyDto, List<IFormFile>? images)
+        public async Task<(bool updated, Company)> UpdateCompany(int employeeId, int companyId, CompanyDto companyDto, List<IFormFile>? images)
         {
-            return await _patcherService.UpdateEntity(
-                companyId,
-                companyDto,
-                images,
-                AddImagesToExistingCompany,
-                GetCompany
-                );
+            return await _patcherService.UpdateEntity(employeeId, companyId, companyDto, images, AddImagesToExistingCompany, GetCompany);
         }
     }
 }

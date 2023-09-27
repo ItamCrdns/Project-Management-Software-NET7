@@ -1,4 +1,5 @@
 ﻿using CompanyPMO_.NET.Data;
+using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
@@ -74,6 +75,11 @@ namespace CompanyPMO_.NET.Repository
             }
 
             return false;
+        }
+
+        public Task<(bool updated, Project)> UpdateProject(int projectId, ProjectDto project, List<IFormFile>? images)
+        {
+            throw new NotImplementedException();
         }
     }
 }

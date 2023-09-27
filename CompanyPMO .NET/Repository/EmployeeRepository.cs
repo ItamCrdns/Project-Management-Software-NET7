@@ -10,11 +10,13 @@ namespace CompanyPMO_.NET.Repository
     {
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
+        private readonly IPatcher _patcherService;
 
-        public EmployeeRepository(ApplicationDbContext context, IImage imageService)
+        public EmployeeRepository(ApplicationDbContext context, IImage imageService, IPatcher patcherService)
         {
             _context = context;
             _imageService = imageService;
+            _patcherService = patcherService;
         }
         public async Task<(bool authenticated, string result, EmployeeDto employee)> AuthenticateEmployee(string username, string password)
         {
@@ -214,16 +216,9 @@ namespace CompanyPMO_.NET.Repository
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<(bool updated, Employee)> UpdateEmployee(int employeeId, EmployeeDto employeeDto, IFormFile image)
+        public Task<(bool updated, Employee)> UpdateEmployee(int employeeId, EmployeeDto employeeDto, IFormFile image)
         {
-            var employeeToUpdate = await _context.Employees.FindAsync(employeeId);
-
-            if(employeeToUpdate is not null)
-            {
-                return (false, null);
-            }
-
-            return (false, null);
+            throw new NotImplementedException();
         }
     }
 }

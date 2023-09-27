@@ -76,7 +76,7 @@ namespace CompanyPMO_.NET.Controllers
             {
                 return NotFound();
             }
-            var (created, returnedCompany) = await _companyService.UpdateCompany(companyId, companyDto, images);
+            var (created, returnedCompany) = await _companyService.UpdateCompany(await GetUserId(), companyId, companyDto, images);
 
             if(!created)
             {

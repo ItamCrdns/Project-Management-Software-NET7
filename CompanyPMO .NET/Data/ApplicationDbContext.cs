@@ -23,6 +23,7 @@ namespace CompanyPMO_.NET.Data
         public DbSet<Tier> Tiers { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Image> Images { get; set; }
+        public DbSet<Changelog> Changelog { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,6 +41,7 @@ namespace CompanyPMO_.NET.Data
             modelBuilder.Entity<Tier>().HasKey(t => t.TierId);
             modelBuilder.Entity<User>().HasKey(u => u.UserId);
             modelBuilder.Entity<Image>().HasKey(i => i.ImageId);
+            modelBuilder.Entity<Changelog>().HasKey(c => c.LogId);
 
             // Relationships
 
