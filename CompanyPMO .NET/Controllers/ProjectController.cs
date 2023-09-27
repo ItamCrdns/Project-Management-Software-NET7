@@ -58,5 +58,21 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(project);
         }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpPost("{projectId}/set/ended")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        public async Task<IActionResult> SetProjectFinalized(int projectId)
+        {
+            bool updated = await _projectService.SetProjectFinalized(projectId);
+
+            if(!updated)
+            {
+                return BadRequest();
+            }
+
+            return NoContent();
+        }
     }
 }

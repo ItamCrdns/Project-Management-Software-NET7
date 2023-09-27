@@ -15,6 +15,7 @@ builder.Services.AddScoped<IImage, ImageRepository>();
 builder.Services.AddScoped<IProject, ProjectRepository>();
 builder.Services.AddScoped<ITask, TaskRepository>();
 builder.Services.AddScoped<IUserIdentity, UserIdentityRepository>();
+builder.Services.AddScoped<IPatcher, PatcherRepository>();
 
 // Add services to the container.
 
@@ -42,16 +43,6 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("SupervisorOnly", policy => policy.RequireClaim(ClaimTypes.Role, "supervisor"));
     options.AddPolicy("EmployeesAllowed", policy => policy.RequireClaim(ClaimTypes.Role, "employee", "supervisor"));
-
-    //var userIdClaimValue = "";
-    //var userIdClaim = ClaimsPrincipal.Current.FindFirst(ClaimTypes.NameIdentifier);
-
-    //if(userIdClaim is not null)
-    //{
-    //    userIdClaimValue = userIdClaim.Value;
-    //}
-
-    //options.
 });
 
 // Cloudinary

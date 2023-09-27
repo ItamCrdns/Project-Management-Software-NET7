@@ -47,12 +47,43 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(returnedCompany);
         }
 
-        //[Authorize(Policy = "SupervisorOnly")]
-        //[HttpPost("{companyId}/images/new")]
-        //[ProducesResponseType(200, Type = typeof(IEnumerable<Image>))]
-        //public async Task<IActionResult> AddImagesToExistingCompany([FromForm] List<IFormFile>? images)
-        //{
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{companyId}")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<Company>))]
+        [ProducesResponseType(400)]
+        public async Task<IActionResult> GetCompanyById(int companyId)
+        {
+            var company = await _companyService.GetCompanyById(companyId);
 
-        //}
+            if(company is null)
+            {
+                return BadRequest();
+            }
+
+            return Ok(company);
+        }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpPatch("{companyId}/update")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<Company>))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> UpdateCompany(int companyId, [FromForm] CompanyDto companyDto, [FromForm] List<IFormFile>? images)
+        {
+            bool companyExists = await _companyService.DoesCompanyExist(companyId);
+
+            if(!companyExists)
+            {
+                return NotFound();
+            }
+            var (created, returnedCompany) = await _companyService.UpdateCompany(companyId, companyDto, images);
+
+            if(!created)
+            {
+                return BadRequest();
+            }
+
+            return Ok(returnedCompany);
+        }
     }
 }

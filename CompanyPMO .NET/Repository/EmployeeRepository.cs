@@ -213,5 +213,17 @@ namespace CompanyPMO_.NET.Repository
 
             return await _context.SaveChangesAsync() > 0;
         }
+
+        public async Task<(bool updated, Employee)> UpdateEmployee(int employeeId, EmployeeDto employeeDto, IFormFile image)
+        {
+            var employeeToUpdate = await _context.Employees.FindAsync(employeeId);
+
+            if(employeeToUpdate is not null)
+            {
+                return (false, null);
+            }
+
+            return (false, null);
+        }
     }
 }

@@ -3,6 +3,7 @@ using CloudinaryDotNet;
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
+using System.ComponentModel.Design;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -17,7 +18,18 @@ namespace CompanyPMO_.NET.Repository
             _cloudinary = cloudinary;
         }
 
-        public async Task<List<Image>> AddImagesToEntity(ICollection<IFormFile> images, int entityId, string entityType)
+        public async Task<IEnumerable<Image>> AddImagesToExistingCompany(int entityId, List<IFormFile>? images, string entityType)
+        {
+            if (images is not null && images.Any(i => i.Length > 0))
+            {
+                List<Image> imageCollection = await AddImagesToNewEntity(images, entityId, entityType);
+
+                return imageCollection;
+            }
+            return null;
+        }
+
+        public async Task<List<Image>> AddImagesToNewEntity(ICollection<IFormFile> images, int entityId, string entityType)
         {
             List<Image> imageCollection = new();
             foreach (var image in images)

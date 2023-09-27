@@ -33,7 +33,7 @@ namespace CompanyPMO_.NET.Repository
 
             if(images is not null && images.Any(i => i.Length > 0))
             {
-                imageCollection = await _imageService.AddImagesToEntity(images, newProject.ProjectId, "Project");
+                imageCollection = await _imageService.AddImagesToNewEntity(images, newProject.ProjectId, "Project");
             }
 
             return (newProject, imageCollection);
@@ -57,11 +57,23 @@ namespace CompanyPMO_.NET.Repository
                 PublicId = i.PublicId
             }).ToList(); // Materialize the project
 
-            project.Images = projectImages
-                
-                .ToList();
+            project.Images = projectImages;
 
             return project;
+        }
+
+        public async Task<bool> SetProjectFinalized(int projectId)
+        {
+            var project = await _context.Projects.FindAsync(projectId);
+
+            if(project is not null && project.Finalized is null)
+            {
+                project.Finalized = DateTimeOffset.UtcNow;
+                _context.Update(project);
+                return await _context.SaveChangesAsync() > 0;
+            }
+
+            return false;
         }
     }
 }

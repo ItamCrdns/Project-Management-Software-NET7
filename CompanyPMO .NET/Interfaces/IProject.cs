@@ -6,5 +6,6 @@ namespace CompanyPMO_.NET.Interfaces
     {
         Task<(Project, List<Image>)> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images);
         Task<Project> GetProjectById(int projectId);
+        Task<bool> SetProjectFinalized(int projectId);
     }
 }

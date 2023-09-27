@@ -2,6 +2,7 @@
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -9,11 +10,13 @@ namespace CompanyPMO_.NET.Repository
     {
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
+        private readonly IPatcher _patcherService;
 
-        public CompanyRepository(ApplicationDbContext context, IImage imageService)
+        public CompanyRepository(ApplicationDbContext context, IImage imageService, IPatcher patcherService)
         {
             _context = context;
             _imageService = imageService;
+            _patcherService = patcherService;
         }
 
         public async Task<(bool created, Company)> AddCompany(int supervisorId, CompanyDto companyDto, List<IFormFile>? images)
@@ -35,7 +38,7 @@ namespace CompanyPMO_.NET.Repository
 
             if (images is not null && images.Any(i => i.Length > 0))
             {
-                imageCollection = await _imageService.AddImagesToEntity(images, company.CompanyId, "Company");
+                imageCollection = await _imageService.AddImagesToNewEntity(images, company.CompanyId, "Company");
             }
 
             var returnedCompany = new Company
@@ -53,15 +56,47 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<IEnumerable<Image>> AddImagesToExistingCompany(int companyId, List<IFormFile>? images)
         {
-            if(images is not null && images.Any(i => i.Length > 0))
-            {
-                List<Image> imageCollection = await _imageService.AddImagesToEntity(images, companyId, "Company");
+            IEnumerable<Image> imageCollection = await _imageService.AddImagesToExistingCompany(companyId, images, "Company");
 
-                return imageCollection;
-            }
-            return null;
+            return imageCollection;
         }
 
-        public async Task<Company> GetCompany(int companyId) => await _context.Companies.FindAsync(companyId);
+        public async Task<bool> DoesCompanyExist(int companyId) => await _context.Companies.AnyAsync(c => c.CompanyId.Equals(companyId));
+
+        public async Task<Company?> GetCompany(int companyId) => await _context.Companies.FindAsync(companyId);
+
+        public async Task<Company> GetCompanyById(int companyId)
+        {
+            var company = await _context.Companies
+                .Where(c => c.CompanyId.Equals(companyId))
+                .Include(i => i.Images)
+                .FirstOrDefaultAsync();
+
+            var companyImages = company.Images
+                .Where(et => et.EntityType.Equals("Company"))
+                .Select(i => new Image
+                {
+                    ImageId = i.ImageId,
+                    EntityType = i.EntityType,
+                    EntityId = i.EntityId,
+                    ImageUrl = i.ImageUrl,
+                    PublicId = i.PublicId
+                }).ToList();
+
+            company.Images = companyImages;
+
+            return company;
+        }
+
+        public async Task<(bool updated, Company)> UpdateCompany(int companyId, CompanyDto companyDto, List<IFormFile>? images)
+        {
+            return await _patcherService.UpdateEntity(
+                companyId,
+                companyDto,
+                images,
+                AddImagesToExistingCompany,
+                GetCompany
+                );
+        }
     }
 }
