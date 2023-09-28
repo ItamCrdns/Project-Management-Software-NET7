@@ -83,6 +83,7 @@ namespace CompanyPMO_.NET.Controllers
                 return NotFound();
             }
 
+            // To do: handle the case when the entity has for example 7 values and you pass 5, only the first 3 will be uploaded and the other 2 will not, no error will be given (and it should be an error!)
             if (images is not null && images.Count > 10)
             {
                 ModelState.AddModelError("Images", "The request contains too many images (maximum allowed is 10).");

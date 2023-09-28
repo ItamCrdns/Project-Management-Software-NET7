@@ -7,6 +7,6 @@ namespace CompanyPMO_.NET.Interfaces
     {
         Task<(string imageUrl, string publicId)> UploadToCloudinary(IFormFile file, int width, int height);
         Task<List<Image>> AddImagesToNewEntity(List<IFormFile> images, int entityId, string entityType, int? imagesInEntity);
-        Task<IEnumerable<ImageDto>> AddImagesToExistingEntity(int entity, List<IFormFile>? images, string entityType, int? imagesInEntity);
+        Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingEntity(int entity, List<IFormFile>? images, string entityType, int? imagesInEntity);
     }
 }

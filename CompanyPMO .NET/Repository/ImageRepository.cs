@@ -18,13 +18,14 @@ namespace CompanyPMO_.NET.Repository
             _cloudinary = cloudinary;
         }
 
-        public async Task<IEnumerable<ImageDto>> AddImagesToExistingEntity(int entityId, List<IFormFile>? images, string entityType, int? imagesInEntity)
+        public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingEntity(int entityId, List<IFormFile>? images, string entityType, int? imagesInEntity)
         {
             if (images is not null && images.Any(i => i.Length > 0))
             {
-                List<Image> imageCollection = await AddImagesToNewEntity(images, entityId, entityType, imagesInEntity);
+                // If more than 10 images in the entity the count of this collection will be 0
+                var imageCollection = await AddImagesToNewEntity(images, entityId, entityType, imagesInEntity);
 
-                return imageCollection.Select(i => new ImageDto
+                var imageCollectionToReturn = imageCollection.Select(i => new ImageDto
                 {
                     ImageId = i.ImageId,
                     EntityType = i.EntityType,
@@ -33,14 +34,26 @@ namespace CompanyPMO_.NET.Repository
                     PublicId = i.PublicId,
                     Created = i.Created
                 });
+
+                if (imageCollection.Any())
+                {
+                    string message = imageCollection.Count + " images added.";
+                    return (message, imageCollectionToReturn);
+                }
+                else
+                {
+                    string message = "You cannot add more images to this collection. There are already " + imagesInEntity + " images stored.";
+                    return (message, imageCollectionToReturn);
+                }
             }
-            return null;
+            return (null, null);
         }
 
         public async Task<List<Image>> AddImagesToNewEntity(List<IFormFile> images, int entityId, string entityType, int? imagesInEntity)
         {
             List<Image> imageCollection = new();
 
+            // Check how many images the entity has. If null it means a new entity so set it to zero
             int imageCount = imagesInEntity ?? 0;
 
             foreach (var image in images)
@@ -61,21 +74,22 @@ namespace CompanyPMO_.NET.Repository
                     Created = DateTimeOffset.Now
                 };
 
-                imageCount++;
+                imageCount++; // Add one image for every iteration
                 _context.Images.Add(newImage);
                 imageCollection.Add(newImage);
             }
-
+            // If more than 10 images provided images will be truncated but we are handling that in the controller (return a 400 statuscode if more than 10 images are provided)
             _ = await _context.SaveChangesAsync();
 
-            return imageCollection.Select(i => new Image
-            {
-                ImageId = i.ImageId,
-                EntityType = i.EntityType,
-                ImageUrl = i.ImageUrl,
-                PublicId = i.PublicId,
-                Created = i.Created
-            }).ToList();
+            return imageCollection
+                .Select(i => new Image
+                {
+                    ImageId = i.ImageId,
+                    EntityType = i.EntityType,
+                    ImageUrl = i.ImageUrl,
+                    PublicId = i.PublicId,
+                    Created = i.Created
+                }).ToList();
         }
 
         public async Task<(string imageUrl, string publicId)> UploadToCloudinary(IFormFile file, int width, int height)

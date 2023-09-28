@@ -25,16 +25,7 @@ namespace CompanyPMO_.NET.Repository
 
             int imageCountInProjectEntity = project.Images.Count;
 
-            IEnumerable<ImageDto> imageCollection = await _imageService.AddImagesToExistingEntity(projectId, images, "Project", imageCountInProjectEntity);
-
-            if(imageCollection.Any())
-            {
-                return ($"{imageCollection.Count()} images added", imageCollection);
-            }
-            else
-            {
-                return ("You cannot add more images to this collection.", imageCollection);
-            }
+            return await _imageService.AddImagesToExistingEntity(projectId, images, "Project", imageCountInProjectEntity);
         }
 
         public async Task<(Project, List<Image>)> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images)

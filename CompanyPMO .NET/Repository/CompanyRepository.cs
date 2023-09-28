@@ -60,16 +60,7 @@ namespace CompanyPMO_.NET.Repository
 
             int imageCountInCompanyEntity = company.Images.Count;
 
-            IEnumerable<ImageDto> imageCollection = await _imageService.AddImagesToExistingEntity(companyId, images, "Company", imageCountInCompanyEntity);
-
-            if(imageCollection.Any())
-            {
-                return ($"{imageCollection.Count()} images added", imageCollection);
-            }
-            else
-            {
-                return ("You cannot add more images to this collection.", imageCollection);
-            }
+            return await _imageService.AddImagesToExistingEntity(companyId, images, "Company", imageCountInCompanyEntity);
         }
 
         public async Task<bool> DoesCompanyExist(int companyId) => await _context.Companies.AnyAsync(c => c.CompanyId.Equals(companyId));
