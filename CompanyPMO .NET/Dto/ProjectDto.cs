@@ -1,6 +1,4 @@
-﻿using CompanyPMO_.NET.Models;
-
-namespace CompanyPMO_.NET.Dto
+﻿namespace CompanyPMO_.NET.Dto
 {
     public class ProjectDto
     {

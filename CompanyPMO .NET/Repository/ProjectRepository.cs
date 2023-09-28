@@ -52,9 +52,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<bool> DoesProjectExist(int projectId) => await _context.Projects.AnyAsync(i => i.ProjectId == projectId);
 
-        public async Task<Project?> GetProject(int projectId) => await _context.Projects.FindAsync(projectId);
-
-        public async Task<Project?> GetProjectById(int projectId)
+        public async Task<Project> GetProjectById(int projectId)
         {
             var project = await _context.Projects
                 .Where(p => p.ProjectId.Equals(projectId))
@@ -69,8 +67,9 @@ namespace CompanyPMO_.NET.Repository
                 EntityType = i.EntityType,
                 EntityId = i.EntityId,
                 ImageUrl = i.ImageUrl,
-                PublicId = i.PublicId
-            }).ToList(); // Materialize the project
+                PublicId = i.PublicId,
+                Created = i.Created
+            }).ToList();
 
             project.Images = projectImages;
 
@@ -93,7 +92,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images)
         {
-            return await _patcherService.UpdateEntity(employeeId, projectId, projectDto, images, AddImagesToExistingProject, GetProject);
+            return await _patcherService.UpdateEntity(employeeId, projectId, projectDto, images, AddImagesToExistingProject, GetProjectById);
         }
     }
 }

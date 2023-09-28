@@ -63,8 +63,6 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<bool> DoesCompanyExist(int companyId) => await _context.Companies.AnyAsync(c => c.CompanyId.Equals(companyId));
 
-        public async Task<Company?> GetCompany(int companyId) => await _context.Companies.FindAsync(companyId);
-
         public async Task<Company> GetCompanyById(int companyId)
         {
             var company = await _context.Companies
@@ -80,7 +78,8 @@ namespace CompanyPMO_.NET.Repository
                     EntityType = i.EntityType,
                     EntityId = i.EntityId,
                     ImageUrl = i.ImageUrl,
-                    PublicId = i.PublicId
+                    PublicId = i.PublicId,
+                    Created = i.Created,
                 }).ToList();
 
             company.Images = companyImages;
@@ -90,7 +89,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<(bool updated, CompanyDto)> UpdateCompany(int employeeId, int companyId, CompanyDto companyDto, List<IFormFile>? images)
         {
-            return await _patcherService.UpdateEntity(employeeId, companyId, companyDto, images, AddImagesToExistingCompany, GetCompany);
+            return await _patcherService.UpdateEntity(employeeId, companyId, companyDto, images, AddImagesToExistingCompany, GetCompanyById);
         }
     }
 }

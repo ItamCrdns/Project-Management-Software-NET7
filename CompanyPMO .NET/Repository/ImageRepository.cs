@@ -37,7 +37,7 @@ namespace CompanyPMO_.NET.Repository
             return null;
         }
 
-        public async Task<List<Image>> AddImagesToNewEntity(ICollection<IFormFile> images, int entityId, string entityType)
+        public async Task<List<Image>> AddImagesToNewEntity(List<IFormFile> images, int entityId, string entityType)
         {
             List<Image> imageCollection = new();
             foreach (var image in images)
@@ -50,20 +50,22 @@ namespace CompanyPMO_.NET.Repository
                     EntityId = entityId,
                     ImageUrl = imageUrl,
                     PublicId = publicId,
-                    Created = DateTimeOffset.UtcNow
+                    Created = DateTimeOffset.Now
                 };
 
-                _context.Add(newImage);
+                _context.Images.Add(newImage);
                 imageCollection.Add(newImage);
-                _ = await _context.SaveChangesAsync();
             }
+
+            _ = await _context.SaveChangesAsync();
 
             return imageCollection.Select(i => new Image
             {
                 ImageId = i.ImageId,
                 EntityType = i.EntityType,
                 ImageUrl = i.ImageUrl,
-                PublicId = i.PublicId
+                PublicId = i.PublicId,
+                Created = i.Created
             }).ToList();
         }
 

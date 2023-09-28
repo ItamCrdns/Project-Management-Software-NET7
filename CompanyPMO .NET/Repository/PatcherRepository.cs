@@ -16,13 +16,14 @@ namespace CompanyPMO_.NET.Repository
         }
         public async Task<(bool updated, TDto)> UpdateEntity<TEntity, TDto>(int employeeId, int entityId, TDto dto, List<IFormFile>? images, Func<int, List<IFormFile>, Task<IEnumerable<ImageDto>>> addImagesMethod, Func<int, Task<TEntity?>> findEntityMethod) where TEntity : class
         {
-            var entityToUpdate = await findEntityMethod(entityId);
+            // This gets the whole entity. Including (at the moment) images, but will include more in the future.
+            var entityBeforeBeingUpdated = await findEntityMethod(entityId);
 
-            if (entityToUpdate is not null)
+            if (entityBeforeBeingUpdated is not null)
             {
                 // Convert the entity to JSON to store it 
-                var oldEntityToJson = JsonSerializer.Serialize(entityToUpdate);
-                var entityName = entityToUpdate.GetType().Name;
+                var oldEntityToJson = JsonSerializer.Serialize(entityBeforeBeingUpdated);
+                var entityName = entityBeforeBeingUpdated.GetType().Name;
 
                 var type = typeof(TDto);
                 var props = type.GetProperties();
@@ -38,13 +39,13 @@ namespace CompanyPMO_.NET.Repository
                         }
                     }
 
-                    var eachProp = entityToUpdate.GetType().GetProperty(prop.Name);
+                    var eachProp = entityBeforeBeingUpdated.GetType().GetProperty(prop.Name);
 
                     var newValue = prop.GetValue(dto);
 
                     if (newValue is not null)
                     {
-                        eachProp.SetValue(entityToUpdate, newValue);
+                        eachProp.SetValue(entityBeforeBeingUpdated, newValue);
                     }
                 }
 
@@ -57,15 +58,22 @@ namespace CompanyPMO_.NET.Repository
                     imageCollection.AddRange(uploadedImages);
                 }
 
-                _context.Update(entityToUpdate);
+                _context.Update(entityBeforeBeingUpdated);
                 int rowsAffected = await _context.SaveChangesAsync();
 
-                if(rowsAffected > 0)
+                if (rowsAffected > 0)
                 {
-                    var imagesProperty = dto.GetType().GetProperty("Images");
-                    imagesProperty.SetValue(dto, imageCollection);
+                    if (imageCollection.Count > 0)
+                    {
+                        // Add the mew images to the dto to return all the changes we have made
+                        var imagesProperty = dto.GetType().GetProperty("Images");
+                        imagesProperty.SetValue(dto, imageCollection);
+                    }
 
-                    var newEntityToJson = JsonSerializer.Serialize(dto);
+                    // Load the entity again, now updated with the new values
+                    var entityAfterBeingUpdated = await findEntityMethod(entityId);
+
+                    var newEntityToJson = JsonSerializer.Serialize(entityAfterBeingUpdated);
 
                     var newChangeLog = new Changelog
                     {
@@ -75,7 +83,7 @@ namespace CompanyPMO_.NET.Repository
                         EmployeeId = employeeId,
                         Modified = DateTimeOffset.UtcNow,
                         OldData = oldEntityToJson, // Save the old and new data as a plain json 
-                        NewData = newEntityToJson
+                        NewData = newEntityToJson // TO DO: Anything higher than 4000CHAR will give error. Either limit images or use NVARCHAR(MAX)
                     };
 
                     _context.Add(newChangeLog);
