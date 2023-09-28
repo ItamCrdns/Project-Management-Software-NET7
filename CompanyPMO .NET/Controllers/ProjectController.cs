@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Interfaces;
+﻿using CompanyPMO_.NET.Dto;
+using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -47,6 +48,30 @@ namespace CompanyPMO_.NET.Controllers
             };
 
             return Ok(projectDto);
+        }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpPatch("{projectId}/update")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<Project>))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> UpdateProject(int projectId, [FromForm] ProjectDto projectDto, [FromForm] List<IFormFile>? images)
+        {
+            bool projectExists = await _projectService.DoesProjectExist(projectId);
+
+            if(!projectExists)
+            {
+                return NotFound();
+            }
+
+            var (updated, project) = await _projectService.UpdateProject(await GetUserId(), projectId, projectDto, images);
+
+            if (!updated)
+            {
+                return BadRequest();
+            }
+
+            return Ok(project);
         }
 
         [Authorize(Policy = "EmployeesAllowed")]

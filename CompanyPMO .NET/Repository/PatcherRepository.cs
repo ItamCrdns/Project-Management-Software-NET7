@@ -1,4 +1,5 @@
 ﻿using CompanyPMO_.NET.Data;
+using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using System.Text.Json;
@@ -13,7 +14,7 @@ namespace CompanyPMO_.NET.Repository
         {
             _context = context;
         }
-        public async Task<(bool updated, TEntity)> UpdateEntity<TEntity, TDto>(int employeeId, int entityId, TDto dto, List<IFormFile>? images, Func<int, List<IFormFile>, Task<IEnumerable<Image>>> addImagesMethod, Func<int, Task<TEntity?>> findEntityMethod) where TEntity : class
+        public async Task<(bool updated, TDto)> UpdateEntity<TEntity, TDto>(int employeeId, int entityId, TDto dto, List<IFormFile>? images, Func<int, List<IFormFile>, Task<IEnumerable<ImageDto>>> addImagesMethod, Func<int, Task<TEntity?>> findEntityMethod) where TEntity : class
         {
             var entityToUpdate = await findEntityMethod(entityId);
 
@@ -47,7 +48,7 @@ namespace CompanyPMO_.NET.Repository
                     }
                 }
 
-                List<Image> imageCollection = new();
+                List<ImageDto> imageCollection = new();
 
                 if (images is not null && images.Any(i => i.Length > 0))
                 {
@@ -61,9 +62,11 @@ namespace CompanyPMO_.NET.Repository
 
                 if(rowsAffected > 0)
                 {
-                    var newEntityToJson = JsonSerializer.Serialize(entityToUpdate);
+                    var imagesProperty = dto.GetType().GetProperty("Images");
+                    imagesProperty.SetValue(dto, imageCollection);
 
-                    // Add a validation so we dont add a changelog if entity did not update
+                    var newEntityToJson = JsonSerializer.Serialize(dto);
+
                     var newChangeLog = new Changelog
                     {
                         EntityType = entityName,
@@ -78,16 +81,16 @@ namespace CompanyPMO_.NET.Repository
                     _context.Add(newChangeLog);
                     _ = await _context.SaveChangesAsync();
 
-                    return (true, entityToUpdate);
+                    return (true, dto);
                 }
                 else
                 {
-                    return (false, entityToUpdate);
+                    return (false, dto);
                 }
             }
             else
             {
-                return (false, entityToUpdate);
+                return (false, dto);
             }
         }
     }

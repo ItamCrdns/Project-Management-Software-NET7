@@ -10,12 +10,22 @@ namespace CompanyPMO_.NET.Repository
     {
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
+        private readonly IPatcher _patcherService;
 
-        public ProjectRepository(ApplicationDbContext context, IImage imageService)
+        public ProjectRepository(ApplicationDbContext context, IImage imageService, IPatcher patcherService)
         {
             _context = context;
             _imageService = imageService;
+            _patcherService = patcherService;
         }
+
+        public async Task<IEnumerable<ImageDto>> AddImagesToExistingProject(int projectId, List<IFormFile>? images)
+        {
+            IEnumerable<ImageDto> imageCollection = await _imageService.AddImagesToExistingEntity(projectId, images, "Project");
+
+            return imageCollection;
+        }
+
         public async Task<(Project, List<Image>)> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images)
         {
             var newProject = new Project
@@ -39,6 +49,10 @@ namespace CompanyPMO_.NET.Repository
 
             return (newProject, imageCollection);
         }
+
+        public async Task<bool> DoesProjectExist(int projectId) => await _context.Projects.AnyAsync(i => i.ProjectId == projectId);
+
+        public async Task<Project?> GetProject(int projectId) => await _context.Projects.FindAsync(projectId);
 
         public async Task<Project?> GetProjectById(int projectId)
         {
@@ -77,9 +91,9 @@ namespace CompanyPMO_.NET.Repository
             return false;
         }
 
-        public Task<(bool updated, Project)> UpdateProject(int projectId, ProjectDto project, List<IFormFile>? images)
+        public async Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images)
         {
-            throw new NotImplementedException();
+            return await _patcherService.UpdateEntity(employeeId, projectId, projectDto, images, AddImagesToExistingProject, GetProject);
         }
     }
 }

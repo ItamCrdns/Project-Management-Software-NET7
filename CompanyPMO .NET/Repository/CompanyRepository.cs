@@ -54,9 +54,9 @@ namespace CompanyPMO_.NET.Repository
             return (true, returnedCompany);
         }
 
-        public async Task<IEnumerable<Image>> AddImagesToExistingCompany(int companyId, List<IFormFile>? images)
+        public async Task<IEnumerable<ImageDto>> AddImagesToExistingCompany(int companyId, List<IFormFile>? images)
         {
-            IEnumerable<Image> imageCollection = await _imageService.AddImagesToExistingCompany(companyId, images, "Company");
+            IEnumerable<ImageDto> imageCollection = await _imageService.AddImagesToExistingEntity(companyId, images, "Company");
 
             return imageCollection;
         }
@@ -88,7 +88,7 @@ namespace CompanyPMO_.NET.Repository
             return company;
         }
 
-        public async Task<(bool updated, Company)> UpdateCompany(int employeeId, int companyId, CompanyDto companyDto, List<IFormFile>? images)
+        public async Task<(bool updated, CompanyDto)> UpdateCompany(int employeeId, int companyId, CompanyDto companyDto, List<IFormFile>? images)
         {
             return await _patcherService.UpdateEntity(employeeId, companyId, companyDto, images, AddImagesToExistingCompany, GetCompany);
         }

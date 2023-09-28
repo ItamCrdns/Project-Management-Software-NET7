@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
+﻿using CompanyPMO_.NET.Dto;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CompanyPMO_.NET.Models
 {

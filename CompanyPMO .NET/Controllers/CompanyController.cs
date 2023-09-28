@@ -76,14 +76,15 @@ namespace CompanyPMO_.NET.Controllers
             {
                 return NotFound();
             }
-            var (created, returnedCompany) = await _companyService.UpdateCompany(await GetUserId(), companyId, companyDto, images);
 
-            if(!created)
+            var (updated, company) = await _companyService.UpdateCompany(await GetUserId(), companyId, companyDto, images);
+
+            if(!updated)
             {
                 return BadRequest();
             }
 
-            return Ok(returnedCompany);
+            return Ok(company);
         }
     }
 }
