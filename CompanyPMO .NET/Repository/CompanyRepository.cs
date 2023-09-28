@@ -38,7 +38,7 @@ namespace CompanyPMO_.NET.Repository
 
             if (images is not null && images.Any(i => i.Length > 0))
             {
-                imageCollection = await _imageService.AddImagesToNewEntity(images, company.CompanyId, "Company");
+                imageCollection = await _imageService.AddImagesToNewEntity(images, company.CompanyId, "Company", null);
             }
 
             var returnedCompany = new Company
@@ -54,11 +54,22 @@ namespace CompanyPMO_.NET.Repository
             return (true, returnedCompany);
         }
 
-        public async Task<IEnumerable<ImageDto>> AddImagesToExistingCompany(int companyId, List<IFormFile>? images)
+        public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingCompany(int companyId, List<IFormFile>? images)
         {
-            IEnumerable<ImageDto> imageCollection = await _imageService.AddImagesToExistingEntity(companyId, images, "Company");
+            var company = await GetCompanyById(companyId);
 
-            return imageCollection;
+            int imageCountInCompanyEntity = company.Images.Count;
+
+            IEnumerable<ImageDto> imageCollection = await _imageService.AddImagesToExistingEntity(companyId, images, "Company", imageCountInCompanyEntity);
+
+            if(imageCollection.Any())
+            {
+                return ($"{imageCollection.Count()} images added", imageCollection);
+            }
+            else
+            {
+                return ("You cannot add more images to this collection.", imageCollection);
+            }
         }
 
         public async Task<bool> DoesCompanyExist(int companyId) => await _context.Companies.AnyAsync(c => c.CompanyId.Equals(companyId));

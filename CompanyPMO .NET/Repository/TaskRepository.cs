@@ -34,7 +34,7 @@ namespace CompanyPMO_.NET.Repository
 
             if(images is not null && images.Any(i => i.Length >  0))
             {
-                imageCollection = await _imageService.AddImagesToNewEntity(images, newTask.TaskId, "Task");
+                imageCollection = await _imageService.AddImagesToNewEntity(images, newTask.TaskId, "Task", null);
             }
 
             return (newTask, imageCollection);

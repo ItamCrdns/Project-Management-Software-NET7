@@ -19,11 +19,22 @@ namespace CompanyPMO_.NET.Repository
             _patcherService = patcherService;
         }
 
-        public async Task<IEnumerable<ImageDto>> AddImagesToExistingProject(int projectId, List<IFormFile>? images)
+        public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images)
         {
-            IEnumerable<ImageDto> imageCollection = await _imageService.AddImagesToExistingEntity(projectId, images, "Project");
+            var project = await GetProjectById(projectId);
 
-            return imageCollection;
+            int imageCountInProjectEntity = project.Images.Count;
+
+            IEnumerable<ImageDto> imageCollection = await _imageService.AddImagesToExistingEntity(projectId, images, "Project", imageCountInProjectEntity);
+
+            if(imageCollection.Any())
+            {
+                return ($"{imageCollection.Count()} images added", imageCollection);
+            }
+            else
+            {
+                return ("You cannot add more images to this collection.", imageCollection);
+            }
         }
 
         public async Task<(Project, List<Image>)> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images)
@@ -44,7 +55,7 @@ namespace CompanyPMO_.NET.Repository
 
             if(images is not null && images.Any(i => i.Length > 0))
             {
-                imageCollection = await _imageService.AddImagesToNewEntity(images, newProject.ProjectId, "Project");
+                imageCollection = await _imageService.AddImagesToNewEntity(images, newProject.ProjectId, "Project", null);
             }
 
             return (newProject, imageCollection);

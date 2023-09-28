@@ -34,9 +34,15 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("new")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Company>))]
-        [ProducesResponseType(500)]
+        [ProducesResponseType(400)]
         public async Task<IActionResult> NewCompany([FromForm] CompanyDto newCompany, [FromForm] List<IFormFile>? images)
         {
+            if (images is not null && images.Count > 10)
+            {
+                ModelState.AddModelError("Images", "The request contains too many images (maximum allowed is 10).");
+                return StatusCode(400, ModelState);
+            }
+
             var (created, returnedCompany) = await _companyService.AddCompany(await GetUserId(), newCompany, images);
 
             if(!created)
@@ -75,6 +81,12 @@ namespace CompanyPMO_.NET.Controllers
             if(!companyExists)
             {
                 return NotFound();
+            }
+
+            if (images is not null && images.Count > 10)
+            {
+                ModelState.AddModelError("Images", "The request contains too many images (maximum allowed is 10).");
+                return StatusCode(400, ModelState);
             }
 
             var (updated, company) = await _companyService.UpdateCompany(await GetUserId(), companyId, companyDto, images);

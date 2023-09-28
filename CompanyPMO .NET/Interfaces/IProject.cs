@@ -10,6 +10,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<Project> GetProjectById(int projectId);
         Task<bool> SetProjectFinalized(int projectId);
         Task<bool> DoesProjectExist(int projectId);
-        Task<IEnumerable<ImageDto>> AddImagesToExistingProject(int projectId, List<IFormFile>? images);
+        Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images);
     }
 }

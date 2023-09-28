@@ -12,7 +12,7 @@ namespace CompanyPMO_.NET.Interfaces
             int entityId, // Represents the id of the entity we are going to update
             TDto dto,
             List<IFormFile>? images,
-            Func<int, List<IFormFile>, Task<IEnumerable<ImageDto>>> addImagesMethod,
+            Func<int, List<IFormFile>, Task<(string result, IEnumerable<ImageDto>)>> addImagesMethod,
             Func<int, Task<TEntity?>> findEntityMethod)
             where TEntity : class;
     }

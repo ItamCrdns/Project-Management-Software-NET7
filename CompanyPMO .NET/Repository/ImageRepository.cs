@@ -18,11 +18,11 @@ namespace CompanyPMO_.NET.Repository
             _cloudinary = cloudinary;
         }
 
-        public async Task<IEnumerable<ImageDto>> AddImagesToExistingEntity(int entityId, List<IFormFile>? images, string entityType)
+        public async Task<IEnumerable<ImageDto>> AddImagesToExistingEntity(int entityId, List<IFormFile>? images, string entityType, int? imagesInEntity)
         {
             if (images is not null && images.Any(i => i.Length > 0))
             {
-                List<Image> imageCollection = await AddImagesToNewEntity(images, entityId, entityType);
+                List<Image> imageCollection = await AddImagesToNewEntity(images, entityId, entityType, imagesInEntity);
 
                 return imageCollection.Select(i => new ImageDto
                 {
@@ -37,11 +37,19 @@ namespace CompanyPMO_.NET.Repository
             return null;
         }
 
-        public async Task<List<Image>> AddImagesToNewEntity(List<IFormFile> images, int entityId, string entityType)
+        public async Task<List<Image>> AddImagesToNewEntity(List<IFormFile> images, int entityId, string entityType, int? imagesInEntity)
         {
             List<Image> imageCollection = new();
+
+            int imageCount = imagesInEntity ?? 0;
+
             foreach (var image in images)
             {
+                if (imageCount >= 10)
+                {
+                    break;
+                }
+
                 var (imageUrl, publicId) = await UploadToCloudinary(image, 0, 0);
 
                 var newImage = new Image
@@ -53,6 +61,7 @@ namespace CompanyPMO_.NET.Repository
                     Created = DateTimeOffset.Now
                 };
 
+                imageCount++;
                 _context.Images.Add(newImage);
                 imageCollection.Add(newImage);
             }
