@@ -32,6 +32,16 @@ namespace CompanyPMO_.NET.Controllers
         }
 
         [Authorize(Policy = "SupervisorOnly")]
+        [HttpGet("all")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<Project>))]
+        public async Task<IActionResult> GetAllProjects(int page, int pageSize)
+        {
+            var projects = await _projectService.GetAllProjects(page, pageSize);
+
+            return Ok(projects);
+        }
+
+        [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("new")]
         [ProducesResponseType(200, Type = typeof(Project))]
         public async Task<IActionResult> NewProject([FromForm] Project project, [FromForm] List<IFormFile>? images)

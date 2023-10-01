@@ -54,6 +54,25 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<bool> DoesProjectExist(int projectId) => await _context.Projects.AnyAsync(i => i.ProjectId == projectId);
 
+        public async Task<List<Project>> GetAllProjects(int page, int pageSize)
+        {
+            int postsToSkip = (page - 1) * pageSize;
+
+            var projects = await _context.Projects
+                .OrderByDescending(p => p.Created)
+                .Include(t => t.Images)
+                .Skip(postsToSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            foreach(var project in projects)
+            {
+                project.Images = SelectImages(project.Images);
+            }
+
+            return projects;
+        }
+
         public async Task<Project> GetProjectById(int projectId)
         {
             var project = await _context.Projects
@@ -61,21 +80,26 @@ namespace CompanyPMO_.NET.Repository
                 .Include(t => t.Images)
                 .FirstOrDefaultAsync();
 
-            var projectImages = project.Images
-                .Where(et => et.EntityType.Equals("Project")) // Client side filtering
-                .Select(i => new Image
-            {
-                ImageId = i.ImageId,
-                EntityType = i.EntityType,
-                EntityId = i.EntityId,
-                ImageUrl = i.ImageUrl,
-                PublicId = i.PublicId,
-                Created = i.Created
-            }).ToList();
-
-            project.Images = projectImages;
+            project.Images = SelectImages(project.Images);
 
             return project;
+        }
+
+        public List<Image> SelectImages(ICollection<Image> images)
+        {
+            var projectImages = images
+                .Where(et => et.EntityType.Equals("Project"))
+                .Select(i => new Image
+                {
+                    ImageId = i.ImageId,
+                    EntityType = i.EntityType,
+                    EntityId = i.EntityId,
+                    ImageUrl = i.ImageUrl,
+                    PublicId = i.PublicId,
+                    Created = i.Created
+                }).ToList();
+
+            return projectImages;
         }
 
         public async Task<bool> SetProjectFinalized(int projectId)

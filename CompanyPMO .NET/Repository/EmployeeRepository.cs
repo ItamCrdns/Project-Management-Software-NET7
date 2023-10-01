@@ -18,7 +18,7 @@ namespace CompanyPMO_.NET.Repository
             _imageService = imageService;
             _patcherService = patcherService;
         }
-        public async Task<(bool authenticated, string result, EmployeeDto employee)> AuthenticateEmployee(string username, string password)
+        public async Task<(AuthenticationResult result, string message, EmployeeDto employee)> AuthenticateEmployee(string username, string password)
         {
             bool? isAccountLocked = await IsAccountLocked(username);
 
@@ -27,14 +27,14 @@ namespace CompanyPMO_.NET.Repository
 
             if (isAccountLocked is true)
             {
-                return (false, $"Access to your account is currently restricted until {employee.LockedUntil}. You can try again after this time.", null);
+                return (new AuthenticationResult { Blocked = true }, $"Your account has been blocked for {_patcherService.MinutesUntilTimeArrival(employee.LockedUntil)} minutes.", null);
             }
 
             if(!string.IsNullOrEmpty(password))
             {
                 if(employee is null)
                 {
-                    return (false, "Something went wrong.", null);
+                    return (new AuthenticationResult { DoesntExist = true }, "Apparently, this user does not exist.", null);
                 }
 
                 if(BCrypt.Net.BCrypt.Verify(password, employee.Password))
@@ -52,18 +52,18 @@ namespace CompanyPMO_.NET.Repository
                         ProfilePicture = employee.ProfilePicture
                     };
 
-                    return (true, $"Welcome, {employeeReturn.Username}", employeeReturn);
+                    return (new AuthenticationResult { Authenticated = true }, $"Welcome, {employeeReturn.Username}", employeeReturn);
                 }
                 else
                 {
                     employee.LoginAttempts++;
                     _ = await _context.SaveChangesAsync();
 
-                    return (false, $"Wrong credentials. You have tried {employee.LoginAttempts} times", null);
+                    return (new AuthenticationResult { WrongCreds = true }, $"Wrong credentials. You have tried {employee.LoginAttempts} times", null);
                 }
             }
 
-            return (false, "Something went wrong.", null);
+            return (new AuthenticationResult { SomethingWrong = true }, "Something went wrong.", null);
         }
 
         public async Task<Employee> GetEmployeeById(int employeeId)

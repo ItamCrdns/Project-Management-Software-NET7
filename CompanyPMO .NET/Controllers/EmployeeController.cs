@@ -1,11 +1,8 @@
 ﻿using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace CompanyPMO_.NET.Controllers
 {
@@ -14,10 +11,12 @@ namespace CompanyPMO_.NET.Controllers
     public class EmployeeController : ControllerBase
     {
         private readonly IEmployee _employeeService;
+        private readonly IJwt _jwtService;
 
-        public EmployeeController(IEmployee employeeService)
+        public EmployeeController(IEmployee employeeService, IJwt jwtService)
         {
             _employeeService = employeeService;
+            _jwtService = jwtService;
         }
 
         [AllowAnonymous]
@@ -29,40 +28,40 @@ namespace CompanyPMO_.NET.Controllers
         {
             var employeeAuthentication = await _employeeService.AuthenticateEmployee(employee.Username, employee.Password);
 
-            if(employeeAuthentication.authenticated)
+            if(employeeAuthentication.result.Authenticated)
             {
                 var loggedEmployee = await _employeeService.GetEmployeeForClaims(employee.Username);
 
-                var claims = new List<Claim>
+                var token = _jwtService.JwtTokenGenerator(loggedEmployee);
+
+                HttpContext.Response.Cookies.Append("JwtToken", token, new CookieOptions
                 {
-                    new Claim(ClaimTypes.NameIdentifier, loggedEmployee.EmployeeId.ToString()),
-                    new Claim(ClaimTypes.Name, loggedEmployee.Username),
-                    new Claim(ClaimTypes.Role, loggedEmployee.Role)
-                };
-
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-                var authProperties = new AuthenticationProperties
-                {
-                    IsPersistent = true
-                };
-
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity), authProperties);
+                    Expires = DateTime.Now.AddDays(7),
+                    HttpOnly = true,
+                    SameSite = SameSiteMode.Strict,
+                    Secure = true, // No HTTPS
+                    IsEssential = true
+                });
 
                 var loginResponse = new LoginResponseDto
                 {
-                    Authenticated = employeeAuthentication.authenticated,
-                    Message = employeeAuthentication.result,
+                    Result = employeeAuthentication.result,
+                    Message = employeeAuthentication.message,
                     Employee = employeeAuthentication.employee
                 };
 
                 return Ok(loginResponse);
             }
-            else if(!employeeAuthentication.authenticated)
+            else if(!employeeAuthentication.result.Authenticated)
             {
-                return Unauthorized();
+                var loginResponse = new LoginResponseDto
+                {
+                    Result = employeeAuthentication.result,
+                    Message = employeeAuthentication.message,
+                    Employee = employeeAuthentication.employee
+                };
+
+                return Unauthorized(loginResponse);
             }
 
             return NoContent();

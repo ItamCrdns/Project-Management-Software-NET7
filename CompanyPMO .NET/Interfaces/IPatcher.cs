@@ -15,5 +15,7 @@ namespace CompanyPMO_.NET.Interfaces
             Func<int, List<IFormFile>, Task<(string result, IEnumerable<ImageDto>)>> addImagesMethod,
             Func<int, Task<TEntity?>> findEntityMethod)
             where TEntity : class;
+
+        int MinutesUntilTimeArrival(DateTimeOffset? time); // Relative time function to get how many minutes are there until a certain date
     }
 }

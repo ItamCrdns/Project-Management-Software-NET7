@@ -14,6 +14,23 @@ namespace CompanyPMO_.NET.Repository
         {
             _context = context;
         }
+
+        public int MinutesUntilTimeArrival(DateTimeOffset? time)
+        {
+            DateTimeOffset currentTime = DateTimeOffset.Now;
+
+            if (time <= currentTime)
+            {
+                return 0;
+            }
+
+            TimeSpan timeUntilArrival = (time.Value - currentTime);
+
+            double rounded = Math.Round(timeUntilArrival.TotalSeconds / 60);
+
+            return (int)rounded;
+        }
+
         public async Task<(bool updated, TDto)> UpdateEntity<TEntity, TDto>(int employeeId, int entityId, TDto dto, List<IFormFile>? images, Func<int, List<IFormFile>, Task<(string result, IEnumerable<ImageDto>)>> addImagesMethod, Func<int, Task<TEntity?>> findEntityMethod) where TEntity : class
         {
             // This gets the whole entity. Including (at the moment) images, but will include more in the future.
