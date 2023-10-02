@@ -15,6 +15,8 @@ namespace CompanyPMO_.NET.Models
         [Column("public_id")]
         public string PublicId { get; set; }
         public DateTimeOffset Created { get; set; }
+        [Column("uploader_id")]
+        public int UploaderId { get; set; }
 
         // Navigation properties
 

@@ -12,6 +12,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<bool> DoesProjectExist(int projectId);
         Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images);
         Task<List<Project>> GetAllProjects(int page, int pageSize);
-        List<Image> SelectImages(ICollection<Image> images);
+        ICollection<Image> SelectImages(ICollection<Image> images);
     }
 }

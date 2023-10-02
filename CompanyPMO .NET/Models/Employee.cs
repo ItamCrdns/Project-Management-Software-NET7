@@ -32,13 +32,17 @@ namespace CompanyPMO_.NET.Models
         public int LoginAttempts { get; set; }
         [Column("locked_until")]
         public DateTimeOffset? LockedUntil { get; set; }
+        [Column("supervisor_id")]
+        public int? SupervisorId { get; set; }
 
         // Navigation properties
 
         public Tier Tier { get; set; }
         public Company Company { get; set; }
-        public List<Project> Projects { get; set; }
-        public List<Task> Tasks { get; set; }
-        public List<Issue> Issues { get; set; }
+        public List<Project>? Projects { get; set; }
+        public List<Task>? Tasks { get; set; }
+        public List<Issue>? Issues { get; set; }
+        public Employee? Supervisor { get; set; }
+        public List<Employee>? Employees { get; set; }
     }
 }

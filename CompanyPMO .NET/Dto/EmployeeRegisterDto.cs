@@ -15,5 +15,6 @@
         public DateTimeOffset LastLogin { get; set; }
         public int CompanyId { get; set; }
         public int TierId { get; set; }
+        public int? SupervisorId { get; set; }
     }
 }

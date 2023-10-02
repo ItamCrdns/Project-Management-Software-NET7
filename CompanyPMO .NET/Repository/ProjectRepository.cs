@@ -85,7 +85,7 @@ namespace CompanyPMO_.NET.Repository
             return project;
         }
 
-        public List<Image> SelectImages(ICollection<Image> images)
+        public ICollection<Image> SelectImages(ICollection<Image> images)
         {
             var projectImages = images
                 .Where(et => et.EntityType.Equals("Project"))
@@ -101,6 +101,7 @@ namespace CompanyPMO_.NET.Repository
 
             return projectImages;
         }
+
 
         public async Task<bool> SetProjectFinalized(int projectId)
         {

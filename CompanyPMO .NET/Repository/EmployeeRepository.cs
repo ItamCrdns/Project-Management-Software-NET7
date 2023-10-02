@@ -75,6 +75,7 @@ namespace CompanyPMO_.NET.Repository
                 .Include(t => t.Tier)
                 .Include(t => t.Tasks)
                 .Include(i => i.Issues)
+                .Include(s => s.Supervisor)
                 .FirstOrDefaultAsync();
 
             var employeeDto = new Employee
@@ -96,6 +97,13 @@ namespace CompanyPMO_.NET.Repository
                 LockedUntil = employee.LockedUntil,
                 Tier = employee.Tier,
                 Company = employee.Company,
+                SupervisorId = employee.SupervisorId,
+                Supervisor = new Employee
+                {
+                    EmployeeId = employee.Supervisor.EmployeeId,
+                    Username = employee.Supervisor.Username,
+                    ProfilePicture = employee.Supervisor.ProfilePicture,
+                },
                 Projects = employee.Projects.Select(project => new Project
                 {
                     ProjectId = project.ProjectId,
@@ -208,7 +216,8 @@ namespace CompanyPMO_.NET.Repository
                 ProfilePicture = imageUrl,
                 LastLogin = DateTimeOffset.UtcNow,
                 CompanyId = employee.CompanyId,
-                TierId = employee.TierId
+                TierId = employee.TierId,
+                SupervisorId = employee.SupervisorId // CHANGE THIS !
             };
 
             _context.Add(newEmployee);

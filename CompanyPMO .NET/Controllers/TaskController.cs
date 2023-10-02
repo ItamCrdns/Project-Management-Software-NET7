@@ -106,5 +106,14 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(employees);
         }
+
+        [HttpGet("all")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<Models.Task>))]
+        public async Task<IActionResult> GetAllTasks(int page, int pageSize)
+        {
+            var tasks = await _taskService.GetTasks(page, pageSize);
+
+            return Ok(tasks);
+        }   
     }
 }

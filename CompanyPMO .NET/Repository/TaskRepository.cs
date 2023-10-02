@@ -84,6 +84,25 @@ namespace CompanyPMO_.NET.Repository
             return task;
         }
 
+        public async Task<List<Models.Task>> GetTasks(int page, int pageSize)
+        {
+            int postsToSkip = (page - 1) * pageSize;
+
+            var tasks = await _context.Tasks
+                .OrderByDescending(p => p.Created)
+                .Include(t => t.Images)
+                .Skip(postsToSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            foreach(var task in tasks)
+            {
+                task.Images = SelectImages(task.Images);
+            }
+
+            return tasks;
+        }
+
         public async Task<List<Models.Task>> GetTasksByProjectId(int projectId)
         {
             var tasks = await _context.Tasks
@@ -122,6 +141,23 @@ namespace CompanyPMO_.NET.Repository
 
             return tasks;
         }
+
+        public ICollection<Image> SelectImages(ICollection<Image> images)
+        {
+            var projectImages = images
+                .Where(et => et.EntityType.Equals("Task"))
+                .Select(i => new Image
+                {
+                    ImageId = i.ImageId,
+                    EntityType = i.EntityType,
+                    EntityId = i.EntityId,
+                    ImageUrl = i.ImageUrl,
+                    PublicId = i.PublicId,
+                    Created = i.Created
+                }).ToList();
+
+            return projectImages;
+        }   
 
         public async Task<bool> StartingWorkingOnTask(int userId, int taskId)
         {
