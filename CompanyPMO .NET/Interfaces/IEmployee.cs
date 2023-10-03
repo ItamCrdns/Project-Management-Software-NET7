@@ -11,5 +11,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<bool?> IsAccountLocked(string username);
         Task<Employee> GetEmployeeForClaims(string username);
         Task<Employee> GetEmployeeById(int employeeId);
+        Task<IEnumerable<Employee>> GetEmployeeBySupervisorId(int supervisorId);
+        Employee EmployeeQuery(Employee employee);
     }
 }

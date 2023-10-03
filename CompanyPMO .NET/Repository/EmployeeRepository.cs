@@ -66,19 +66,9 @@ namespace CompanyPMO_.NET.Repository
             return (new AuthenticationResult { SomethingWrong = true }, "Something went wrong.", null);
         }
 
-        public async Task<Employee> GetEmployeeById(int employeeId)
+        public Employee EmployeeQuery(Employee employee)
         {
-            var employee = await _context.Employees
-                .Where(e => e.EmployeeId.Equals(employeeId))
-                .Include(p => p.Projects)
-                .Include(c => c.Company)
-                .Include(t => t.Tier)
-                .Include(t => t.Tasks)
-                .Include(i => i.Issues)
-                .Include(s => s.Supervisor)
-                .FirstOrDefaultAsync();
-
-            var employeeDto = new Employee
+            var query = new Employee
             {
                 EmployeeId = employee.EmployeeId,
                 Username = employee.Username,
@@ -134,7 +124,33 @@ namespace CompanyPMO_.NET.Repository
                 }).ToList()
             };
 
-            return employeeDto;
+            return query;
+        }
+
+        public async Task<Employee> GetEmployeeById(int employeeId)
+        {
+            var employee = await _context.Employees
+                .Where(e => e.EmployeeId.Equals(employeeId))
+                .Include(p => p.Projects)
+                .Include(c => c.Company)
+                .Include(t => t.Tier)
+                .Include(t => t.Tasks)
+                .Include(i => i.Issues)
+                .Include(s => s.Supervisor)
+                .FirstOrDefaultAsync();
+
+            return EmployeeQuery(employee);
+        }
+
+        public async Task<IEnumerable<Employee>> GetEmployeeBySupervisorId(int supervisorId)
+        {
+            var employees = await _context.Employees
+                .Where(s => s.SupervisorId.Equals(supervisorId))
+                .Include(t => t.Tier)
+                .Include(c => c.Company)
+                .ToListAsync();
+
+            return employees;
         }
 
         public async Task<Employee?> GetEmployeeForClaims(string username)

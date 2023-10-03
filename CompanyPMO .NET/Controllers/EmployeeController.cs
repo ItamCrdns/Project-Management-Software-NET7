@@ -86,5 +86,15 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(employee);
         }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpGet("supervisor/{supervisorId}/employees")]
+        [ProducesResponseType(200, Type = typeof(Employee))]
+        public async Task<IActionResult> GetEmployeesBySupervisorId(int supervisorId)
+        {
+            IEnumerable<Employee> employees = await _employeeService.GetEmployeeBySupervisorId(supervisorId);
+
+            return Ok(employees);
+        }
     }
 }
