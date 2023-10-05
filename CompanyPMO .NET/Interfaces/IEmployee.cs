@@ -15,5 +15,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<IEnumerable<Employee>> GetEmployeeBySupervisorId(int supervisorId);
         Employee EmployeeQuery(Employee employee);
         Task<IEnumerable<EmployeeDto>> GetEmployeesWorkingInTheSameCompany(string username);
+        Task<IEnumerable<ProjectDto>> GetProjectsByEmployeeUsername(string username);
     }
 }
