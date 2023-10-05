@@ -153,6 +153,31 @@ namespace CompanyPMO_.NET.Repository
             return employees;
         }
 
+        public async Task<EmployeeDto> GetEmployeeByUsername(string username)
+        {
+            var employee = await _context.Employees
+                .Where(e => e.Username.Equals(username))
+                .Include(t => t.Tier)
+                .Include(s => s.Supervisor)
+                .FirstOrDefaultAsync();
+
+            var employeeDto = new EmployeeDto
+            {
+                EmployeeId = employee.EmployeeId,
+                Username = employee.Username,
+                Role = employee.Role,
+                ProfilePicture = employee.ProfilePicture,
+                Tier = employee.Tier,
+                Supervisor = employee.SupervisorId is not null ? new EmployeeDto
+                {
+                    Username = employee.Supervisor.Username,
+                    ProfilePicture = employee.Supervisor.ProfilePicture,
+                } : null
+            };
+
+            return employeeDto;
+        }
+
         public async Task<Employee?> GetEmployeeForClaims(string username)
         {
             return await _context.Employees
@@ -164,6 +189,26 @@ namespace CompanyPMO_.NET.Repository
                     Role = employee.Role
                 })
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<EmployeeDto>> GetEmployeesWorkingInTheSameCompany(string username)
+        {
+            int companyId = await _context.Employees
+                .Where(u => u.Username.Equals(username))
+                .Select(c => c.CompanyId)
+                .FirstOrDefaultAsync();
+
+            IEnumerable<EmployeeDto> employees = await _context.Employees
+                .Where(c => c.CompanyId.Equals(companyId) && !c.Username.Equals(username)) // Does not equal ugly af syntax
+                .Select(e => new EmployeeDto
+                {
+                    EmployeeId = e.EmployeeId,
+                    Username = e.Username,
+                    ProfilePicture = e.ProfilePicture
+                })
+                .ToListAsync();
+
+            return employees;
         }
 
         public async Task<bool?> IsAccountLocked(string username)

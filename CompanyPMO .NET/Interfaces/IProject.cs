@@ -13,5 +13,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images);
         Task<List<Project>> GetAllProjects(int page, int pageSize);
         ICollection<Image> SelectImages(ICollection<Image> images);
+        Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToProject(int projectId, List<int> employees);
+        //Task<IEnumerable<ProjectDto>> GetProjectsByEmployeeUsername(string username);
     }
 }

@@ -19,8 +19,15 @@ namespace CompanyPMO_.NET.Repository
             _patcherService = patcherService;
         }
 
-        public async Task<(bool created, Company)> AddCompany(int supervisorId, CompanyDto companyDto, List<IFormFile>? images)
+        public async Task<(bool created, Company)> AddCompany(int supervisorId, CompanyDto companyDto, List<IFormFile>? images, IFormFile? logoFile)
         {
+            string logoUrl = string.Empty;
+            if (logoFile is not null)
+            {
+                var (imageUrl, _) = await _imageService.UploadToCloudinary(logoFile, 0, 0);
+                logoUrl = imageUrl;
+            }
+
             var company = new Company
             {
                 Name = companyDto.Name,
@@ -28,7 +35,8 @@ namespace CompanyPMO_.NET.Repository
                 AddressId = companyDto.AddressId,
                 ContactEmail = companyDto.ContactEmail,
                 ContactPhoneNumber = companyDto.ContactPhoneNumber,
-                AddedById = supervisorId
+                AddedById = supervisorId,
+                Logo = logoUrl ?? null
             };
 
             _context.Add(company);
@@ -48,6 +56,7 @@ namespace CompanyPMO_.NET.Repository
                 AddressId = company.AddressId,
                 ContactEmail = company.ContactEmail,
                 ContactPhoneNumber = company.ContactPhoneNumber,
+                Logo = company.Logo,
                 Images = imageCollection
             };
 

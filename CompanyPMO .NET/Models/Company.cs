@@ -17,6 +17,7 @@ namespace CompanyPMO_.NET.Models
         public string ContactPhoneNumber { get; set; }
         [Column("added_by_id")]
         public int AddedById { get; set; }
+        public string? Logo { get; set; }
 
         // Navigation properties
 

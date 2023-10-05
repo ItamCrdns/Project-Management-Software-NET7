@@ -109,5 +109,27 @@ namespace CompanyPMO_.NET.Controllers
 
             return NoContent();
         }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpPost("{projectId}/add/employees")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        public async Task<IActionResult> AddEmployeesToProject(int projectId, [FromForm] List<int> employees)
+        {
+            var (response, employeesAdded) = await _projectService.AddEmployeesToProject(projectId, employees);
+
+            if(response is null)
+            {
+                return BadRequest();
+            }
+
+            var toReturn = new
+            {
+                Status = response,
+                EmployeesAdded = employeesAdded
+            };
+
+            return Ok(toReturn);
+        }
     }
 }

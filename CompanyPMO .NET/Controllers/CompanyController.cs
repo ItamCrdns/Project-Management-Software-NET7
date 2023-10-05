@@ -35,7 +35,7 @@ namespace CompanyPMO_.NET.Controllers
         [HttpPost("new")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Company>))]
         [ProducesResponseType(400)]
-        public async Task<IActionResult> NewCompany([FromForm] CompanyDto newCompany, [FromForm] List<IFormFile>? images)
+        public async Task<IActionResult> NewCompany([FromForm] CompanyDto newCompany, [FromForm] List<IFormFile>? images, IFormFile? logoFile)
         {
             if (images is not null && images.Count > 10)
             {
@@ -43,7 +43,7 @@ namespace CompanyPMO_.NET.Controllers
                 return StatusCode(400, ModelState);
             }
 
-            var (created, returnedCompany) = await _companyService.AddCompany(await GetUserId(), newCompany, images);
+            var (created, returnedCompany) = await _companyService.AddCompany(await GetUserId(), newCompany, images, logoFile);
 
             if(!created)
             {

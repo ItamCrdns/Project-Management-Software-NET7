@@ -96,5 +96,34 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(employees);
         }
+
+        [HttpPost("logout")]
+        [ProducesResponseType(204)]
+        public IActionResult EmployeeLogout()
+        {
+            Response.Cookies.Delete("JwtToken");
+
+            return NoContent();
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("username/{username}")]
+        [ProducesResponseType(200, Type = typeof(Employee))]
+        public async Task<IActionResult> GetEmployeeByUsername(string username)
+        {
+            EmployeeDto employee = await _employeeService.GetEmployeeByUsername(username);
+
+            return Ok(employee);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("username/{username}/colleagues")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<Employee>))]
+        public async Task<IActionResult> GetEmployeesWorkingInTheSameCompany(string username)
+        {
+            IEnumerable<EmployeeDto> employees = await _employeeService.GetEmployeesWorkingInTheSameCompany(username);
+
+            return Ok(employees);
+        }
     }
 }
