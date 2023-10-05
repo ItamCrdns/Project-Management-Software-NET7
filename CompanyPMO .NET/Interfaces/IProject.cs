@@ -14,5 +14,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<List<Project>> GetAllProjects(int page, int pageSize);
         ICollection<Image> SelectImages(ICollection<Image> images);
         Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToProject(int projectId, List<int> employees);
+        Task<bool> IsEmployeeAlreadyInProject(int employeeId, int projectId);
     }
 }

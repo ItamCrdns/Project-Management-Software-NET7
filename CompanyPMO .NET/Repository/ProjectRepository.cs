@@ -19,87 +19,14 @@ namespace CompanyPMO_.NET.Repository
             _patcherService = patcherService;
         }
 
-        public async Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToProject(int projectId, List<int> employeeIds)
+        public async Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToProject(int projectId, List<int> employees)
         {
             // * Adds the employees to a certain project and returns a list of the added employees
-            // * Checks if the employee is already in the project and
 
-            bool projectExists = await _context.Projects.FindAsync(projectId) is not null;
-
-            if(!projectExists)
-            {
-                return ("Project does not exist", null);
-            }
-
-            if(employeeIds.Count is 0)
-            {
-                return ("No employees were provided.", null);
-            }
-
-            List<EmployeeProject> EmployeesToAdd = new();
-
-            foreach(var id in employeeIds)
-            {
-                // * Skip iteration if the employee is already in the project
-                bool employeeAlreadyInProject = await _context.EmployeeProjects
-                    .AnyAsync(ep => ep.EmployeeId.Equals(id) && ep.ProjectId.Equals(projectId));
-
-                if(employeeAlreadyInProject)
-                {
-                    continue;
-                }
-
-                var relation = new EmployeeProject
-                {
-                    EmployeeId = id,
-                    ProjectId = projectId
-                };
-
-                EmployeesToAdd.Add(relation);
-            }
-
-            if(EmployeesToAdd.Count > 0)
-            {
-                _context.EmployeeProjects.AddRange(EmployeesToAdd);
-            }
-
-            int rowsAffected = await _context.SaveChangesAsync();
-
-            if(rowsAffected.Equals(employeeIds.Count))
-            {
-                string response = "All employees were added successfully";
-                IEnumerable<EmployeeDto> employeesAdded = await _context.Employees
-                    .Where(e => EmployeesToAdd.Select(e => e.EmployeeId).Contains(e.EmployeeId))
-                    .Select(e => new EmployeeDto
-                    {
-                        EmployeeId = e.EmployeeId,
-                        Username = e.Username,
-                        ProfilePicture = e.ProfilePicture,
-                        Role = e.Role,
-                    }).ToListAsync();
-
-                return (response, employeesAdded);
-            }
-            else if (rowsAffected > 0) {
-                string response = "Operation was completed. However, not all employees could be added. Are you trying to add employees that are already working in this project?";
-                IEnumerable<EmployeeDto> employeesAdded = await _context.Employees
-                    // * Explicitly checks for the intersection of IDs between the two lists.
-                    .Where(e => EmployeesToAdd.Select(e => e.EmployeeId).Contains(e.EmployeeId))
-                    .Select(e => new EmployeeDto
-                    {
-                        EmployeeId = e.EmployeeId,
-                        Username = e.Username,
-                        ProfilePicture = e.ProfilePicture,
-                        Role = e.Role,
-                    }).ToListAsync();
-
-                return (response, employeesAdded);
-            }
-            else
-            {
-                string response = "No employees were added. Are you trying to add employees that are already working in this project?";
-                return (response, null);
-            }
+            // * employees = list of integers with employee ids
+            // * "ProjectId", projectId = identifier of what entity we are updating
+            // * IsEmployeeAlreadyInProject return whether or not the employee its already in the project
+            return await _patcherService.AddEmployeesToEntity<EmployeeProject, Project>(employees, "ProjectId", projectId, IsEmployeeAlreadyInProject);
         }
 
         public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images)
@@ -166,6 +93,12 @@ namespace CompanyPMO_.NET.Repository
             project.Images = SelectImages(project.Images);
 
             return project;
+        }
+
+        public async Task<bool> IsEmployeeAlreadyInProject(int employeeId, int projectId)
+        {
+            return await _context.EmployeeProjects
+                .AnyAsync(ep => ep.EmployeeId.Equals(employeeId) && ep.ProjectId.Equals(projectId));
         }
 
         public ICollection<Image> SelectImages(ICollection<Image> images)

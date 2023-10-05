@@ -2,6 +2,7 @@
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
 namespace CompanyPMO_.NET.Repository
@@ -13,6 +14,83 @@ namespace CompanyPMO_.NET.Repository
         public PatcherRepository(ApplicationDbContext context)
         {
             _context = context;
+        }
+
+        public async Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToEntity<TEntity, UEntity>(List<int> employeeIds, string entityName, int entityId, Func<int, int, Task<bool>> isEmployeeAlreadyInEntity) where TEntity : class, new() where UEntity : class
+        {
+            // Check if entity exists (i.e "api/Project/3/add/employees" will check if Project with ID #3 existts)
+            bool entityExists = await _context.Set<UEntity>().FindAsync(entityId) is not null;
+
+            if (!entityExists)
+            {
+                return ("Entity does not exist", null);
+            }
+
+            if (employeeIds.Count is 0)
+            { 
+                return ("No employees were provided.", null);
+            }
+
+            List<TEntity> employeesToAdd = new(); // This is used to update the entity in the database
+            List<(int employeeId, int entityId)> addedEmployees = new(); // This list will be returned at the end of the method
+
+            foreach (var employeeId in employeeIds)
+            {
+                bool isEmployeeIn = await isEmployeeAlreadyInEntity(employeeId, entityId);
+                if (isEmployeeIn)
+                {
+                    continue; // Skip iteration and do not add the employee because he is already in the entity
+                }
+
+                var newEntity = new TEntity();
+
+                var props = typeof(TEntity).GetProperties();
+                foreach (var prop in props)
+                {
+                    if (prop.Name.Equals("RelationId")) continue; // Primary key. Skip iteration
+                    if(prop.Name.Equals("EmployeeId"))
+                    {
+                        prop.SetValue(newEntity, employeeId);
+                        addedEmployees.Add((employeeId, entityId));
+                    }
+                    else if (prop.Name.Equals(entityName))
+                    {
+                        prop.SetValue(newEntity, entityId);
+                    }
+                }
+
+                employeesToAdd.Add(newEntity);
+            }
+
+            _context.Set<TEntity>().AddRange(employeesToAdd);
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            IEnumerable<EmployeeDto> employeesAdded = await _context.Employees
+                .Where(e => addedEmployees.Select(e => e.employeeId).Contains(e.EmployeeId))
+                .Select(e => new EmployeeDto
+                {
+                    EmployeeId = e.EmployeeId,
+                    Username = e.Username,
+                    ProfilePicture = e.ProfilePicture,
+                    Role = e.Role,
+                }).ToListAsync();
+
+            // Check whether all employees were added, some or none and return an appropiate response
+            if (rowsAffected.Equals(employeeIds.Count))
+            {
+                string response = "All employees were added successfully";
+                return (response, employeesAdded);
+            }
+            else if (rowsAffected > 0) {
+                string response = "Operation was completed. However, not all employees could be added. Are you trying to add employees that are already working in this project?";
+                return (response, employeesAdded);
+            }
+            else
+            {
+                string response = "No employees were added. Are you trying to add employees that are already working in this project?";
+                return (response, null);
+            }
         }
 
         public int MinutesUntilTimeArrival(DateTimeOffset? time)
