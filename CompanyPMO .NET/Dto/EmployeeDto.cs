@@ -10,5 +10,8 @@ namespace CompanyPMO_.NET.Dto
         public string? ProfilePicture { get; set; }
         public Tier Tier { get; set; }
         public EmployeeDto? Supervisor { get; set; }
+        public int ProjectCount { get; set; }
+        public int TaskCount { get; set; }
+        public int IssueCount { get; set; }
     }
 }

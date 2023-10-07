@@ -99,5 +99,15 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(company);
         }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("all/withprojects")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<CompanyShowcaseDto>))]
+        public async Task<IActionResult> GetCompaniesThatHaveProjects()
+        {
+            var companies = await _companyService.GetCompaniesThatHaveProjects();
+
+            return Ok(companies);
+        }
     }
 }

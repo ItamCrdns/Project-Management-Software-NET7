@@ -60,6 +60,11 @@ namespace CompanyPMO_.NET.Data
                 .WithMany(e => e.Employees)
                 .HasForeignKey(s => s.SupervisorId);
 
+            modelBuilder.Entity<Project>()
+                .HasOne(c => c.Company)
+                .WithMany(p => p.Projects)
+                .HasForeignKey(c => c.CompanyId);
+
             // Junction table for many to many
 
             modelBuilder.Entity<Employee>()
@@ -91,6 +96,16 @@ namespace CompanyPMO_.NET.Data
                 .HasMany(i => i.Images)
                 .WithOne(c => c.Company)
                 .HasForeignKey(i => i.EntityId);
+
+            modelBuilder.Entity<Company>()
+                .HasMany(e => e.Employees)
+                .WithOne(c => c.Company)
+                .HasForeignKey(c => c.CompanyId);
+
+            modelBuilder.Entity<Project>()
+                .HasOne(p => p.ProjectCreator)
+                .WithMany()
+                .HasForeignKey(p => p.ProjectCreatorId);
         }
     }
 }

@@ -3,6 +3,7 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.Design;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -64,23 +65,51 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<bool> DoesProjectExist(int projectId) => await _context.Projects.AnyAsync(i => i.ProjectId == projectId);
 
-        public async Task<List<Project>> GetAllProjects(int page, int pageSize)
+        public async Task<IEnumerable<ProjectDto>> GetAllProjects(int page, int pageSize)
         {
             int postsToSkip = (page - 1) * pageSize;
 
             var projects = await _context.Projects
                 .OrderByDescending(p => p.Created)
                 .Include(t => t.Images)
+                .Include(c => c.Company)
+                .Include(e => e.Employees)
+                .Include(p => p.ProjectCreator)
                 .Skip(postsToSkip)
                 .Take(pageSize)
                 .ToListAsync();
 
             foreach(var project in projects)
-            {
+            { 
                 project.Images = SelectImages(project.Images);
             }
 
-            return projects;
+            var projectDtos = projects.Select(project => new ProjectDto
+            {
+                ProjectId = project.ProjectId,
+                Name = project.Name,
+                Description = project.Description,
+                Created = project.Created,
+                Finalized = project.Finalized,
+                Priority = project.Priority,
+                Company = new CompanyShowcaseDto
+                {
+                    Name = project.Company.Name,
+                    Logo = project.Company.Logo
+                },
+                Employees = project.Employees.Select(p => new EmployeeShowcaseDto
+                {
+                    Username = p.Username,
+                    ProfilePicture = p.ProfilePicture
+                }).ToList(),
+                ProjectCreator = new EmployeeShowcaseDto
+                {
+                    Username = project.ProjectCreator.Username,
+                    ProfilePicture = project.ProjectCreator.ProfilePicture
+                }
+            }).ToList();
+
+            return projectDtos;
         }
 
         public async Task<Project> GetProjectById(int projectId)
@@ -117,7 +146,6 @@ namespace CompanyPMO_.NET.Repository
 
             return projectImages;
         }
-
 
         public async Task<bool> SetProjectFinalized(int projectId)
         {

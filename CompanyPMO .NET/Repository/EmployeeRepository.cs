@@ -155,11 +155,27 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<EmployeeDto> GetEmployeeByUsername(string username)
         {
-            var employee = await _context.Employees
+            Employee employee = await _context.Employees
                 .Where(e => e.Username.Equals(username))
                 .Include(t => t.Tier)
                 .Include(s => s.Supervisor)
                 .FirstOrDefaultAsync();
+                
+            // Count the number of projects, tasks and issues  the employee is working on
+            int projectCount = await _context.EmployeeProjects
+                .Where(p => p.EmployeeId.Equals(employee.EmployeeId))
+                .Select(i => i.EmployeeId)
+                .CountAsync();
+
+            int taskCount = await _context.EmployeeTasks
+                .Where(t => t.EmployeeId.Equals(employee.EmployeeId))
+                .Select(i => i.EmployeeId)
+                .CountAsync();
+
+            int issueCount = await _context.EmployeeIssues
+                .Where(i => i.EmployeeId.Equals(employee.EmployeeId))
+                .Select(i => i.EmployeeId)
+                .CountAsync();
 
             var employeeDto = new EmployeeDto
             {
@@ -172,7 +188,10 @@ namespace CompanyPMO_.NET.Repository
                 {
                     Username = employee.Supervisor.Username,
                     ProfilePicture = employee.Supervisor.ProfilePicture,
-                } : null
+                } : null,
+                ProjectCount = projectCount,
+                TaskCount = taskCount,
+                IssueCount = issueCount
             };
 
             return employeeDto;

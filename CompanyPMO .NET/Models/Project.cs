@@ -13,10 +13,15 @@ namespace CompanyPMO_.NET.Models
         public DateTimeOffset? Finalized { get; set;}
         [Column("project_creator_id")]
         public int ProjectCreatorId { get; set; }
+        [Column("company_id")]
+        public int CompanyId { get; set; }
+        public int Priority { get; set; }
 
         // Navigation properties
 
         public ICollection<Image>? Images { get; set; }
         public List<Employee>? Employees { get; set; }
+        public Company? Company { get; set; }
+        public Employee ProjectCreator { get; set; }
     }
 }

@@ -6,5 +6,11 @@
         public string? Name { get; set; }
         public string? Description { get; set; }
         public PatchEntityImagesDto? Images { get; set; }
+        public DateTimeOffset Created { get; set; }
+        public DateTimeOffset? Finalized { get; set; }
+        public int Priority { get; set; }
+        public EmployeeShowcaseDto ProjectCreator { get; set; }
+        public CompanyShowcaseDto Company { get; set; }
+        public IEnumerable<EmployeeShowcaseDto>? Employees { get; set; }
     }
 }

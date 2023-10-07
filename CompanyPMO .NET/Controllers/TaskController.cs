@@ -107,6 +107,7 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(employees);
         }
 
+        [Authorize(Policy = "SupervisorOnly")]
         [HttpGet("all")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Models.Task>))]
         public async Task<IActionResult> GetAllTasks(int page, int pageSize)
