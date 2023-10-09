@@ -38,7 +38,7 @@ namespace CompanyPMO_.NET.Repository
             return await _imageService.AddImagesToExistingEntity(projectId, images, "Project", imageCountInProjectEntity);
         }
 
-        public async Task<(Project, List<Image>)> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId)
+        public async Task<(Project, List<Image>)> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees)
         {
             var newProject = new Project
             {
@@ -53,6 +53,25 @@ namespace CompanyPMO_.NET.Repository
             // Save changed because we will need to access the projectId later when adding images
             _context.Add(newProject);
             _ = await _context.SaveChangesAsync();
+
+            List<EmployeeProject> employeesToAdd = new();
+
+            if(employees.Count > 0)
+            {
+                foreach (var employee in employees)
+                {
+                    var newRelation = new EmployeeProject
+                    {
+                        EmployeeId = employee,
+                        ProjectId = newProject.ProjectId
+                    };
+
+                    employeesToAdd.Add(newRelation);
+                }
+
+                _context.AddRange(employeesToAdd);
+                _ = await _context.SaveChangesAsync();
+            }
 
             List<Image> imageCollection = new();
 

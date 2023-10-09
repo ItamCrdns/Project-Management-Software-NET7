@@ -5,7 +5,7 @@ namespace CompanyPMO_.NET.Interfaces
 {
     public interface IProject
     {
-        Task<(Project, List<Image>)> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId);
+        Task<(Project, List<Image>)> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees);
         Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images);
         Task<Project> GetProjectById(int projectId);
         Task<bool> SetProjectFinalized(int projectId);
