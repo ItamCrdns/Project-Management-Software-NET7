@@ -91,6 +91,7 @@ namespace CompanyPMO_.NET.Repository
             {
                 var companyDto = new CompanyShowcaseDto
                 {
+                    CompanyId = company.CompanyId,
                     Name = company.Name,
                     Logo = company.Logo
                 };

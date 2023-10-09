@@ -22,6 +22,6 @@ namespace CompanyPMO_.NET.Models
         public ICollection<Image>? Images { get; set; }
         public List<Employee>? Employees { get; set; }
         public Company? Company { get; set; }
-        public Employee ProjectCreator { get; set; }
+        public Employee? ProjectCreator { get; set; }
     }
 }

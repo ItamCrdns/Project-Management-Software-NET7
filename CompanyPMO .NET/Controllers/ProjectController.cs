@@ -42,11 +42,21 @@ namespace CompanyPMO_.NET.Controllers
         }
 
         [Authorize(Policy = "SupervisorOnly")]
+        [HttpGet("all/groupedbycompany")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<Project>))]
+        public async Task<IActionResult> GetProjectsGroupedByCompany(int page, int pageSize)
+        {
+            var projects = await _projectService.GetProjectsGroupedByCompany(page, pageSize);
+
+            return Ok(projects);
+        }
+
+        [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("new")]
         [ProducesResponseType(200, Type = typeof(Project))]
-        public async Task<IActionResult> NewProject([FromForm] Project project, [FromForm] List<IFormFile>? images)
+        public async Task<IActionResult> NewProject([FromForm] Project project, [FromForm] List<IFormFile>? images, [FromForm] int companyId)
         {
-            var (newProject, imageCollection) = await _projectService.CreateProject(project, await GetUserId(), images);
+            var (newProject, imageCollection) = await _projectService.CreateProject(project, await GetUserId(), images, companyId);
 
             var projectDto = new Project
             {

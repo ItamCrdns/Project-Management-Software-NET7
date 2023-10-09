@@ -3,7 +3,6 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.Design;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -39,7 +38,7 @@ namespace CompanyPMO_.NET.Repository
             return await _imageService.AddImagesToExistingEntity(projectId, images, "Project", imageCountInProjectEntity);
         }
 
-        public async Task<(Project, List<Image>)> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images)
+        public async Task<(Project, List<Image>)> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId)
         {
             var newProject = new Project
             {
@@ -47,6 +46,8 @@ namespace CompanyPMO_.NET.Repository
                 Description = project.Description,
                 Created = DateTimeOffset.UtcNow,
                 ProjectCreatorId = employeeSupervisorId,
+                Priority = project.Priority,
+                CompanyId = companyId
             };
 
             // Save changed because we will need to access the projectId later when adding images
@@ -94,6 +95,7 @@ namespace CompanyPMO_.NET.Repository
                 Priority = project.Priority,
                 Company = new CompanyShowcaseDto
                 {
+                    CompanyId = project.Company.CompanyId,
                     Name = project.Company.Name,
                     Logo = project.Company.Logo
                 },
@@ -122,6 +124,58 @@ namespace CompanyPMO_.NET.Repository
             project.Images = SelectImages(project.Images);
 
             return project;
+        }
+
+        public async Task<Dictionary<string, List<ProjectDto>>> GetProjectsGroupedByCompany(int page, int pageSize)
+        {
+            int entitiesToSkip = (page - 1) * pageSize;
+
+            // * This will load all of the projects to memory
+            var groupedProjects = await _context.Projects
+                .Include(c => c.Company)
+                .Include(e => e.Employees)
+                .Include(p => p.ProjectCreator)
+                .GroupBy(p => p.Company.Name)
+                .ToListAsync();
+            
+            // Create a dictionary to store the grouped projects by their Company Name
+            var result = new Dictionary<string, List<ProjectDto>>();
+
+            foreach (var group in groupedProjects)
+            {
+                var companyName = group.Key;
+                var projects = group.ToList();
+
+                var projectDtos = projects.Select(project => new ProjectDto
+                {
+                    ProjectId = project.ProjectId,
+                    Name = project.Name,
+                    Description = project.Description,
+                    Created = project.Created,
+                    Finalized = project.Finalized,
+                    Priority = project.Priority,
+                    Company = new CompanyShowcaseDto
+                    {
+                        CompanyId = project.Company.CompanyId,
+                        Name = project.Company.Name,
+                        Logo = project.Company.Logo
+                    },
+                    Employees = project.Employees.Select(p => new EmployeeShowcaseDto
+                    {
+                        Username = p.Username,
+                        ProfilePicture = p.ProfilePicture
+                    }).ToList(),
+                    ProjectCreator = new EmployeeShowcaseDto
+                    {
+                        Username = project.ProjectCreator.Username,
+                        ProfilePicture = project.ProjectCreator.ProfilePicture
+                    }
+                }).Skip(entitiesToSkip).Take(pageSize).ToList(); // Skip and take to get only a certain amount of projects by company
+
+                result.Add(companyName, projectDtos);
+            }
+
+            return result;
         }
 
         public async Task<bool> IsEmployeeAlreadyInProject(int employeeId, int projectId)
