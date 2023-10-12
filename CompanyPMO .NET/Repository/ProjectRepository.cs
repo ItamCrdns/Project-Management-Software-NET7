@@ -31,14 +31,14 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images)
         {
-            var project = await GetProjectById(projectId);
+            var project = await GetProjectEntityById(projectId);
 
             int imageCountInProjectEntity = project.Images.Count;
 
             return await _imageService.AddImagesToExistingEntity(projectId, images, "Project", imageCountInProjectEntity);
         }
 
-        public async Task<(Project, List<Image>)> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees)
+        public async Task<int> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees)
         {
             var newProject = new Project
             {
@@ -56,7 +56,7 @@ namespace CompanyPMO_.NET.Repository
 
             List<EmployeeProject> employeesToAdd = new();
 
-            if(employees.Count > 0)
+            if (employees.Count > 0)
             {
                 foreach (var employee in employees)
                 {
@@ -80,7 +80,7 @@ namespace CompanyPMO_.NET.Repository
                 imageCollection = await _imageService.AddImagesToNewEntity(images, newProject.ProjectId, "Project", null);
             }
 
-            return (newProject, imageCollection);
+            return newProject.ProjectId;
         }
 
         public async Task<bool> DoesProjectExist(int projectId) => await _context.Projects.AnyAsync(i => i.ProjectId == projectId);
@@ -133,16 +133,60 @@ namespace CompanyPMO_.NET.Repository
             return projectDtos;
         }
 
-        public async Task<Project> GetProjectById(int projectId)
+        public async Task<ProjectDto> GetProjectById(int projectId)
         {
             var project = await _context.Projects
                 .Where(p => p.ProjectId.Equals(projectId))
                 .Include(t => t.Images)
+                .Include(p => p.ProjectCreator)
+                .Include(c => c.Company)
+                .Include(e => e.Employees)
                 .FirstOrDefaultAsync();
 
-            project.Images = SelectImages(project.Images);
+            var images = project.Images = SelectImages(project.Images);
 
-            return project;
+            ProjectDto projectDto = new()
+            {
+                ProjectId = project.ProjectId,
+                Name = project.Name,
+                Description = project.Description,
+                ImagesCollection = images.Select(i => new ImageDto
+                {
+                    ImageId = i.ImageId,
+                    ImageUrl = i.ImageUrl,
+                    PublicId = i.PublicId,
+                    Created = i.Created
+                }).ToList(),
+                Created = project.Created,
+                Finalized = project.Finalized,
+                Priority = project.Priority,
+                ProjectCreator = new EmployeeShowcaseDto
+                {
+                    Username = project.ProjectCreator.Username,
+                    ProfilePicture = project.ProjectCreator.ProfilePicture
+                },
+                Company = new CompanyShowcaseDto
+                {
+                    CompanyId = project.Company.CompanyId,
+                    Name = project.Company.Name,
+                    Logo = project.Company.Logo
+                },
+                Employees = project.Employees.Select(p => new EmployeeShowcaseDto
+                {
+                    Username = p.Username,
+                    ProfilePicture = p.ProfilePicture
+                }).ToList(),
+            };
+
+            return projectDto;
+        }
+
+        public async Task<Project> GetProjectEntityById(int projectId)
+        {
+            return await _context.Projects
+                .Where(p => p.ProjectId.Equals(projectId))
+                .Include(t => t.Images)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<Dictionary<string, List<ProjectDto>>> GetProjectsGroupedByCompany(int page, int pageSize)

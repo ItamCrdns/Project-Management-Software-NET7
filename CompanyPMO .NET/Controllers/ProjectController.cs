@@ -56,18 +56,9 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(Project))]
         public async Task<IActionResult> NewProject([FromForm] Project project, [FromForm] List<IFormFile>? images, [FromForm] int companyId, [FromForm] List<int> employees)
         {
-            var (newProject, imageCollection) = await _projectService.CreateProject(project, await GetUserId(), images, companyId, employees);
+            int projectId = await _projectService.CreateProject(project, await GetUserId(), images, companyId, employees);
 
-            var projectDto = new Project
-            {
-                ProjectId = newProject.ProjectId,
-                Name = newProject.Name,
-                Description = newProject.Description,
-                Created = newProject.Created,
-                Images = imageCollection
-            };
-
-            return Ok(projectDto);
+            return Ok(projectId);
         }
 
         [Authorize(Policy = "SupervisorOnly")]

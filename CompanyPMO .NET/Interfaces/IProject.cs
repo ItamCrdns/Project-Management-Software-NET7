@@ -5,9 +5,10 @@ namespace CompanyPMO_.NET.Interfaces
 {
     public interface IProject
     {
-        Task<(Project, List<Image>)> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees);
+        Task<int> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees);
         Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images);
-        Task<Project> GetProjectById(int projectId);
+        Task<ProjectDto> GetProjectById(int projectId);
+        Task<Project> GetProjectEntityById(int projectId);
         Task<bool> SetProjectFinalized(int projectId);
         Task<bool> DoesProjectExist(int projectId);
         Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images);

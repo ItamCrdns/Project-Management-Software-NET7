@@ -135,5 +135,15 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(projects);
         }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpGet("all")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        public async Task<IActionResult> GetEmployeesShowcasePaginated(int page, int pageSize)
+        {
+            IEnumerable<EmployeeShowcaseDto> employees = await _employeeService.GetEmployeesShowcasePaginated(page, pageSize);
+
+            return Ok(employees);
+        }
     }
 }

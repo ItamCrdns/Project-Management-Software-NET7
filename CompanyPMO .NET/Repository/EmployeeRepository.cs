@@ -210,6 +210,26 @@ namespace CompanyPMO_.NET.Repository
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<IEnumerable<EmployeeShowcaseDto>> GetEmployeesShowcasePaginated(int page, int pageSize)
+        {
+            int entitiesToSkip = (page - 1) * pageSize;
+
+            List<Employee> employees = await _context.Employees
+                .OrderByDescending(p => p.Username)
+                .Skip(entitiesToSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            IEnumerable<EmployeeShowcaseDto> employeeDtos = employees.Select(employee => new EmployeeShowcaseDto
+            {
+                EmployeeId = employee.EmployeeId,
+                Username = employee.Username,
+                ProfilePicture = employee.ProfilePicture
+            }).ToList();
+
+            return employeeDtos;
+        }
+
         public async Task<IEnumerable<EmployeeDto>> GetEmployeesWorkingInTheSameCompany(string username)
         {
             int companyId = await _context.Employees
