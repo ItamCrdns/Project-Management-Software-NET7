@@ -15,6 +15,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<IEnumerable<Employee>> GetEmployeeBySupervisorId(int supervisorId);
         Employee EmployeeQuery(Employee employee);
         Task<IEnumerable<EmployeeDto>> GetEmployeesWorkingInTheSameCompany(string username);
+        Task<IEnumerable<EmployeeShowcaseDto>> GetEmployeesWorkingInACertainProject(int projectId);
         Task<IEnumerable<ProjectDto>> GetProjectsByEmployeeUsername(string username);
         Task<IEnumerable<EmployeeShowcaseDto>> GetEmployeesShowcasePaginated(int page, int pageSize);
     }

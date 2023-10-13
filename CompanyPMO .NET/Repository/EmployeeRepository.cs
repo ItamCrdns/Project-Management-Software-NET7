@@ -230,6 +230,28 @@ namespace CompanyPMO_.NET.Repository
             return employeeDtos;
         }
 
+        public async Task<IEnumerable<EmployeeShowcaseDto>> GetEmployeesWorkingInACertainProject(int projectId)
+        {
+            // Get a list of the employeeIds that are in a certain project
+            IEnumerable<int> employeeIds = await _context.EmployeeProjects
+                .Where(p => p.ProjectId.Equals(projectId))
+                .Select(i => i.EmployeeId) // * I only need the employee Id
+                .ToListAsync();
+
+            IEnumerable<Employee> employees = await _context.Employees
+                .Where(i => employeeIds.Contains(i.EmployeeId))
+                .ToListAsync();
+
+            IEnumerable<EmployeeShowcaseDto> employeeDtos = employees.Select(employee => new EmployeeShowcaseDto
+            {
+                EmployeeId = employee.EmployeeId,
+                Username = employee.Username,
+                ProfilePicture = employee.ProfilePicture
+            }).ToList();
+
+            return employeeDtos;
+        }
+
         public async Task<IEnumerable<EmployeeDto>> GetEmployeesWorkingInTheSameCompany(string username)
         {
             int companyId = await _context.Employees

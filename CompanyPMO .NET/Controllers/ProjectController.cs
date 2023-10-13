@@ -12,12 +12,14 @@ namespace CompanyPMO_.NET.Controllers
     {
         private readonly IProject _projectService;
         private readonly IUserIdentity _userIdentityService;
+        private readonly IEmployee _employeeService;
         private readonly Lazy<Task<int>> _lazyUserId;
 
-        public ProjectController(IProject projectService, IUserIdentity userIdentityService)
+        public ProjectController(IProject projectService, IUserIdentity userIdentityService, IEmployee employeeService)
         {
             _projectService = projectService;
             _userIdentityService = userIdentityService;
+            _employeeService = employeeService;
             _lazyUserId = new Lazy<Task<int>>(InitializeUserId);
         }
 
@@ -131,6 +133,26 @@ namespace CompanyPMO_.NET.Controllers
             };
 
             return Ok(toReturn);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("company/{companyId}")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<ProjectDto>))]
+        public async Task<IActionResult> GetProjectsByCompanyName(int companyId, int page, int pageSize)
+        {
+            var projects = await _projectService.GetProjectsByCompanyName(companyId, page, pageSize);
+
+            return Ok(projects);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{projectId}/employees")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        public async Task<IActionResult> GetEmployeesWorkingInACertainProject(int projectId)
+        {
+            var employees = await _employeeService.GetEmployeesWorkingInACertainProject(projectId);
+
+            return Ok(employees);
         }
     }
 }

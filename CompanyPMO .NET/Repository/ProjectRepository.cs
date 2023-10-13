@@ -104,31 +104,32 @@ namespace CompanyPMO_.NET.Repository
                 project.Images = SelectImages(project.Images);
             }
 
-            var projectDtos = projects.Select(project => new ProjectDto
-            {
-                ProjectId = project.ProjectId,
-                Name = project.Name,
-                Description = project.Description,
-                Created = project.Created,
-                Finalized = project.Finalized,
-                Priority = project.Priority,
-                Company = new CompanyShowcaseDto
-                {
-                    CompanyId = project.Company.CompanyId,
-                    Name = project.Company.Name,
-                    Logo = project.Company.Logo
-                },
-                Employees = project.Employees.Select(p => new EmployeeShowcaseDto
-                {
-                    Username = p.Username,
-                    ProfilePicture = p.ProfilePicture
-                }).ToList(),
-                ProjectCreator = new EmployeeShowcaseDto
-                {
-                    Username = project.ProjectCreator.Username,
-                    ProfilePicture = project.ProjectCreator.ProfilePicture
-                }
-            }).ToList();
+            var projectDtos = ProjectSelectQuery(projects);
+
+            return projectDtos;
+        }
+
+        public async Task<IEnumerable<ProjectDto>> GetProjectsByCompanyName(int companyId, int page, int pageSize)
+        {
+            int toSkip = (page - 1) * pageSize;
+
+            //int companyId = await _context.Companies
+            //    //.Where(n => EF.Functions.Like(n.Name, $"%{companyName}%"))
+            //    .Where(n => n.Name.Contains(companyName)) // perform a simple substring search
+            //    .Select(i => i.CompanyId)
+            //    .FirstOrDefaultAsync();
+
+            var projects = await _context.Projects
+                .Where(i => i.CompanyId.Equals(companyId))
+                .OrderByDescending(c => c.Created)
+                .Include(c => c.Company)
+                .Include(e => e.Employees)
+                .Include(p => p.ProjectCreator)
+                .Skip(toSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var projectDtos = ProjectSelectQuery(projects);
 
             return projectDtos;
         }
@@ -245,6 +246,37 @@ namespace CompanyPMO_.NET.Repository
         {
             return await _context.EmployeeProjects
                 .AnyAsync(ep => ep.EmployeeId.Equals(employeeId) && ep.ProjectId.Equals(projectId));
+        }
+
+        public ICollection<ProjectDto> ProjectSelectQuery(ICollection<Project> projects)
+        {
+            var projectDtos = projects.Select(project => new ProjectDto
+            {
+                ProjectId = project.ProjectId,
+                Name = project.Name,
+                Description = project.Description,
+                Created = project.Created,
+                Finalized = project.Finalized,
+                Priority = project.Priority,
+                Company = new CompanyShowcaseDto
+                {
+                    CompanyId = project.Company.CompanyId,
+                    Name = project.Company.Name,
+                    Logo = project.Company.Logo
+                },
+                Employees = project.Employees.Select(p => new EmployeeShowcaseDto
+                {
+                    Username = p.Username,
+                    ProfilePicture = p.ProfilePicture
+                }).ToList(),
+                ProjectCreator = new EmployeeShowcaseDto
+                {
+                    Username = project.ProjectCreator.Username,
+                    ProfilePicture = project.ProjectCreator.ProfilePicture
+                }
+            }).ToList();
+
+            return projectDtos;
         }
 
         public ICollection<Image> SelectImages(ICollection<Image> images)
