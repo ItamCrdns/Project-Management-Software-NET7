@@ -230,12 +230,16 @@ namespace CompanyPMO_.NET.Repository
             return employeeDtos;
         }
 
-        public async Task<IEnumerable<EmployeeShowcaseDto>> GetEmployeesWorkingInACertainProject(int projectId)
+        public async Task<IEnumerable<EmployeeShowcaseDto>> GetProjectEmployees(int projectId, int page, int pageSize)
         {
+            int toSkip = (page - 1) * pageSize;
+
             // Get a list of the employeeIds that are in a certain project
             IEnumerable<int> employeeIds = await _context.EmployeeProjects
                 .Where(p => p.ProjectId.Equals(projectId))
                 .Select(i => i.EmployeeId) // * I only need the employee Id
+                .Skip(toSkip)
+                .Take(pageSize)
                 .ToListAsync();
 
             IEnumerable<Employee> employees = await _context.Employees
@@ -350,8 +354,18 @@ namespace CompanyPMO_.NET.Repository
             return employee.LockedEnabled;
         }
 
-        public async Task<bool> RegisterEmployee(EmployeeRegisterDto employee, IFormFile image)
+        public async Task<(string result, bool status)> RegisterEmployee(EmployeeRegisterDto employee, IFormFile image)
         {
+            string username = employee.Username.ToLower();
+
+            bool usernameExists = await _context.Employees
+                .AnyAsync(u => u.Username.Equals(username));
+
+            if(usernameExists)
+            {
+                return ("Username already registered", false);
+            }
+
             string salt = BCrypt.Net.BCrypt.GenerateSalt();
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(employee.Password, salt);
 
@@ -362,7 +376,7 @@ namespace CompanyPMO_.NET.Repository
                 Username = employee.Username,
                 Role = employee.Role,
                 Email = employee.Email,
-                PhoneNumber = employee.PhoneNumber,
+                PhoneNumber = employee.PhoneNumber, 
                 Password = hashedPassword,
                 FirstName = employee.FirstName,
                 LastName = employee.LastName,
@@ -377,12 +391,53 @@ namespace CompanyPMO_.NET.Repository
 
             _context.Add(newEmployee);
 
-            return await _context.SaveChangesAsync() > 0;
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                return ("Employee created", true);
+            }
+            else
+            {
+                return ("Something went wrong", false);
+            }
         }
 
         public Task<(bool updated, Employee)> UpdateEmployee(int employeeId, EmployeeDto employeeDto, IFormFile image)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<Dictionary<string, object>> GetEmployeesByCompanyPaginated(int companyId, int page, int pageSize)
+        {
+            int entitiesToSkip = (page - 1) * pageSize;
+
+            int totalEmployeesCount = await _context.Employees
+                .Where(c => c.CompanyId.Equals(companyId))
+                .CountAsync();
+
+            // Save only what we need
+            List<EmployeeShowcaseDto> employees = await _context.Employees
+                .OrderByDescending(p => p.Username)
+                .Where(c => c.CompanyId.Equals(companyId)) // Filter by only company
+                .Select(employee => new EmployeeShowcaseDto
+                {
+                    EmployeeId = employee.EmployeeId,
+                    Username = employee.Username,
+                    ProfilePicture = employee.ProfilePicture
+                })
+                .Skip(entitiesToSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // Create a dictionary to return both the employees and the total count of employees
+            var response = new Dictionary<string, object>
+            {
+                { "data", employees },
+                { "count", totalEmployeesCount }
+            };
+
+            return response;
         }
     }
 }

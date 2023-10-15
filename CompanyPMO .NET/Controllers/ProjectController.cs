@@ -148,9 +148,9 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}/employees")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
-        public async Task<IActionResult> GetEmployeesWorkingInACertainProject(int projectId)
+        public async Task<IActionResult> GetEmployeesWorkingInACertainProject(int projectId, int page, int pageSize)
         {
-            var employees = await _employeeService.GetEmployeesWorkingInACertainProject(projectId);
+            var employees = await _employeeService.GetProjectEmployees(projectId, page, pageSize);
 
             return Ok(employees);
         }

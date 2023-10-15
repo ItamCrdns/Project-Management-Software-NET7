@@ -72,9 +72,9 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> RegisterEmployee([FromForm] EmployeeRegisterDto employee, [FromForm] IFormFile? profilePicture)
         {
-            bool newEmployee = await _employeeService.RegisterEmployee(employee, profilePicture);
+            var (result, status) = await _employeeService.RegisterEmployee(employee, profilePicture);
 
-            return Ok(new { Created = newEmployee });
+            return Ok(new { Created = status, Message = result });
         }
 
         [Authorize(Policy = "SupervisorOnly")]

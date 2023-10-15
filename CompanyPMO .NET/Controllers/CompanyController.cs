@@ -12,12 +12,14 @@ namespace CompanyPMO_.NET.Controllers
     {
         private readonly ICompany _companyService;
         private readonly IUserIdentity _userIdentityService;
+        private readonly IEmployee _employeeService;
         private readonly Lazy<Task<int>> _lazyUserId;
 
-        public CompanyController(ICompany companyService, IUserIdentity userIdentityService)
+        public CompanyController(ICompany companyService, IUserIdentity userIdentityService, IEmployee employeeService)
         {
             _companyService = companyService;
             _userIdentityService = userIdentityService;
+            _employeeService = employeeService;
             _lazyUserId = new Lazy<Task<int>>(InitializeUserId);
         }
 
@@ -109,5 +111,15 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(companies);
         }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpGet("{companyId}/employees")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        public async Task<IActionResult> GetEmployeesByCompanyId(int companyId, int page, int pageSize)
+        {
+            var employees = await _employeeService.GetEmployeesByCompanyPaginated(companyId, page, pageSize);
+
+            return Ok(employees);
+        }   
     }
 }
