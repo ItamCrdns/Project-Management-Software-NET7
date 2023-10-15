@@ -120,6 +120,16 @@ namespace CompanyPMO_.NET.Controllers
             var employees = await _employeeService.GetEmployeesByCompanyPaginated(companyId, page, pageSize);
 
             return Ok(employees);
-        }   
+        }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpGet("{companyId}/employees/search/{employeeToSearch}")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        public async Task<IActionResult> SearchEmployeesByCompany(int companyId, string employeeToSearch, int page, int pageSize)
+        {
+            var employees = await _employeeService.SearchEmployeesByCompanyPaginated(employeeToSearch, companyId, page, pageSize);
+
+            return Ok(employees);
+        }
     }
 }

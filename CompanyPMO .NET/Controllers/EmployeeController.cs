@@ -119,9 +119,9 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("username/{username}/colleagues")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Employee>))]
-        public async Task<IActionResult> GetEmployeesWorkingInTheSameCompany(string username)
+        public async Task<IActionResult> GetEmployeesWorkingInTheSameCompany(string username, int page, int pageSize)
         {
-            IEnumerable<EmployeeDto> employees = await _employeeService.GetEmployeesWorkingInTheSameCompany(username);
+            IEnumerable<EmployeeDto> employees = await _employeeService.GetEmployeesWorkingInTheSameCompany(username, page, pageSize);
 
             return Ok(employees);
         }

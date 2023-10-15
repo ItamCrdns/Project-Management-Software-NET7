@@ -264,8 +264,10 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<IEnumerable<EmployeeDto>> GetEmployeesWorkingInTheSameCompany(string username)
+        public async Task<IEnumerable<EmployeeDto>> GetEmployeesWorkingInTheSameCompany(string username, int page, int pageSize)
         {
+            int toSkip = (page - 1) * pageSize;
+
             int companyId = await _context.Employees
                 .Where(u => u.Username.Equals(username))
                 .Select(c => c.CompanyId)
@@ -279,6 +281,8 @@ namespace CompanyPMO_.NET.Repository
                     Username = e.Username,
                     ProfilePicture = e.ProfilePicture
                 })
+                .Skip(toSkip)
+                .Take(pageSize)
                 .ToListAsync();
 
             return employees;
@@ -496,6 +500,40 @@ namespace CompanyPMO_.NET.Repository
             }).ToList();
 
             return employeeDtos;
+        }
+
+        public async Task<Dictionary<string, object>> SearchEmployeesByCompanyPaginated(string search, int companyId, int page, int pageSize)
+        {
+            int toSkip = (page - 1) * pageSize;
+
+            // Total count of found employees
+            int totalEmployeesCount = await _context.Employees
+                .Where(c => c.CompanyId.Equals(companyId) && c.Username.Contains(search))
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
+
+            List<EmployeeShowcaseDto> employees = await _context.Employees
+                .OrderByDescending(p => p.Username)
+                .Where(i => i.CompanyId.Equals(companyId) && i.Username.Contains(search)) // Filter ny company and search parameters
+                .Select(employee => new EmployeeShowcaseDto
+                {
+                    EmployeeId = employee.EmployeeId,
+                    Username = employee.Username,
+                    ProfilePicture = employee.ProfilePicture
+                })
+                .Skip(toSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = new Dictionary<string, object>
+            {
+                { "data", employees },
+                { "count", totalEmployeesCount },
+                { "pages", totalPages }
+            };
+
+            return result;
         }
     }
 }
