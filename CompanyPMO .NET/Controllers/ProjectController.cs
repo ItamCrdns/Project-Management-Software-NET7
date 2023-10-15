@@ -154,5 +154,15 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(employees);
         }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{projectId}/employees/search/{employeeToSearch}")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        public async Task<IActionResult> SearchEmployeesWorkingInACertainProject(int projectId, string employeeToSearch, int page, int pageSize)
+        {
+            var employees = await _employeeService.SearchProjectEmployees(employeeToSearch, projectId, page, pageSize);
+
+            return Ok(employees);
+        }
     }
 }

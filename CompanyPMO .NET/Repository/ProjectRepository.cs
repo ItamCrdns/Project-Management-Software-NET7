@@ -146,6 +146,11 @@ namespace CompanyPMO_.NET.Repository
 
             var images = project.Images = SelectImages(project.Images);
 
+            int totalEmployeesCount = await _context.Projects
+                .Where(p => p.ProjectId.Equals(projectId))
+                .SelectMany(e => e.Employees)
+                .CountAsync();
+
             ProjectDto projectDto = new()
             {
                 ProjectId = project.ProjectId,
@@ -163,6 +168,7 @@ namespace CompanyPMO_.NET.Repository
                 Priority = project.Priority,
                 ProjectCreator = new EmployeeShowcaseDto
                 {
+                    EmployeeId = project.ProjectCreator.EmployeeId,
                     Username = project.ProjectCreator.Username,
                     ProfilePicture = project.ProjectCreator.ProfilePicture
                 },
@@ -172,11 +178,13 @@ namespace CompanyPMO_.NET.Repository
                     Name = project.Company.Name,
                     Logo = project.Company.Logo
                 },
+                EmployeeCount = totalEmployeesCount,
                 Employees = project.Employees.Select(p => new EmployeeShowcaseDto
                 {
+                    EmployeeId = p.EmployeeId,
                     Username = p.Username,
                     ProfilePicture = p.ProfilePicture
-                }).ToList(),
+                }).Take(5).ToList(),
             };
 
             return projectDto;

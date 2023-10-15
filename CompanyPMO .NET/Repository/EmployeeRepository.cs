@@ -230,9 +230,15 @@ namespace CompanyPMO_.NET.Repository
             return employeeDtos;
         }
 
-        public async Task<IEnumerable<EmployeeShowcaseDto>> GetProjectEmployees(int projectId, int page, int pageSize)
+        public async Task<Dictionary<string, object>> GetProjectEmployees(int projectId, int page, int pageSize)
         {
             int toSkip = (page - 1) * pageSize;
+
+            int totalEmployeesCount = await _context.EmployeeProjects
+                .Where(p => p.ProjectId.Equals(projectId))
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
 
             // Get a list of the employeeIds that are in a certain project
             IEnumerable<int> employeeIds = await _context.EmployeeProjects
@@ -246,14 +252,16 @@ namespace CompanyPMO_.NET.Repository
                 .Where(i => employeeIds.Contains(i.EmployeeId))
                 .ToListAsync();
 
-            IEnumerable<EmployeeShowcaseDto> employeeDtos = employees.Select(employee => new EmployeeShowcaseDto
-            {
-                EmployeeId = employee.EmployeeId,
-                Username = employee.Username,
-                ProfilePicture = employee.ProfilePicture
-            }).ToList();
+            var employeeDtos = EmployeeShowcaseQuery(employees);
 
-            return employeeDtos;
+            var result = new Dictionary<string, object>
+            {
+                { "data", employeeDtos },
+                { "count", totalEmployeesCount },
+                { "pages", totalPages }
+            };  
+
+            return result;
         }
 
         public async Task<IEnumerable<EmployeeDto>> GetEmployeesWorkingInTheSameCompany(string username)
@@ -433,14 +441,61 @@ namespace CompanyPMO_.NET.Repository
                 .ToListAsync();
 
             // Create a dictionary to return both the employees and the total count of employees
-            var response = new Dictionary<string, object>
+            var result = new Dictionary<string, object>
             {
                 { "data", employees },
                 { "count", totalEmployeesCount },
                 { "pages", totalPages }
             };
 
-            return response;
+            return result;
+        }
+
+        public async Task<Dictionary<string, object>> SearchProjectEmployees(string search, int projectId, int page, int pageSize)
+        {
+            int toSkip = (page - 1) * pageSize;
+
+            // Get a list of ALL the employee ids in the project
+            IEnumerable<int> employeeIds = await _context.EmployeeProjects
+                .Where(p => p.ProjectId.Equals(projectId))
+                .Select(i => i.EmployeeId)
+                .ToListAsync();
+
+            int totalEmployeesCount = await _context.Employees
+                .Where(i => employeeIds.Contains(i.EmployeeId) && i.Username.Contains(search))
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
+
+            // Get a list of the employeeIds that are in a certain project and match the search
+            IEnumerable<Employee> employees = await _context.Employees
+                .Where(i => employeeIds.Contains(i.EmployeeId) && i.Username.Contains(search))
+                .Skip(toSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var employeeDtos = EmployeeShowcaseQuery(employees);
+
+            var result = new Dictionary<string, object>
+            {
+                { "data", employeeDtos },
+                { "count", totalEmployeesCount },
+                { "pages", totalPages }
+            };
+
+            return result;
+        }
+
+        public IEnumerable<EmployeeShowcaseDto> EmployeeShowcaseQuery(IEnumerable<Employee> employees)
+        {
+            IEnumerable<EmployeeShowcaseDto> employeeDtos = employees.Select(employee => new EmployeeShowcaseDto
+            {
+                EmployeeId = employee.EmployeeId,
+                Username = employee.Username,
+                ProfilePicture = employee.ProfilePicture
+            }).ToList();
+
+            return employeeDtos;
         }
     }
 }
