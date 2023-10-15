@@ -416,6 +416,8 @@ namespace CompanyPMO_.NET.Repository
                 .Where(c => c.CompanyId.Equals(companyId))
                 .CountAsync();
 
+            int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
+
             // Save only what we need
             List<EmployeeShowcaseDto> employees = await _context.Employees
                 .OrderByDescending(p => p.Username)
@@ -434,7 +436,8 @@ namespace CompanyPMO_.NET.Repository
             var response = new Dictionary<string, object>
             {
                 { "data", employees },
-                { "count", totalEmployeesCount }
+                { "count", totalEmployeesCount },
+                { "pages", totalPages }
             };
 
             return response;
