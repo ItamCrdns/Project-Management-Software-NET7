@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Models;
+﻿using CompanyPMO_.NET.Dto;
+using CompanyPMO_.NET.Models;
 
 namespace CompanyPMO_.NET.Interfaces
 {
@@ -11,6 +12,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<Models.Task> GetTaskById(int taskId);
         Task<List<Employee>> GetEmployeesWorkingOnTask(int taskId); // Get employees working in a certain task
         Task<List<Models.Task>> GetTasksByProjectId(int projectId);
+        Task<IEnumerable<TaskShowcaseDto>> GetTaskShowcasesByProjectId(int projectId);
         Task<List<Models.Task>> GetTasks(int page, int pageSize);
         ICollection<Image> SelectImages(ICollection<Image> images);
     }

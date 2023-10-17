@@ -1,4 +1,5 @@
 ﻿using CompanyPMO_.NET.Data;
+using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
@@ -140,6 +141,28 @@ namespace CompanyPMO_.NET.Repository
             }
 
             return tasks;
+        }
+
+        public async Task<IEnumerable<TaskShowcaseDto>> GetTaskShowcasesByProjectId(int projectId)
+        {
+           return await _context.Tasks
+                .Where(p => p.ProjectId.Equals(projectId))
+                .Include(i => i.Images)
+                .Include(e => e.Employees)
+                .Select(t => new TaskShowcaseDto
+                {
+                    TaskId = t.TaskId,
+                    Name = t.Name,
+                    Created = t.Created,
+                    StartedWorking = t.StartedWorking,
+                    Finished = t.Finished,
+                    Employees = t.Employees.Select(e => new EmployeeShowcaseDto
+                    {
+                        EmployeeId = e.EmployeeId,
+                        Username = e.Username,
+                        ProfilePicture = e.ProfilePicture
+                    }).ToList(),
+                }).ToListAsync();   
         }
 
         public ICollection<Image> SelectImages(ICollection<Image> images)

@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Interfaces;
+﻿using CompanyPMO_.NET.Dto;
+using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -59,15 +60,6 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(task);
         }
 
-        [HttpGet("project/{projectId}")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Models.Task>))]
-        public async Task<IActionResult> GetTasksByProjectId(int projectId)
-        {
-            var tasks = await _taskService.GetTasksByProjectId(projectId);
-
-            return Ok(tasks);
-        }
-
         [HttpPost("{taskId}/start")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
@@ -115,6 +107,15 @@ namespace CompanyPMO_.NET.Controllers
             var tasks = await _taskService.GetTasks(page, pageSize);
 
             return Ok(tasks);
-        }   
+        }
+
+        [HttpGet("project/{projectId}")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<TaskShowcaseDto>))]
+        public async Task<IActionResult> GetTaskShowcasesByProjectId(int projectId)
+        {
+            var tasks = await _taskService.GetTaskShowcasesByProjectId(projectId);
+
+            return Ok(tasks);
+        }
     }
 }
