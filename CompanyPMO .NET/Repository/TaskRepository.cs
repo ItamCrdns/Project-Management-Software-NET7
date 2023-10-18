@@ -10,11 +10,19 @@ namespace CompanyPMO_.NET.Repository
     {
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
+        private readonly IPatcher _patcherService;
 
-        public TaskRepository(ApplicationDbContext context, IImage imageService)
+        public TaskRepository(ApplicationDbContext context, IImage imageService, IPatcher patcherService)
         {
             _context = context;
             _imageService = imageService;
+            _patcherService = patcherService;
+        }
+
+        public async Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds)
+        {
+            // Later: check if employee its working in the project & company the task is in
+            return await _patcherService.AddEmployeesToEntity<EmployeeTask, Models.Task>(employeeIds, "TaskId", taskId, IsEmployeeAlreadyInTask);
         }
 
         public async Task<(Models.Task, List<Image>)> CreateTask(Models.Task task, int employeeId, int projectId, List<IFormFile>? images)
@@ -39,6 +47,11 @@ namespace CompanyPMO_.NET.Repository
             }
 
             return (newTask, imageCollection);
+        }
+
+        public async Task<bool> DoesTaskExist(int taskId)
+        {
+            return await _context.Tasks.AnyAsync(t => t.TaskId.Equals(taskId));
         }
 
         public async Task<bool> FinishedWorkingOnTask(int userId, int taskId)
@@ -143,9 +156,11 @@ namespace CompanyPMO_.NET.Repository
             return tasks;
         }
 
-        public async Task<IEnumerable<TaskShowcaseDto>> GetTaskShowcasesByProjectId(int projectId)
+        public async Task<IEnumerable<TaskShowcaseDto>> GetTaskShowcasesByProjectId(int projectId, int page, int pageSize)
         {
-           return await _context.Tasks
+            int tasksToSkip = (page - 1) * pageSize;
+
+            return await _context.Tasks
                 .Where(p => p.ProjectId.Equals(projectId))
                 .Include(i => i.Images)
                 .Include(e => e.Employees)
@@ -162,7 +177,16 @@ namespace CompanyPMO_.NET.Repository
                         Username = e.Username,
                         ProfilePicture = e.ProfilePicture
                     }).ToList(),
-                }).ToListAsync();   
+                })
+                .Skip(tasksToSkip)
+                .Take(pageSize)
+                .ToListAsync();   
+        }
+
+        public async Task<bool> IsEmployeeAlreadyInTask(int employeeId, int taskId)
+        {
+            return await _context.EmployeeTasks
+                .AnyAsync(et => et.EmployeeId.Equals(employeeId) && et.TaskId.Equals(taskId));
         }
 
         public ICollection<Image> SelectImages(ICollection<Image> images)

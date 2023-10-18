@@ -151,6 +151,10 @@ namespace CompanyPMO_.NET.Repository
                 .SelectMany(e => e.Employees)
                 .CountAsync();
 
+            int tasksCount = await _context.Tasks
+                .Where(t => t.ProjectId.Equals(projectId))
+                .CountAsync();
+
             ProjectDto projectDto = new()
             {
                 ProjectId = project.ProjectId,
@@ -179,6 +183,7 @@ namespace CompanyPMO_.NET.Repository
                     Logo = project.Company.Logo
                 },
                 EmployeeCount = totalEmployeesCount,
+                TasksCount = tasksCount,
                 Employees = project.Employees.Select(p => new EmployeeShowcaseDto
                 {
                     EmployeeId = p.EmployeeId,

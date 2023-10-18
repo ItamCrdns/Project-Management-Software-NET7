@@ -92,7 +92,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [HttpGet("{taskId}/employees")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Employee>))]
-        public async Task<IActionResult> GetEmployyesWorkingOnATask(int taskId)
+        public async Task<IActionResult> GetEmployeesWorkingOnATask(int taskId)
         {
             var employees = await _taskService.GetEmployeesWorkingOnTask(taskId);
 
@@ -111,11 +111,32 @@ namespace CompanyPMO_.NET.Controllers
 
         [HttpGet("project/{projectId}")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<TaskShowcaseDto>))]
-        public async Task<IActionResult> GetTaskShowcasesByProjectId(int projectId)
+        public async Task<IActionResult> GetTaskShowcasesByProjectId(int projectId, int page, int pageSize)
         {
-            var tasks = await _taskService.GetTaskShowcasesByProjectId(projectId);
+            var tasks = await _taskService.GetTaskShowcasesByProjectId(projectId, page, pageSize);
 
             return Ok(tasks);
+        }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpPost("{taskId}/employees/add")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        public async Task<IActionResult> AddEmployeesToTask(int taskId, [FromForm] List<int> employees)
+        {
+            var (response, employeesAdded) = await _taskService.AddEmployeesToTask(taskId, employees);
+
+            if (response is null)
+            {
+                return BadRequest();
+            }
+
+            var toReturn = new
+            {
+                Status = response,
+                EmployeesAdded = employeesAdded
+            };
+
+            return Ok(toReturn);
         }
     }
 }
