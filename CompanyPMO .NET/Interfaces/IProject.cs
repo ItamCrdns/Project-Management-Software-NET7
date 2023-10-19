@@ -15,6 +15,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images);
         Task<IEnumerable<ProjectDto>> GetAllProjects(int page, int pageSize);
         Task<Dictionary<string, List<ProjectDto>>> GetProjectsGroupedByCompany(int page, int pageSize);
+        Task<Dictionary<string, object>> GetProjectsGroupedByUsername(string username, int page, int pageSize);
         ICollection<Image> SelectImages(ICollection<Image> images);
         ICollection<ProjectDto> ProjectSelectQuery(ICollection<Project> projects);
         Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToProject(int projectId, List<int> employees);

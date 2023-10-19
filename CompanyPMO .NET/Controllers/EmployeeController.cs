@@ -12,11 +12,13 @@ namespace CompanyPMO_.NET.Controllers
     {
         private readonly IEmployee _employeeService;
         private readonly IJwt _jwtService;
+        private readonly IProject _projectService;
 
-        public EmployeeController(IEmployee employeeService, IJwt jwtService)
+        public EmployeeController(IEmployee employeeService, IJwt jwtService, IProject projectService)
         {
             _employeeService = employeeService;
             _jwtService = jwtService;
+            _projectService = projectService;
         }
 
         [AllowAnonymous]
@@ -126,16 +128,6 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(employees);
         }
 
-        [Authorize(Policy = "EmployeesAllowed")]
-        [HttpGet("username/{username}/projects")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Project>))]
-        public async Task<IActionResult> GetProjectsByEmployeeUsername(string username)
-        {
-            IEnumerable<ProjectDto> projects = await _employeeService.GetProjectsByEmployeeUsername(username);
-
-            return Ok(projects);
-        }
-
         [Authorize(Policy = "SupervisorOnly")]
         [HttpGet("all")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
@@ -144,6 +136,16 @@ namespace CompanyPMO_.NET.Controllers
             IEnumerable<EmployeeShowcaseDto> employees = await _employeeService.GetEmployeesShowcasePaginated(page, pageSize);
 
             return Ok(employees);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{username}/projects")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<ProjectDto>))]
+        public async Task<IActionResult> GetProjectsByEmployeeUsername(string username, int page, int pageSize)
+        {
+            var projects = await _projectService.GetProjectsGroupedByUsername(username, page, pageSize);
+
+            return Ok(projects);
         }
     }
 }

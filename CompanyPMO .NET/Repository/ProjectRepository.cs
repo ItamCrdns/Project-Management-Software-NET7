@@ -279,11 +279,13 @@ namespace CompanyPMO_.NET.Repository
                 },
                 Employees = project.Employees.Select(p => new EmployeeShowcaseDto
                 {
+                    EmployeeId = p.EmployeeId,
                     Username = p.Username,
                     ProfilePicture = p.ProfilePicture
                 }).ToList(),
                 ProjectCreator = new EmployeeShowcaseDto
                 {
+                    EmployeeId = project.ProjectCreator.EmployeeId,
                     Username = project.ProjectCreator.Username,
                     ProfilePicture = project.ProjectCreator.ProfilePicture
                 }
@@ -326,6 +328,50 @@ namespace CompanyPMO_.NET.Repository
         public async Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images)
         {
             return await _patcherService.UpdateEntity(employeeId, projectId, projectDto, images, AddImagesToExistingProject, GetProjectById);
+        }
+
+        public async Task<Dictionary<string, object>> GetProjectsGroupedByUsername(string username, int page, int pageSize)
+        {
+            int entitiesToSkip = (page - 1) * pageSize;
+
+            // Get the employee Id based on its username
+            int employeeId = await _context.Employees
+                .Where(e => e.Username.Equals(username))
+                .Select(i => i.EmployeeId)
+                .FirstOrDefaultAsync();
+
+            // * List of the ids of projects the employee is working on (All, could be big but just ints so i dont think its a big deal)
+            List<int> projectIds = await _context.EmployeeProjects
+                .Where(e => e.EmployeeId.Equals(employeeId))
+                .Select(i => i.ProjectId)
+                .ToListAsync();
+
+            int totalProjectsCount = await _context.EmployeeProjects
+                .Where(i => i.EmployeeId.Equals(employeeId))
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalProjectsCount / pageSize);
+
+            // * This will load all of the projects to memory
+            ICollection<Project> projects = await _context.Projects
+                .Where(p => projectIds.Contains(p.ProjectId))
+                .Include(c => c.Company)
+                .Include(e => e.Employees)
+                .Include(p => p.ProjectCreator)
+                .Skip(entitiesToSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var projectDtos = ProjectSelectQuery(projects);
+
+            var result = new Dictionary<string, object>
+            {
+                { "data", projectDtos },
+                { "count", totalProjectsCount },
+                { "pages", totalPages }
+            };
+
+            return result;
         }
     }
 }
