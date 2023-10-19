@@ -2,7 +2,7 @@
 
 namespace CompanyPMO_.NET.Interfaces
 {
-    public interface IPatcher
+    public interface IUtility
     {
         // TEntity = Generic method so it can work (update) different of my database entities.
         // TDto = generic method, will be used to update the entity.

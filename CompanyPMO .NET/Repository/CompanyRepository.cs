@@ -10,13 +10,13 @@ namespace CompanyPMO_.NET.Repository
     {
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
-        private readonly IPatcher _patcherService;
+        private readonly IUtility _utilityService;
 
-        public CompanyRepository(ApplicationDbContext context, IImage imageService, IPatcher patcherService)
+        public CompanyRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService)
         {
             _context = context;
             _imageService = imageService;
-            _patcherService = patcherService;
+            _utilityService = utilityService;
         }
 
         public async Task<(bool created, Company)> AddCompany(int supervisorId, CompanyDto companyDto, List<IFormFile>? images, IFormFile? logoFile)
@@ -128,7 +128,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<(bool updated, CompanyDto)> UpdateCompany(int employeeId, int companyId, CompanyDto companyDto, List<IFormFile>? images)
         {
-            return await _patcherService.UpdateEntity(employeeId, companyId, companyDto, images, AddImagesToExistingCompany, GetCompanyById);
+            return await _utilityService.UpdateEntity(employeeId, companyId, companyDto, images, AddImagesToExistingCompany, GetCompanyById);
         }
     }
 }

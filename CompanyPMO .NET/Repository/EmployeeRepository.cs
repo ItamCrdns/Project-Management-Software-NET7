@@ -10,13 +10,13 @@ namespace CompanyPMO_.NET.Repository
     {
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
-        private readonly IPatcher _patcherService;
+        private readonly IUtility _utilityService;
 
-        public EmployeeRepository(ApplicationDbContext context, IImage imageService, IPatcher patcherService)
+        public EmployeeRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService)
         {
             _context = context;
             _imageService = imageService;
-            _patcherService = patcherService;
+            _utilityService = utilityService;
         }
         public async Task<(AuthenticationResult result, string message, EmployeeDto employee)> AuthenticateEmployee(string username, string password)
         {
@@ -27,7 +27,8 @@ namespace CompanyPMO_.NET.Repository
 
             if (isAccountLocked is true)
             {
-                return (new AuthenticationResult { Blocked = true }, $"Your account has been blocked for {_patcherService.MinutesUntilTimeArrival(employee.LockedUntil)} minutes.", null);
+                var minutes = _utilityService.MinutesUntilTimeArrival(employee.LockedUntil);
+                return (new AuthenticationResult { Blocked = true }, $"Your account has been blocked for {minutes} minutes.", null);
             }
 
             if(!string.IsNullOrEmpty(password))

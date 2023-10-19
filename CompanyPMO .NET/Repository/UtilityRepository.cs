@@ -7,11 +7,11 @@ using System.Text.Json;
 
 namespace CompanyPMO_.NET.Repository
 {
-    public class PatcherRepository : IPatcher
+    public class UtilityRepository : IUtility
     {
         private readonly ApplicationDbContext _context;
 
-        public PatcherRepository(ApplicationDbContext context)
+        public UtilityRepository(ApplicationDbContext context)
         {
             _context = context;
         }

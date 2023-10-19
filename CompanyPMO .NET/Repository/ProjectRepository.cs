@@ -10,13 +10,13 @@ namespace CompanyPMO_.NET.Repository
     {
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
-        private readonly IPatcher _patcherService;
+        private readonly IUtility _utilityService;
 
-        public ProjectRepository(ApplicationDbContext context, IImage imageService, IPatcher patcherService)
+        public ProjectRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService)
         {
             _context = context;
             _imageService = imageService;
-            _patcherService = patcherService;
+            _utilityService = utilityService;
         }
 
         public async Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToProject(int projectId, List<int> employees)
@@ -26,7 +26,7 @@ namespace CompanyPMO_.NET.Repository
             // * employees = list of integers with employee ids
             // * "ProjectId", projectId = identifier of what entity we are updating
             // * IsEmployeeAlreadyInProject return whether or not the employee its already in the project
-            return await _patcherService.AddEmployeesToEntity<EmployeeProject, Project>(employees, "ProjectId", projectId, IsEmployeeAlreadyInProject);
+            return await _utilityService.AddEmployeesToEntity<EmployeeProject, Project>(employees, "ProjectId", projectId, IsEmployeeAlreadyInProject);
         }
 
         public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images)
@@ -327,7 +327,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images)
         {
-            return await _patcherService.UpdateEntity(employeeId, projectId, projectDto, images, AddImagesToExistingProject, GetProjectById);
+            return await _utilityService.UpdateEntity(employeeId, projectId, projectDto, images, AddImagesToExistingProject, GetProjectById);
         }
 
         public async Task<Dictionary<string, object>> GetProjectsGroupedByUsername(string username, int page, int pageSize)

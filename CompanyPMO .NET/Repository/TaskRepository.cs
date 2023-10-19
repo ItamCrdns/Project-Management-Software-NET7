@@ -10,19 +10,19 @@ namespace CompanyPMO_.NET.Repository
     {
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
-        private readonly IPatcher _patcherService;
+        private readonly IUtility _utilityService;
 
-        public TaskRepository(ApplicationDbContext context, IImage imageService, IPatcher patcherService)
+        public TaskRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService)
         {
             _context = context;
             _imageService = imageService;
-            _patcherService = patcherService;
+            _utilityService = utilityService;
         }
 
         public async Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds)
         {
             // Later: check if employee its working in the project & company the task is in
-            return await _patcherService.AddEmployeesToEntity<EmployeeTask, Models.Task>(employeeIds, "TaskId", taskId, IsEmployeeAlreadyInTask);
+            return await _utilityService.AddEmployeesToEntity<EmployeeTask, Models.Task>(employeeIds, "TaskId", taskId, IsEmployeeAlreadyInTask);
         }
 
         public async Task<(Models.Task, List<Image>)> CreateTask(Models.Task task, int employeeId, int projectId, List<IFormFile>? images)
