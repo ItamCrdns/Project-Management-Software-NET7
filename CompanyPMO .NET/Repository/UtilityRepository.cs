@@ -93,6 +93,40 @@ namespace CompanyPMO_.NET.Repository
             }
         }
 
+        public async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEmployeeUsername<TEntity>(string username, string entityName, int page, int pageSize) where TEntity : class, IEmployeeEntity // TEntity is constrained with IEmployeeEntity
+        {
+            // Generic method to return a list of entities that the employee belongs to, its count and the total pages.
+            // Result comes paginated.
+
+            // Get the employeeId from the username. Why? Junction tables store the Id, not the username
+            int employeeId = await _context.Employees
+                .Where(e => e.Username.Equals(username))
+                .Select(e => e.EmployeeId)
+                .FirstOrDefaultAsync();
+
+            // Count the total entities that the employee belongs to
+            int totalEntitiesCount = await _context.Set<TEntity>()
+                .Where(i => i.EmployeeId.Equals(employeeId))
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / pageSize);
+
+            int toSkip = (page - 1) * pageSize;
+            
+            // Use reflection to get the EntityId
+            var entityId = typeof(TEntity).GetProperty(entityName);
+
+            // Returns a list of integers of all the entity ids that the employee belongs to
+            List<int> entityIds = await _context.Set<TEntity>()
+                .Where(i => i.EmployeeId.Equals(employeeId))
+                .Select(e => (int)entityId.GetValue(e))
+                .Skip(toSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (entityIds, totalEntitiesCount, totalPages);
+        }
+
         public int MinutesUntilTimeArrival(DateTimeOffset? time)
         {
             DateTimeOffset currentTime = DateTimeOffset.Now;

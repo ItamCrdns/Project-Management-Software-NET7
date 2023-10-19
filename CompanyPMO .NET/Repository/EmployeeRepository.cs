@@ -506,27 +506,8 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<Dictionary<string, object>> GetProjectsByEmployeeUsername(string username, int page, int pageSize)
         {
-            int toSkip = (page - 1) * pageSize;
-
-            // Materialize employeeId and projectIds into memory and then query the projects
-            int employeeId = await _context.Employees
-                .Where(u => u.Username.Equals(username))
-                .Select(i => i.EmployeeId)
-                .FirstOrDefaultAsync();
-
-            int totalProjectsCount = await _context.EmployeeProjects
-                .Where(i => i.EmployeeId.Equals(employeeId))
-                .Select(p => p.ProjectId)
-                .CountAsync();
-
-            int totalPages = (int)Math.Ceiling((double)totalProjectsCount / pageSize);
-
-            List<int> projectIds = await _context.EmployeeProjects
-                .Where(i => i.EmployeeId.Equals(employeeId))
-                .Select(p => p.ProjectId)
-                .Skip(toSkip)
-                .Take(pageSize)
-                .ToListAsync();
+            // Returns a simple list just to showcase the project
+            var (projectIds, totalProjectsCount, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeProject>(username, "ProjectId", page, pageSize);
 
             List<ProjectShowcaseDto> projects = new();
 

@@ -2,6 +2,11 @@
 
 namespace CompanyPMO_.NET.Interfaces
 {
+    public interface IEmployeeEntity
+    {
+        int EmployeeId { get; set; }
+    }
+
     public interface IUtility
     {
         // TEntity = Generic method so it can work (update) different of my database entities.
@@ -19,12 +24,19 @@ namespace CompanyPMO_.NET.Interfaces
         Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToEntity<TEntity, UEntity>(
             List<int> employeeIds, // List of employees to add
             // Takes two integers as arguments one for the entityId and the other one for the employeeId
-            string entityName, // Entity name used to identify whether its a trask, project or issue
+            string entityName, // Entity name used to identify whether its a task, project or issue
             int entityId,
             Func<int, int, Task<bool>> isEmployeeAlreadyInEntity) // Check if the employee already exists in the entity (i.e employee its already working on a project)
             where TEntity : class, new()
             where UEntity : class;
 
         int MinutesUntilTimeArrival(DateTimeOffset? time); // Relative time function to get how many minutes are there until a certain date
+
+        Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEmployeeUsername<TEntity>(
+            string username,
+            string entityName, // Used to identify whatever the entity its a task, project or issue. We will pass a string "EntityId, TaskId or ProjectId" for example
+            int page,
+            int pageSize)
+            where TEntity : class, IEmployeeEntity;
     }
 }

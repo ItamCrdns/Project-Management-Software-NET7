@@ -332,34 +332,14 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<Dictionary<string, object>> GetProjectsGroupedByUsername(string username, int page, int pageSize)
         {
-            int entitiesToSkip = (page - 1) * pageSize;
+            // Returns a list of actual projects. containing a lot of information
+            var (projectIds, totalProjectsCount, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeProject>(username, "ProjectId", page, pageSize);
 
-            // Get the employee Id based on its username
-            int employeeId = await _context.Employees
-                .Where(e => e.Username.Equals(username))
-                .Select(i => i.EmployeeId)
-                .FirstOrDefaultAsync();
-
-            // * List of the ids of projects the employee is working on (All, could be big but just ints so i dont think its a big deal)
-            List<int> projectIds = await _context.EmployeeProjects
-                .Where(e => e.EmployeeId.Equals(employeeId))
-                .Select(i => i.ProjectId)
-                .ToListAsync();
-
-            int totalProjectsCount = await _context.EmployeeProjects
-                .Where(i => i.EmployeeId.Equals(employeeId))
-                .CountAsync();
-
-            int totalPages = (int)Math.Ceiling((double)totalProjectsCount / pageSize);
-
-            // * This will load all of the projects to memory
             ICollection<Project> projects = await _context.Projects
                 .Where(p => projectIds.Contains(p.ProjectId))
                 .Include(c => c.Company)
                 .Include(e => e.Employees)
                 .Include(p => p.ProjectCreator)
-                .Skip(entitiesToSkip)
-                .Take(pageSize)
                 .ToListAsync();
 
             var projectDtos = ProjectSelectQuery(projects);
