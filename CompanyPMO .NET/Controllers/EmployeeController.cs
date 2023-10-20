@@ -171,7 +171,7 @@ namespace CompanyPMO_.NET.Controllers
         }
 
         [Authorize(Policy = "EmployeesAllowed")]
-        [HttpGet("{username}/tasks")]
+        [HttpGet("{username}/tasks/all")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<TaskShowcaseDto>))]
         public async Task<IActionResult> GetTasksByEmployeeUsername(string username, int page, int pageSize)
         {

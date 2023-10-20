@@ -11,8 +11,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<bool> FinishedWorkingOnTask(int userId, int taskId);
         Task<Models.Task> GetTaskById(int taskId);
         Task<List<Employee>> GetEmployeesWorkingOnTask(int taskId); // Get employees working in a certain task
-        Task<List<Models.Task>> GetTasksByProjectId(int projectId);
-        Task<IEnumerable<TaskShowcaseDto>> GetTaskShowcasesByProjectId(int projectId, int page, int pageSize);
+        Task<Dictionary<string, object>> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize);
         Task<List<Models.Task>> GetTasks(int page, int pageSize);
         ICollection<Image> SelectImages(ICollection<Image> images);
         Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds);
@@ -20,5 +19,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<bool> IsEmployeeAlreadyInTask(int employeeId, int taskId);
         Task<Dictionary<string, object>> GetTasksByEmployeeUsername(string username, int page, int pageSize);
         Task<Dictionary<string, object>> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize);
+        Task<Dictionary<string, object>> GetTasksByProjectId(int projectId, int page, int pageSize);
     }
 }

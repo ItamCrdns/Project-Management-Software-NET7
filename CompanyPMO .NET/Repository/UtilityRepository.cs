@@ -3,6 +3,7 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using System.Text.Json;
 
 namespace CompanyPMO_.NET.Repository
@@ -120,6 +121,49 @@ namespace CompanyPMO_.NET.Repository
             List<int> entityIds = await _context.Set<TEntity>()
                 .Where(i => i.EmployeeId.Equals(employeeId))
                 .Select(e => (int)entityId.GetValue(e))
+                .Skip(toSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (entityIds, totalEntitiesCount, totalPages);
+        }
+
+        public async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEntityId<TEntity>(int entityId, string entityName, string primaryKeyName, int page, int pageSize) where TEntity : class
+        {
+            // The name its kind of redundant but its what it says: it will, for example, return tasks based on the projectId
+
+            var entityProperty = typeof(TEntity).GetProperty(entityName);
+            var primaryKey = typeof(TEntity).GetProperty(primaryKeyName);
+
+            // Use expression tree to build a predicate value for the where clause
+            var parameter = Expression.Parameter(typeof(TEntity), "x");
+
+            // Create the property access expression (x => x.Property)
+            var propertyAccess = Expression.Property(parameter, entityProperty);
+
+            // Create the comparasion expression (x => x.Property EQUALS entityId)
+            var equals = Expression.Equal(propertyAccess, Expression.Constant(entityId));
+
+            // Create a lambda expression (x => x.Property EQUALS entityId)
+            var whereExpression = Expression.Lambda<Func<TEntity, bool>>(equals, parameter);
+
+            // Compile the lambda expression into a delegate
+            //var predicate = lambda.Compile(); //+		System.Linq.Expressions.Expression<TDelegate>.Compile devuelto	{Method = <Internal Error evaluating expression>}	System.Func<CompanyPMO_.NET.Models.Task, bool>
+
+            // Count the total entities that the employee belongs to
+            var totalEntitiesCount = _context.Set<TEntity>()
+                .Where(whereExpression)
+                .Select(x => (int)entityProperty.GetValue(x))
+                .Count();
+
+            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / pageSize);
+
+            int toSkip = (page - 1) * pageSize;
+
+            // Get a list of the entity Ids
+            List<int> entityIds = await _context.Set<TEntity>()
+                .Where(whereExpression)
+                .Select(x => (int)primaryKey.GetValue(x)) // Select the primary key of the entity and return a list of those primary keys
                 .Skip(toSkip)
                 .Take(pageSize)
                 .ToListAsync();

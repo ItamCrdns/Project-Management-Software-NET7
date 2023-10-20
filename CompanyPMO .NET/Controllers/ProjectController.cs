@@ -13,13 +13,15 @@ namespace CompanyPMO_.NET.Controllers
         private readonly IProject _projectService;
         private readonly IUserIdentity _userIdentityService;
         private readonly IEmployee _employeeService;
+        private readonly ITask _taskService;
         private readonly Lazy<Task<int>> _lazyUserId;
 
-        public ProjectController(IProject projectService, IUserIdentity userIdentityService, IEmployee employeeService)
+        public ProjectController(IProject projectService, IUserIdentity userIdentityService, IEmployee employeeService, ITask taskService)
         {
             _projectService = projectService;
             _userIdentityService = userIdentityService;
             _employeeService = employeeService;
+            _taskService = taskService;
             _lazyUserId = new Lazy<Task<int>>(InitializeUserId);
         }
 
@@ -163,6 +165,16 @@ namespace CompanyPMO_.NET.Controllers
             var employees = await _employeeService.SearchProjectEmployees(employeeToSearch, projectId, page, pageSize);
 
             return Ok(employees);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{projectId}/tasks/all")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<Models.Task>))]
+        public async Task<IActionResult> GetTasksByProjectId(int projectId, int page, int pageSize)
+        {
+            var tasks = await _taskService.GetTasksByProjectId(projectId, page, pageSize);
+
+            return Ok(tasks);
         }
     }
 }

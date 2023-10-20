@@ -141,15 +141,17 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<List<Models.Task>> GetTasksByProjectId(int projectId)
+        public async Task<Dictionary<string, object>> GetTasksByProjectId(int projectId, int page, int pageSize)
         {
+            var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEntityId<Models.Task>(projectId, "ProjectId", "TaskId", page, pageSize);
+
             var tasks = await _context.Tasks
-                .Where(p => p.ProjectId.Equals(projectId))
+                .Where(task => taskIds.Contains(task.TaskId))
                 .Include(i => i.Images)
                 .Include(e => e.Employees)
                 .ToListAsync();
 
-            foreach(var task in tasks)
+            foreach (var task in tasks)
             {
                 var tasksImages = task.Images
                     .Where(et => et.EntityType.Equals("Task")) // Client side filtering
@@ -177,25 +179,14 @@ namespace CompanyPMO_.NET.Repository
                 task.Images = tasksImages;
             }
 
-            return tasks;
-        }
+            var result = new Dictionary<string, object>
+            {
+                { "data", tasks },
+                { "count", totalTasksCount },
+                { "pages", totalPages }
+            };
 
-        public async Task<IEnumerable<TaskShowcaseDto>> GetTaskShowcasesByProjectId(int projectId, int page, int pageSize)
-        {
-            int tasksToSkip = (page - 1) * pageSize;
-
-            return await _context.Tasks
-                .Where(p => p.ProjectId.Equals(projectId))
-                .Include(i => i.Images)
-                .Include(e => e.Employees)
-                .Select(t => new TaskShowcaseDto
-                {
-                    TaskId = t.TaskId,
-                    Name = t.Name
-                })
-                .Skip(tasksToSkip)
-                .Take(pageSize)
-                .ToListAsync();   
+            return result;
         }
 
         public async Task<bool> IsEmployeeAlreadyInTask(int employeeId, int taskId)
@@ -244,7 +235,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<Dictionary<string, object>> GetTasksByEmployeeUsername(string username, int page, int pageSize)
         {
-            var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeProject>(username, "TaskId", page, pageSize);
+            var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeTask>(username, "TaskId", page, pageSize);
 
             ICollection<TaskDto> tasks = await _context.Tasks
                 .Where(t => taskIds.Contains(t.TaskId))
@@ -267,6 +258,11 @@ namespace CompanyPMO_.NET.Repository
             };
 
             return result;
+        }
+
+        public Task<Dictionary<string, object>> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize)
+        {
+            throw new NotImplementedException();
         }
     }
 }

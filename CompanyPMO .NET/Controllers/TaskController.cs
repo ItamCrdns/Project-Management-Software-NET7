@@ -109,15 +109,6 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(tasks);
         }
 
-        [HttpGet("project/{projectId}")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<TaskShowcaseDto>))]
-        public async Task<IActionResult> GetTaskShowcasesByProjectId(int projectId, int page, int pageSize)
-        {
-            var tasks = await _taskService.GetTaskShowcasesByProjectId(projectId, page, pageSize);
-
-            return Ok(tasks);
-        }
-
         [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("{taskId}/employees/add")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
