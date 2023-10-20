@@ -18,5 +18,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds);
         Task<bool> DoesTaskExist(int taskId);
         Task<bool> IsEmployeeAlreadyInTask(int employeeId, int taskId);
+        Task<Dictionary<string, object>> GetTasksByEmployeeUsername(string username, int page, int pageSize);
     }
 }

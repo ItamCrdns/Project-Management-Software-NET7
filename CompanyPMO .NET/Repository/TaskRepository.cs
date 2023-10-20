@@ -117,6 +117,29 @@ namespace CompanyPMO_.NET.Repository
             return tasks;
         }
 
+        public async Task<Dictionary<string, object>> GetTasksByEmployeeUsername(string username, int page, int pageSize)
+        {
+            var (taskIds, totalTasksCOunt, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeTask>(username, "TaskId", page, pageSize);
+
+            var tasks = await _context.Tasks
+                .Where(t => taskIds.Contains(t.TaskId))
+                .Select(t => new TaskShowcaseDto
+                {
+                    TaskId = t.TaskId,
+                    Name = t.Name
+                })
+                .ToListAsync();
+
+            var result = new Dictionary<string, object>
+            {
+                { "data", tasks },
+                { "count", totalTasksCOunt },
+                { "pages", totalPages}
+            };
+
+            return result;
+        }
+
         public async Task<List<Models.Task>> GetTasksByProjectId(int projectId)
         {
             var tasks = await _context.Tasks
@@ -167,16 +190,7 @@ namespace CompanyPMO_.NET.Repository
                 .Select(t => new TaskShowcaseDto
                 {
                     TaskId = t.TaskId,
-                    Name = t.Name,
-                    Created = t.Created,
-                    StartedWorking = t.StartedWorking,
-                    Finished = t.Finished,
-                    Employees = t.Employees.Select(e => new EmployeeShowcaseDto
-                    {
-                        EmployeeId = e.EmployeeId,
-                        Username = e.Username,
-                        ProfilePicture = e.ProfilePicture
-                    }).ToList(),
+                    Name = t.Name
                 })
                 .Skip(tasksToSkip)
                 .Take(pageSize)

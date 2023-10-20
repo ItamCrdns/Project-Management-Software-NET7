@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using CompanyPMO_.NET.Interfaces;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CompanyPMO_.NET.Models
 {
-    public class EmployeeTask
+    public class EmployeeTask : IEmployeeEntity
     {
         // Relations table
         [Column("relation_id")]

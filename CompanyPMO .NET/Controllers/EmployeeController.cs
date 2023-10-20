@@ -13,12 +13,14 @@ namespace CompanyPMO_.NET.Controllers
         private readonly IEmployee _employeeService;
         private readonly IJwt _jwtService;
         private readonly IProject _projectService;
+        private readonly ITask _taskService;
 
-        public EmployeeController(IEmployee employeeService, IJwt jwtService, IProject projectService)
+        public EmployeeController(IEmployee employeeService, IJwt jwtService, IProject projectService, ITask taskService)
         {
             _employeeService = employeeService;
             _jwtService = jwtService;
             _projectService = projectService;
+            _taskService = taskService;
         }
 
         [AllowAnonymous]
@@ -146,6 +148,16 @@ namespace CompanyPMO_.NET.Controllers
             var projects = await _projectService.GetProjectsGroupedByUsername(username, page, pageSize);
 
             return Ok(projects);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{username}/tasks")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<TaskShowcaseDto>))]
+        public async Task<IActionResult> GetTasksByEmployeeUsername(string username, int page, int pageSize)
+        {
+            var tasks = await _taskService.GetTasksByEmployeeUsername(username, page, pageSize);
+
+            return Ok(tasks);
         }
     }
 }

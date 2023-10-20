@@ -20,5 +20,6 @@ namespace CompanyPMO_.NET.Interfaces
         ICollection<ProjectDto> ProjectSelectQuery(ICollection<Project> projects);
         Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToProject(int projectId, List<int> employees);
         Task<bool> IsEmployeeAlreadyInProject(int employeeId, int projectId);
+        Task<Dictionary<string, object>> GetProjectsByEmployeeUsername(string username, int page, int pageSize);
     }
 }

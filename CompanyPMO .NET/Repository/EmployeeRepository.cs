@@ -503,37 +503,5 @@ namespace CompanyPMO_.NET.Repository
 
             return result;
         }
-
-        public async Task<Dictionary<string, object>> GetProjectsByEmployeeUsername(string username, int page, int pageSize)
-        {
-            // Returns a simple list just to showcase the project
-            var (projectIds, totalProjectsCount, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeProject>(username, "ProjectId", page, pageSize);
-
-            List<ProjectShowcaseDto> projects = new();
-
-            foreach (var id in projectIds)
-            {
-                var project = await _context.Projects
-                    .Where(p => p.ProjectId.Equals(id))
-                    .Select(p => new ProjectShowcaseDto
-                    {
-                        ProjectId = p.ProjectId,
-                        Name = p.Name,
-                        Priority = p.Priority
-                    })
-                    .FirstOrDefaultAsync();
-
-                projects.Add(project);
-            }
-
-            var result = new Dictionary<string, object>
-            {
-                { "data", projects },
-                { "count", totalProjectsCount },
-                { "pages", totalPages }
-            };
-
-            return result;
-        }
     }
 }

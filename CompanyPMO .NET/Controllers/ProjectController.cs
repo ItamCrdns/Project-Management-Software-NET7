@@ -170,7 +170,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<ProjectShowcaseDto>))]
         public async Task<IActionResult> GetProjectsByEmployeeUsername(string username, int page, int pageSize)
         {
-            var projects = await _employeeService.GetProjectsByEmployeeUsername(username, page, pageSize);
+            var projects = await _projectService.GetProjectsByEmployeeUsername(username, page, pageSize);
 
             return Ok(projects);
         }
