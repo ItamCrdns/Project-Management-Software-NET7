@@ -330,7 +330,7 @@ namespace CompanyPMO_.NET.Repository
             return await _utilityService.UpdateEntity(employeeId, projectId, projectDto, images, AddImagesToExistingProject, GetProjectById);
         }
 
-        public async Task<Dictionary<string, object>> GetProjectsGroupedByUsername(string username, int page, int pageSize)
+        public async Task<Dictionary<string, object>> GetProjectsByEmployeeUsername(string username, int page, int pageSize)
         {
             // Returns a list of actual projects. containing a lot of information
             var (projectIds, totalProjectsCount, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeProject>(username, "ProjectId", page, pageSize);
@@ -354,7 +354,7 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<Dictionary<string, object>> GetProjectsByEmployeeUsername(string username, int page, int pageSize)
+        public async Task<Dictionary<string, object>> GetProjectsShowcaseByEmployeeUsername(string username, int page, int pageSize)
         {
             // Returns a simple list just to showcase the project
             var (projectIds, totalProjectsCount, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeProject>(username, "ProjectId", page, pageSize);

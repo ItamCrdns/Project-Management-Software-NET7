@@ -117,9 +117,10 @@ namespace CompanyPMO_.NET.Repository
             return tasks;
         }
 
-        public async Task<Dictionary<string, object>> GetTasksByEmployeeUsername(string username, int page, int pageSize)
+        public async Task<Dictionary<string, object>> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize)
         {
-            var (taskIds, totalTasksCOunt, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeTask>(username, "TaskId", page, pageSize);
+            // Returns a simple list just to showcase the task
+            var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeTask>(username, "TaskId", page, pageSize);
 
             var tasks = await _context.Tasks
                 .Where(t => taskIds.Contains(t.TaskId))
@@ -133,7 +134,7 @@ namespace CompanyPMO_.NET.Repository
             var result = new Dictionary<string, object>
             {
                 { "data", tasks },
-                { "count", totalTasksCOunt },
+                { "count", totalTasksCount },
                 { "pages", totalPages}
             };
 
@@ -239,6 +240,33 @@ namespace CompanyPMO_.NET.Repository
             }
 
             return false; // Task to update was null
+        }
+
+        public async Task<Dictionary<string, object>> GetTasksByEmployeeUsername(string username, int page, int pageSize)
+        {
+            var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeProject>(username, "TaskId", page, pageSize);
+
+            ICollection<TaskDto> tasks = await _context.Tasks
+                .Where(t => taskIds.Contains(t.TaskId))
+                .Select(t => new TaskDto
+                {
+                    TaskId = t.TaskId,
+                    Name = t.Name,
+                    Description = t.Description,
+                    Created = t.Created,
+                    StartedWorking = t.StartedWorking,
+                    Finished = t.Finished
+                })
+                .ToListAsync();
+
+            var result = new Dictionary<string, object>
+            {
+                { "data", tasks },
+                { "count", totalTasksCount },
+                { "pages", totalPages }
+            };
+
+            return result;
         }
     }
 }

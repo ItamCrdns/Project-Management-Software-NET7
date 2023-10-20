@@ -164,15 +164,5 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(employees);
         }
-
-        [Authorize(Policy = "EmployeesAllowed")]
-        [HttpGet("{username}/projects")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<ProjectShowcaseDto>))]
-        public async Task<IActionResult> GetProjectsByEmployeeUsername(string username, int page, int pageSize)
-        {
-            var projects = await _projectService.GetProjectsByEmployeeUsername(username, page, pageSize);
-
-            return Ok(projects);
-        }
     }
 }

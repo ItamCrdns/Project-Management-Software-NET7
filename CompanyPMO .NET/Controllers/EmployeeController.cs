@@ -141,13 +141,33 @@ namespace CompanyPMO_.NET.Controllers
         }
 
         [Authorize(Policy = "EmployeesAllowed")]
-        [HttpGet("{username}/projects")]
+        [HttpGet("{username}/projects/all")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<ProjectDto>))]
         public async Task<IActionResult> GetProjectsByEmployeeUsername(string username, int page, int pageSize)
         {
-            var projects = await _projectService.GetProjectsGroupedByUsername(username, page, pageSize);
+            var projects = await _projectService.GetProjectsByEmployeeUsername(username, page, pageSize);
 
             return Ok(projects);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{username}/projects/showcase")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<ProjectShowcaseDto>))]
+        public async Task<IActionResult> GetProjectsShowcaseByEmployeeUsername(string username, int page, int pageSize)
+        {
+            var projects = await _projectService.GetProjectsShowcaseByEmployeeUsername(username, page, pageSize);
+
+            return Ok(projects);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{username}/tasks/showcase")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<TaskShowcaseDto>))]
+        public async Task<IActionResult> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize)
+        {
+            var tasks = await _taskService.GetTasksShowcaseByEmployeeUsername(username, page, pageSize);
+
+            return Ok(tasks);
         }
 
         [Authorize(Policy = "EmployeesAllowed")]
