@@ -121,11 +121,21 @@ namespace CompanyPMO_.NET.Controllers
         }
 
         [Authorize(Policy = "EmployeesAllowed")]
-        [HttpGet("username/{username}/colleagues")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Employee>))]
+        [HttpGet("{username}/colleagues")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
         public async Task<IActionResult> GetEmployeesWorkingInTheSameCompany(string username, int page, int pageSize)
         {
-            IEnumerable<EmployeeDto> employees = await _employeeService.GetEmployeesWorkingInTheSameCompany(username, page, pageSize);
+            var employees = await _employeeService.GetEmployeesWorkingInTheSameCompany(username, page, pageSize);
+
+            return Ok(employees);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{username}/colleagues/search/{employeeToSearch}")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        public async Task<IActionResult> SearchEmployeesWorkingInTheSameCompany(string username, string employeeToSearch, int page, int pageSize)
+        {
+            var employees = await _employeeService.SearchEmployeesWorkingInTheSameCompany(employeeToSearch, username, page, pageSize);
 
             return Ok(employees);
         }

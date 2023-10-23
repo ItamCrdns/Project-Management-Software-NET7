@@ -3,6 +3,7 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.Design;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -259,13 +260,14 @@ namespace CompanyPMO_.NET.Repository
             {
                 { "data", employeeDtos },
                 { "count", totalEmployeesCount },
+                { "currentPage", page },
                 { "pages", totalPages }
             };  
 
             return result;
         }
 
-        public async Task<IEnumerable<EmployeeDto>> GetEmployeesWorkingInTheSameCompany(string username, int page, int pageSize)
+        public async Task<Dictionary<string, object>> GetEmployeesWorkingInTheSameCompany(string username, int page, int pageSize)
         {
             int toSkip = (page - 1) * pageSize;
 
@@ -274,19 +276,38 @@ namespace CompanyPMO_.NET.Repository
                 .Select(c => c.CompanyId)
                 .FirstOrDefaultAsync();
 
-            IEnumerable<EmployeeDto> employees = await _context.Employees
-                .Where(c => c.CompanyId.Equals(companyId) && !c.Username.Equals(username)) // Does not equal ugly af syntax
-                .Select(e => new EmployeeDto
+            int totalEmployeesCount = await _context.Employees
+                .Where(c => c.CompanyId.Equals(companyId) && !c.Username.Equals(username)) // Filter by only company and exclude the employee that is making the request
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
+
+            // page and pageSize we pass are null because we want to retrieve all the employees and then do some client side filtering to remove the employee its making the query
+            // discarding the totalEntitiesCount and totalPages because the values coming from them are invalid since they include the employee its making the request (and we should exclude it)
+            var (employeeIds, _, _) = await _utilityService.GetEntitiesByEntityId<Employee>(companyId, "CompanyId", "EmployeeId", null, null);
+
+            IEnumerable<EmployeeShowcaseDto> employees = await _context.Employees
+                .OrderByDescending(p => p.Username)
+                // * Used the employeeIds that we got from our generic method to filter the employees
+                .Where(i => employeeIds.Contains(i.EmployeeId) && !i.Username.Equals(username)) // Exclude the employee that is making the request
+                .Select(employee => new EmployeeShowcaseDto
                 {
-                    EmployeeId = e.EmployeeId,
-                    Username = e.Username,
-                    ProfilePicture = e.ProfilePicture
+                    EmployeeId = employee.EmployeeId,
+                    Username = employee.Username,
+                    ProfilePicture = employee.ProfilePicture
                 })
                 .Skip(toSkip)
                 .Take(pageSize)
                 .ToListAsync();
 
-            return employees;
+            var result = new Dictionary<string, object>
+            {
+                { "data", employees },
+                { "count", totalEmployeesCount },
+                { "pages", totalPages }
+            };
+
+            return result;
         }
 
         public async Task<bool?> IsAccountLocked(string username)
@@ -452,6 +473,7 @@ namespace CompanyPMO_.NET.Repository
             {
                 { "data", employeeDtos },
                 { "count", totalEmployeesCount },
+                { "currentPage", page },
                 { "pages", totalPages }
             };
 
@@ -489,6 +511,45 @@ namespace CompanyPMO_.NET.Repository
                     EmployeeId = employee.EmployeeId,
                     Username = employee.Username,
                     ProfilePicture = employee.ProfilePicture
+                })
+                .Skip(toSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = new Dictionary<string, object>
+            {
+                { "data", employees },
+                { "count", totalEmployeesCount },
+                { "pages", totalPages }
+            };
+
+            return result;
+        }
+
+        public async Task<Dictionary<string, object>> SearchEmployeesWorkingInTheSameCompany(string search, string username, int page, int pageSize)
+        {
+            int toSkip = (page - 1) * pageSize;
+
+            int companyId = await _context.Employees
+                .Where(u => u.Username.Equals(username))
+                .Select(c => c.CompanyId)
+                .FirstOrDefaultAsync();
+
+            int totalEmployeesCount = await _context.Employees
+                .Where(c => c.CompanyId.Equals(companyId) && c.Username.Contains(search))
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
+            var (employeeIds, _, _) = await _utilityService.GetEntitiesByEntityId<Employee>(companyId, "CompanyId", "EmployeeId", null, null);
+
+            IEnumerable<EmployeeShowcaseDto> employees = await _context.Employees
+                .OrderByDescending(p => p.Username)
+                .Where(x => employeeIds.Contains(x.EmployeeId) && x.Username.Contains(search) && !x.Username.Equals(username)) // Exclude the employee that is making the request
+                .Select(employeeIds => new EmployeeShowcaseDto
+                {
+                    EmployeeId = employeeIds.EmployeeId,
+                    Username = employeeIds.Username,
+                    ProfilePicture = employeeIds.ProfilePicture
                 })
                 .Skip(toSkip)
                 .Take(pageSize)

@@ -128,7 +128,7 @@ namespace CompanyPMO_.NET.Repository
             return (entityIds, totalEntitiesCount, totalPages);
         }
 
-        public async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEntityId<TEntity>(int entityId, string entityName, string primaryKeyName, int page, int pageSize) where TEntity : class
+        public async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEntityId<TEntity>(int entityId, string entityName, string primaryKeyName, int? page, int? pageSize) where TEntity : class
         {
             // The name its kind of redundant but its what it says: it will, for example, return tasks based on the projectId
 
@@ -156,16 +156,20 @@ namespace CompanyPMO_.NET.Repository
                 .Select(x => (int)entityProperty.GetValue(x))
                 .Count();
 
-            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / pageSize);
+            // If the pageSize is null, return all the entities
+            int pageValue = page ?? 1;
+            int pageValueSize = pageSize ?? totalEntitiesCount;
 
-            int toSkip = (page - 1) * pageSize;
+            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / pageValueSize);
+
+            int toSkip = (pageValue - 1) * pageValueSize;
 
             // Get a list of the entity Ids
             List<int> entityIds = await _context.Set<TEntity>()
                 .Where(whereExpression)
                 .Select(x => (int)primaryKey.GetValue(x)) // Select the primary key of the entity and return a list of those primary keys
                 .Skip(toSkip)
-                .Take(pageSize)
+                .Take(pageValueSize)
                 .ToListAsync();
 
             return (entityIds, totalEntitiesCount, totalPages);

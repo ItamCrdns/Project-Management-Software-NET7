@@ -1,13 +1,10 @@
 ﻿using CompanyPMO_.NET.Dto;
+using System.Linq.Expressions;
+using System.Reflection.Metadata;
 
 namespace CompanyPMO_.NET.Interfaces
 {
     public interface IEmployeeEntity
-    {
-        int EmployeeId { get; set; }
-    }
-
-    public interface IEmployeeEntityDto
     {
         int EmployeeId { get; set; }
     }
@@ -51,8 +48,9 @@ namespace CompanyPMO_.NET.Interfaces
             int entityId, // The entityId that we are looking for. For example: we want to find tasks by projectId 4, entityId will refer to projectId
             string entityName, // The name of the entity we are looking for. For example: we want to find tasks by projectId 4, entityName will refer to "ProjectId",
             string primaryKeyName, // Refers to the name of the primary key of the table we will be looking for. For example: TaskId, ProjectId, IssueId
-            int page,
-            int pageSize)
+            int? page,
+            int? pageSize
+            )
             where TEntity : class;
     }
 }

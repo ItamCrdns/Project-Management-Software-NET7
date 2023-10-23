@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CompanyPMO_.NET.Models
 {
-    public class Employee
+    public class Employee : IEmployeeEntity
     {
         [Column("employee_id")]
         public int EmployeeId { get; set; }
