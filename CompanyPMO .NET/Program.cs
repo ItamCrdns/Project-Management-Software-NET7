@@ -18,6 +18,7 @@ builder.Services.AddScoped<IProject, ProjectRepository>();
 builder.Services.AddScoped<ITask, TaskRepository>();
 builder.Services.AddScoped<IUserIdentity, UserIdentityRepository>();
 builder.Services.AddScoped<IUtility, UtilityRepository>();
+builder.Services.AddScoped<IIssue, IssueRepository>();
 builder.Services.AddScoped<IJwt, JwtService>();
 
 // Add services to the container.

@@ -163,21 +163,38 @@ namespace CompanyPMO_.NET.Repository
                 .Include(s => s.Supervisor)
                 .FirstOrDefaultAsync();
                 
-            // Count the number of projects, tasks and issues  the employee is working on
-            int projectCount = await _context.EmployeeProjects
+            // Projects user is working on or created
+            int projectsParticipantCount = await _context.EmployeeProjects
                 .Where(p => p.EmployeeId.Equals(employee.EmployeeId))
-                .Select(i => i.EmployeeId)
                 .CountAsync();
 
-            int taskCount = await _context.EmployeeTasks
+            int projectsCreatedCount = await _context.Projects
+                .Where(p => p.ProjectCreatorId.Equals(employee.EmployeeId))
+                .CountAsync();
+
+            int totalProjectsCount = projectsParticipantCount + projectsCreatedCount;
+
+            // Tasks user is working on or created
+            int tasksParticipantCount = await _context.EmployeeTasks
                 .Where(t => t.EmployeeId.Equals(employee.EmployeeId))
-                .Select(i => i.EmployeeId)
                 .CountAsync();
 
-            int issueCount = await _context.EmployeeIssues
-                .Where(i => i.EmployeeId.Equals(employee.EmployeeId))
-                .Select(i => i.EmployeeId)
+            int tasksCreatedCount = await _context.Tasks
+                .Where(t => t.TaskCreatorId.Equals(employee.EmployeeId))
                 .CountAsync();
+
+            int totalTasksCount = tasksParticipantCount + tasksCreatedCount;
+
+            // Issues user is working on or created
+            int issuesParticipantCount = await _context.EmployeeIssues
+                .Where(i => i.EmployeeId.Equals(employee.EmployeeId))
+                .CountAsync();
+
+            int issuesCreatedCount = await _context.Issues
+                .Where(i => i.IssueCreator.Equals(employee.EmployeeId))
+                .CountAsync();
+
+            int totalIssuesCount = issuesParticipantCount + issuesCreatedCount;
 
             var employeeDto = new EmployeeDto
             {
@@ -191,9 +208,15 @@ namespace CompanyPMO_.NET.Repository
                     Username = employee.Supervisor.Username,
                     ProfilePicture = employee.Supervisor.ProfilePicture,
                 } : null,
-                ProjectCount = projectCount,
-                TaskCount = taskCount,
-                IssueCount = issueCount
+                ProjectTotalCount = totalProjectsCount,
+                ProjectsParticipant = projectsParticipantCount,
+                ProjectsCreated = projectsCreatedCount,
+                TaskTotalCount = totalTasksCount,
+                TasksParticipant = tasksParticipantCount,
+                TasksCreated = tasksCreatedCount,
+                IssueTotalCount = totalIssuesCount,
+                IssuesParticipant = issuesParticipantCount,
+                IssuesCreated = issuesCreatedCount
             };
 
             return employeeDto;

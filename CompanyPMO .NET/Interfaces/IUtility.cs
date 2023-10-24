@@ -37,8 +37,8 @@ namespace CompanyPMO_.NET.Interfaces
         Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEmployeeUsername<TEntity>(
             string username,
             string entityName, // Used to identify whatever the entity its a task, project or issue. We will pass a string "EntityId, TaskId or ProjectId" for example
-            int page,
-            int pageSize)
+            int? page,
+            int? pageSize)
             where TEntity : class, IEmployeeEntity;
 
         // Very similar to the method above. But I wanted to have a different logic when trying to retrieve by an entity Id

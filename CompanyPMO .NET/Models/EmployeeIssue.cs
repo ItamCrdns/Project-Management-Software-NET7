@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using CompanyPMO_.NET.Interfaces;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CompanyPMO_.NET.Models
 {
-    public class EmployeeIssue
+    public class EmployeeIssue : IEmployeeEntity
     {
         [Column("relation_id")]
         public int RelationId { get; set; }

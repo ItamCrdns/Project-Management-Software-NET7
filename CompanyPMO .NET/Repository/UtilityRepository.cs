@@ -94,7 +94,7 @@ namespace CompanyPMO_.NET.Repository
             }
         }
 
-        public async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEmployeeUsername<TEntity>(string username, string entityName, int page, int pageSize) where TEntity : class, IEmployeeEntity // TEntity is constrained with IEmployeeEntity
+        public async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEmployeeUsername<TEntity>(string username, string entityName, int? page, int? pageSize) where TEntity : class, IEmployeeEntity // TEntity is constrained with IEmployeeEntity
         {
             // Generic method to return a list of entities that the employee belongs to, its count and the total pages.
             // Result comes paginated.
@@ -110,9 +110,13 @@ namespace CompanyPMO_.NET.Repository
                 .Where(i => i.EmployeeId.Equals(employeeId))
                 .CountAsync();
 
-            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / pageSize);
+            // If the pageSize is null, return all the entities
+            int pageValue = page ?? 1;
+            int pageValueSize = pageSize ?? totalEntitiesCount;
 
-            int toSkip = (page - 1) * pageSize;
+            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / pageValueSize);
+
+            int toSkip = (pageValue - 1) * pageValueSize;
             
             // Use reflection to get the EntityId
             var entityId = typeof(TEntity).GetProperty(entityName);
@@ -122,7 +126,7 @@ namespace CompanyPMO_.NET.Repository
                 .Where(i => i.EmployeeId.Equals(employeeId))
                 .Select(e => (int)entityId.GetValue(e))
                 .Skip(toSkip)
-                .Take(pageSize)
+                .Take(pageValueSize)
                 .ToListAsync();
 
             return (entityIds, totalEntitiesCount, totalPages);

@@ -12,7 +12,7 @@ namespace CompanyPMO_.NET.Models
         [Column("started_working")]
         public DateTimeOffset StartedWorking { get; set; }
         public DateTimeOffset Fixed { get; set; }
-        [Column("issue_creator")]
+        [Column("issue_creator_id")]
         public int IssueCreator { get; set; }
         [Column("task_id")]
         public int TaskId { get; set; }
