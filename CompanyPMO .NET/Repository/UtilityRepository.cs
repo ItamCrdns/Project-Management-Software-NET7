@@ -111,6 +111,7 @@ namespace CompanyPMO_.NET.Repository
                 .CountAsync();
 
             // If the pageSize is null, return all the entities
+            
             int pageValue = page ?? 1;
             int pageValueSize = pageSize ?? totalEntitiesCount;
 
@@ -285,6 +286,67 @@ namespace CompanyPMO_.NET.Repository
             {
                 return (false, dto);
             }
+        }
+
+        async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> IUtility.GetEntitiesEmployeeCreatedOrParticipates<TEntity, UEntity>(string username, string entityNameForEntityCreatorId, string entityIdToSelect, int? page, int? pageSize)
+        {
+            int employeeId = await _context.Employees
+                .Where(e => e.Username.Equals(username))
+                .Select(e => e.EmployeeId)
+                .FirstOrDefaultAsync();
+
+            int TEntityCount = await _context.Set<TEntity>()
+                .Where(i => i.EmployeeId.Equals(employeeId))
+                .CountAsync();
+
+            // Build a predicate value for the where clause of UEntity
+            var parameter = Expression.Parameter(typeof(UEntity), "x");
+            
+            var entityProperty = typeof(TEntity).GetProperty("EmployeeId"); // Always employee Id. This generic method its to get employees so we dont need any other property
+            var entityPropertyJunctionTable = typeof(UEntity).GetProperty(entityNameForEntityCreatorId);
+
+            var propertyAccess = Expression.Property(parameter, entityPropertyJunctionTable);
+            var equals = Expression.Equal(propertyAccess, Expression.Constant(employeeId));
+
+            var whereExpression = Expression.Lambda<Func<UEntity, bool>>(equals, parameter);
+
+            int UEntityCount = await _context.Set<UEntity>()
+                .Where(whereExpression)
+                .CountAsync();
+
+            int totalEntitiesCount = TEntityCount + UEntityCount;
+
+            // Default values for the page and pageSize in case they are null
+            int pageValue = page ?? 1;
+            int pageValueSize = pageSize ?? totalEntitiesCount;
+
+            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / pageValueSize);
+
+            int toSkip = (pageValue - 1) * pageValueSize;
+
+            List<int> entityIds = new();
+
+            var entityIdU = typeof(UEntity).GetProperty(entityIdToSelect);
+            var entityIdT = typeof(TEntity).GetProperty(entityIdToSelect);
+
+            List<int> TEntityIds = await _context.Set<UEntity>()
+                .Where(whereExpression)
+                .Select(e => (int)entityIdU.GetValue(e))
+                .ToListAsync();
+
+            entityIds.AddRange(TEntityIds);
+
+            List<int> UEntityIds = await _context.Set<TEntity>()
+                .Where(i => i.EmployeeId.Equals(employeeId))
+                .Select(e => (int)entityIdT.GetValue(e))
+                .ToListAsync();
+
+            entityIds.AddRange(UEntityIds);
+
+            // Select, join and paginate the entities. And return them so we can use them as we like in different endpoints
+            entityIds = entityIds.Skip(toSkip).Take(pageValueSize).ToList();
+
+            return (entityIds, totalEntitiesCount, totalPages);
         }
     }
 }

@@ -356,10 +356,9 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<Dictionary<string, object>> GetProjectsShowcaseByEmployeeUsername(string username, int page, int pageSize)
         {
-            // Returns a simple list just to showcase the project
-            var (projectIds, totalProjectsCount, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeProject>(username, "ProjectId", page, pageSize);
+            var (projectIds, totalProjectsCount, totalPages) = await _utilityService.GetEntitiesEmployeeCreatedOrParticipates<EmployeeProject, Project>(username, "ProjectCreatorId", "ProjectId", page, pageSize);
 
-            var projects = await _context.Projects
+            ICollection<ProjectShowcaseDto> projects = await _context.Projects
                 .Where(p => projectIds.Contains(p.ProjectId))
                 .Select(p => new ProjectShowcaseDto
                 {

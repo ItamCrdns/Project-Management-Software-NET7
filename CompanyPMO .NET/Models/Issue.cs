@@ -10,10 +10,10 @@ namespace CompanyPMO_.NET.Models
         public string Description { get; set; }
         public DateTimeOffset Created { get; set; }
         [Column("started_working")]
-        public DateTimeOffset StartedWorking { get; set; }
-        public DateTimeOffset Fixed { get; set; }
+        public DateTimeOffset? StartedWorking { get; set; }
+        public DateTimeOffset? Fixed { get; set; }
         [Column("issue_creator_id")]
-        public int IssueCreator { get; set; }
+        public int IssueCreatorId { get; set; }
         [Column("task_id")]
         public int TaskId { get; set; }
 

@@ -121,7 +121,7 @@ namespace CompanyPMO_.NET.Repository
                     Created = issue.Created,
                     StartedWorking = issue.StartedWorking,
                     Fixed = issue.Fixed,
-                    IssueCreator = issue.IssueCreator,
+                    IssueCreatorId = issue.IssueCreatorId,
                     TaskId = issue.TaskId
                 }).ToList()
             };
@@ -191,7 +191,7 @@ namespace CompanyPMO_.NET.Repository
                 .CountAsync();
 
             int issuesCreatedCount = await _context.Issues
-                .Where(i => i.IssueCreator.Equals(employee.EmployeeId))
+                .Where(i => i.IssueCreatorId.Equals(employee.EmployeeId))
                 .CountAsync();
 
             int totalIssuesCount = issuesParticipantCount + issuesCreatedCount;

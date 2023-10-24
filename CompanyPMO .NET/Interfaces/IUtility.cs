@@ -1,6 +1,4 @@
 ﻿using CompanyPMO_.NET.Dto;
-using System.Linq.Expressions;
-using System.Reflection.Metadata;
 
 namespace CompanyPMO_.NET.Interfaces
 {
@@ -52,5 +50,14 @@ namespace CompanyPMO_.NET.Interfaces
             int? pageSize
             )
             where TEntity : class;
+
+        Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesEmployeeCreatedOrParticipates<TEntity, UEntity>(
+            string username,
+            string entityNameForEntityCreatorId, // EntityId of the creator id. Example: EmployeeProject table, entityNameForEntityCreatorId will be "ProjectCreatorId"
+            string entityIdToSelect, // EntityId to select the data from. Example: Project table, entityIdToSelect will be "ProjectId". This will select all of the entityIds and will return them
+            int? page,
+            int? pageSize)
+            where TEntity : class, IEmployeeEntity // TEntity will be used to represent the junction table
+            where UEntity : class; // UEntity will be used to represent the entity itself (i.e Project, Task, Issue)
     }
 }
