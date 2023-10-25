@@ -46,6 +46,16 @@ namespace CompanyPMO_.NET.Controllers
         }
 
         [Authorize(Policy = "SupervisorOnly")]
+        [HttpGet("all/showcase")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<Project>))]
+        public async Task<IActionResult> GetAllProjectsShowcase(int page, int pageSize)
+        {
+            var projects = await _projectService.GetAllProjectsShowcase(page, pageSize);
+
+            return Ok(projects);
+        }
+
+        [Authorize(Policy = "SupervisorOnly")]
         [HttpGet("all/groupedbycompany")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Project>))]
         public async Task<IActionResult> GetProjectsGroupedByCompany(int page, int pageSize)

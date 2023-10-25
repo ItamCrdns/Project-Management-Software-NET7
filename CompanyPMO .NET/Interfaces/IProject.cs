@@ -21,5 +21,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<bool> IsEmployeeAlreadyInProject(int employeeId, int projectId);
         Task<Dictionary<string, object>> GetProjectsByEmployeeUsername(string username, int page, int pageSize);
         Task<Dictionary<string, object>> GetProjectsShowcaseByEmployeeUsername(string username, int page, int pageSize);
+        Task<Dictionary<string, object>> GetAllProjectsShowcase(int page, int pageSize);
     }
 }

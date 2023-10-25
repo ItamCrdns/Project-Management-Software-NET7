@@ -20,5 +20,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<Dictionary<string, object>> GetTasksByEmployeeUsername(string username, int page, int pageSize);
         Task<Dictionary<string, object>> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize);
         Task<Dictionary<string, object>> GetTasksByProjectId(int projectId, int page, int pageSize);
+        Task<Dictionary<string, object>> GetAllTasksShowcase(int page, int pageSize);
     }
 }

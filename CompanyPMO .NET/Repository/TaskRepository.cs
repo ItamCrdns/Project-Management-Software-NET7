@@ -263,5 +263,35 @@ namespace CompanyPMO_.NET.Repository
         {
             throw new NotImplementedException();
         }
+
+        public async Task<Dictionary<string, object>> GetAllTasksShowcase(int page, int pageSize)
+        {
+            // Admin only endpoint. Get all projects without any additional information (showcase only)
+
+            int toSkip = (page - 1) * pageSize;
+            IEnumerable<TaskShowcaseDto> tasks = await _context.Tasks
+                .OrderByDescending(t => t.Created)
+                .Select(t => new TaskShowcaseDto
+                {
+                    TaskId = t.TaskId,
+                    Name = t.Name
+                })
+                .Skip(toSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            int totalTasksCount = await _context.Tasks.CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalTasksCount / pageSize);
+
+            var result = new Dictionary<string, object>
+            {
+                { "data", tasks },
+                { "count", totalTasksCount },
+                { "pages", totalPages }
+            };
+
+            return result;
+        }
     }
 }

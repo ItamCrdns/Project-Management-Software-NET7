@@ -113,12 +113,6 @@ namespace CompanyPMO_.NET.Repository
         {
             int toSkip = (page - 1) * pageSize;
 
-            //int companyId = await _context.Companies
-            //    //.Where(n => EF.Functions.Like(n.Name, $"%{companyName}%"))
-            //    .Where(n => n.Name.Contains(companyName)) // perform a simple substring search
-            //    .Select(i => i.CompanyId)
-            //    .FirstOrDefaultAsync();
-
             var projects = await _context.Projects
                 .Where(i => i.CompanyId.Equals(companyId))
                 .OrderByDescending(c => c.Created)
@@ -367,6 +361,37 @@ namespace CompanyPMO_.NET.Repository
                     Priority = p.Priority
                 })
                 .ToListAsync();
+
+            var result = new Dictionary<string, object>
+            {
+                { "data", projects },
+                { "count", totalProjectsCount },
+                { "pages", totalPages }
+            };
+
+            return result;
+        }
+
+        public async Task<Dictionary<string, object>> GetAllProjectsShowcase(int page, int pageSize)
+        {
+            // Admin only endpoint. Get all projects without any additional information (showcase only)
+
+            int toSkip = (page - 1) * pageSize;
+            IEnumerable<ProjectShowcaseDto> projects = await _context.Projects
+                .OrderByDescending(p => p.Created)
+                .Select(project => new ProjectShowcaseDto
+                {
+                    ProjectId = project.ProjectId,
+                    Name = project.Name,
+                    Priority = project.Priority
+                })
+                .Skip(toSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            int totalProjectsCount = await _context.Projects.CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalProjectsCount / pageSize);
 
             var result = new Dictionary<string, object>
             {
