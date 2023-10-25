@@ -17,6 +17,34 @@ namespace CompanyPMO_.NET.Repository
             _utilityService = utilityService;
         }
 
+        public async Task<Dictionary<string, object>> GetAllIssuesShowcase(int page, int pageSize)
+        {
+            int toSkip = (page - 1) * pageSize;
+            IEnumerable<IssueShowcaseDto> issues = await _context.Issues
+                .OrderByDescending(i => i.Created)
+                .Select(i => new IssueShowcaseDto
+                {
+                    IssueId = i.IssueId,
+                    Name = i.Name
+                })
+                .Skip(toSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            int totalIssuesCount = await _context.Issues.CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalIssuesCount / pageSize);
+
+            var result = new Dictionary<string, object>
+            {
+                { "data", issues },
+                { "count", totalIssuesCount },
+                { "pages", totalPages }
+            };
+
+            return result;
+        }
+
         public async Task<Dictionary<string, object>> GetIssuesShowcaseByEmployeeUsername(string username, int page, int pageSize)
         {
             var (issuesIds, totalIssuesCount, totalPages) = await _utilityService.GetEntitiesEmployeeCreatedOrParticipates<EmployeeIssue, Issue>(username, "IssueCreatorId", "IssueId", page, pageSize);

@@ -111,7 +111,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "SupervisorOnly")]
         [HttpGet("all/showcase")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Models.Task>))]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<TaskShowcaseDto>))]
         public async Task<IActionResult> GetAllTasksShowcase(int page, int pageSize)
         {
             var tasks = await _taskService.GetAllTasksShowcase(page, pageSize);
