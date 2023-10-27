@@ -104,7 +104,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<Models.Task>))]
         public async Task<IActionResult> GetAllTasks(int page, int pageSize)
         {
-            var tasks = await _taskService.GetTasks(page, pageSize);
+            var tasks = await _taskService.GetAllTasks(page, pageSize);
 
             return Ok(tasks);
         }

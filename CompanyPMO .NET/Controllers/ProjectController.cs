@@ -37,7 +37,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "SupervisorOnly")]
         [HttpGet("all")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Project>))]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<ProjectDto>))]
         public async Task<IActionResult> GetAllProjects(int page, int pageSize)
         {
             var projects = await _projectService.GetAllProjects(page, pageSize);

@@ -13,6 +13,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<List<Employee>> GetEmployeesWorkingOnTask(int taskId); // Get employees working in a certain task
         Task<Dictionary<string, object>> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize);
         Task<List<Models.Task>> GetTasks(int page, int pageSize);
+        Task<Dictionary<string, object>> GetAllTasks(int page, int pageSize);
         ICollection<Image> SelectImages(ICollection<Image> images);
         Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds);
         Task<bool> DoesTaskExist(int taskId);
@@ -21,5 +22,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<Dictionary<string, object>> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize);
         Task<Dictionary<string, object>> GetTasksByProjectId(int projectId, int page, int pageSize);
         Task<Dictionary<string, object>> GetAllTasksShowcase(int page, int pageSize);
+        IEnumerable<TaskDto> TaskDtoSelectQuery(ICollection<Models.Task> tasks);
     }
 }

@@ -145,42 +145,18 @@ namespace CompanyPMO_.NET.Repository
             var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEntityId<Models.Task>(projectId, "ProjectId", "TaskId", page, pageSize);
 
             var tasks = await _context.Tasks
+                .OrderByDescending(t => t.Created)
                 .Where(task => taskIds.Contains(task.TaskId))
-                .Include(i => i.Images)
+                .Include(t => t.TaskCreator)
                 .Include(e => e.Employees)
+                .Include(p => p.Project)
                 .ToListAsync();
 
-            foreach (var task in tasks)
-            {
-                var tasksImages = task.Images
-                    .Where(et => et.EntityType.Equals("Task")) // Client side filtering
-                    .Select(i => new Image
-                {
-                    ImageId = i.ImageId,
-                    EntityType = i.EntityType,
-                    EntityId = i.EntityId,
-                    ImageUrl = i.ImageUrl,
-                    PublicId = i.PublicId
-                }).ToList();
-
-                var tasksEmployes = task.Employees
-                    .Select(e => new Employee
-                {
-                    EmployeeId = e.EmployeeId,
-                    Username = e.Username,
-                    Role = e.Role,
-                    ProfilePicture = e.ProfilePicture,
-                    FirstName = e.FirstName,
-                    LastName = e.LastName
-                }).ToList();
-
-                task.Employees = tasksEmployes;
-                task.Images = tasksImages;
-            }
+            var taskDtos = TaskDtoSelectQuery(tasks);
 
             var result = new Dictionary<string, object>
             {
-                { "data", tasks },
+                { "data", taskDtos },
                 { "count", totalTasksCount },
                 { "pages", totalPages }
             };
@@ -292,6 +268,68 @@ namespace CompanyPMO_.NET.Repository
             };
 
             return result;
+        }
+
+        public async Task<Dictionary<string, object>> GetAllTasks(int page, int pageSize)
+        {
+            int toSkip = (page - 1) * pageSize;
+
+            var tasks = await _context.Tasks
+                .OrderByDescending(t => t.Created)
+                .Include(e => e.Employees)
+                .Include(t => t.TaskCreator)
+                .Include(p => p.Project)
+                .Skip(toSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            int totalTasksCount = await _context.Tasks.CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalTasksCount / pageSize);
+
+            var taskDtos = TaskDtoSelectQuery(tasks);
+
+            var result = new Dictionary<string, object>
+            {
+                { "data", taskDtos },
+                { "count", totalTasksCount },
+                { "pages", totalPages }
+            };
+
+            return result;
+        }
+
+        public IEnumerable<TaskDto> TaskDtoSelectQuery(ICollection<Models.Task> tasks)
+        {
+            var taskDtos = tasks.Select(task => new TaskDto
+            {
+                TaskId = task.TaskId,
+                Name = task.Name,
+                Description = task.Description,
+                Created = task.Created,
+                StartedWorking = task.StartedWorking,
+                Finished = task.Finished,
+                TaskCreator = new EmployeeShowcaseDto
+                {
+                    EmployeeId = task.TaskCreator.EmployeeId,
+                    Username = task.TaskCreator.Username,
+                    ProfilePicture = task.TaskCreator.ProfilePicture
+                },
+                Employees = task.Employees.Select(employee => new EmployeeShowcaseDto
+                {
+                    EmployeeId = employee.EmployeeId,
+                    Username = employee.Username,
+                    ProfilePicture = employee.ProfilePicture,
+                }).ToList(),
+                Project = new ProjectShowcaseDto
+                {
+                    ProjectId = task.Project.ProjectId,
+                    Name = task.Project.Name,
+                    Priority = task.Project.Priority
+                }
+            });
+
+            return taskDtos;
         }
     }
 }

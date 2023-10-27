@@ -111,6 +111,16 @@ namespace CompanyPMO_.NET.Data
                 .HasOne(p => p.ProjectCreator)
                 .WithMany()
                 .HasForeignKey(p => p.ProjectCreatorId);
+
+            modelBuilder.Entity<Models.Task>()
+                .HasOne(t => t.TaskCreator)
+                .WithMany()
+                .HasForeignKey(t => t.TaskCreatorId);
+
+            modelBuilder.Entity<Models.Task>()
+                .HasOne(p => p.Project)
+                .WithMany()
+                .HasForeignKey(p => p.ProjectId);
         }
     }
 }

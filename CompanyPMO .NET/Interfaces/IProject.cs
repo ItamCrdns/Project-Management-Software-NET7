@@ -13,7 +13,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<bool> SetProjectFinalized(int projectId);
         Task<bool> DoesProjectExist(int projectId);
         Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images);
-        Task<IEnumerable<ProjectDto>> GetAllProjects(int page, int pageSize);
+        Task<Dictionary<string, object>> GetAllProjects(int page, int pageSize);
         Task<Dictionary<string, List<ProjectDto>>> GetProjectsGroupedByCompany(int page, int pageSize);
         ICollection<Image> SelectImages(ICollection<Image> images);
         ICollection<ProjectDto> ProjectSelectQuery(ICollection<Project> projects);

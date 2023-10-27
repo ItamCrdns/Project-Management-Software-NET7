@@ -85,28 +85,33 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<bool> DoesProjectExist(int projectId) => await _context.Projects.AnyAsync(i => i.ProjectId == projectId);
 
-        public async Task<IEnumerable<ProjectDto>> GetAllProjects(int page, int pageSize)
+        public async Task<Dictionary<string, object>> GetAllProjects(int page, int pageSize)
         {
-            int postsToSkip = (page - 1) * pageSize;
+            int toSkip = (page - 1) * pageSize;
 
             var projects = await _context.Projects
                 .OrderByDescending(p => p.Created)
-                .Include(t => t.Images)
                 .Include(c => c.Company)
                 .Include(e => e.Employees)
                 .Include(p => p.ProjectCreator)
-                .Skip(postsToSkip)
+                .Skip(toSkip)
                 .Take(pageSize)
                 .ToListAsync();
 
-            foreach(var project in projects)
-            { 
-                project.Images = SelectImages(project.Images);
-            }
+            int totalProjectsCount = await _context.Projects.CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalProjectsCount / pageSize);
 
             var projectDtos = ProjectSelectQuery(projects);
 
-            return projectDtos;
+            var result = new Dictionary<string, object>
+            {
+                { "data", projectDtos },
+                { "count", totalProjectsCount },
+                { "pages", totalPages }
+            };
+
+            return result;
         }
 
         public async Task<IEnumerable<ProjectDto>> GetProjectsByCompanyName(int companyId, int page, int pageSize)
@@ -327,7 +332,7 @@ namespace CompanyPMO_.NET.Repository
         public async Task<Dictionary<string, object>> GetProjectsByEmployeeUsername(string username, int page, int pageSize)
         {
             // Returns a list of actual projects. containing a lot of information
-            var (projectIds, totalProjectsCount, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeProject>(username, "ProjectId", page, pageSize);
+            var (projectIds, totalProjectsCount, totalPages) = await _utilityService.GetEntitiesEmployeeCreatedOrParticipates<EmployeeProject, Project>(username, "ProjectCreatorId", "ProjectId", page, pageSize);
 
             ICollection<Project> projects = await _context.Projects
                 .Where(p => projectIds.Contains(p.ProjectId))

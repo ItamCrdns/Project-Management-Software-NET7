@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using CompanyPMO_.NET.Models;
 
 namespace CompanyPMO_.NET.Dto
 {
@@ -10,5 +10,8 @@ namespace CompanyPMO_.NET.Dto
         public DateTimeOffset Created { get; set; }
         public DateTimeOffset? StartedWorking { get; set; }
         public DateTimeOffset? Finished { get; set; }
+        public EmployeeShowcaseDto TaskCreator { get; set; }
+        public List<EmployeeShowcaseDto>? Employees { get; set; }
+        public ProjectShowcaseDto Project { get; set; } // Not nullable. All tasks should have a project
     }
 }
