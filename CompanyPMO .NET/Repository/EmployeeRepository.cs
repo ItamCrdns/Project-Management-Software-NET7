@@ -3,7 +3,6 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.Design;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -586,6 +585,21 @@ namespace CompanyPMO_.NET.Repository
             };
 
             return result;
+        }
+
+        public async Task<TierDto> GetEmployeeTier(int employeeId)
+        {
+            var tier = await _context.Employees
+                .Where(e => e.EmployeeId.Equals(employeeId))
+                .Select(t => new TierDto
+                {
+                    TierId = t.Tier.TierId,
+                    Name = t.Tier.Name,
+                    Duty = t.Tier.Duty
+                })
+                .FirstOrDefaultAsync();
+
+            return tier;
         }
     }
 }

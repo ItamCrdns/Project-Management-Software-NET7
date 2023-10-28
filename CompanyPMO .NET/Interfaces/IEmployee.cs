@@ -22,5 +22,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<Dictionary<string, object>> GetEmployeesByCompanyPaginated(int companyId, int page, int pageSize);
         Task<Dictionary<string, object>> SearchEmployeesByCompanyPaginated(string search, int companyId, int page, int pageSize);
         IEnumerable<EmployeeShowcaseDto> EmployeeShowcaseQuery(IEnumerable<Employee> employees);
+        Task<TierDto> GetEmployeeTier(int employeeId);
     }
 }

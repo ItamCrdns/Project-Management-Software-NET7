@@ -15,14 +15,28 @@ namespace CompanyPMO_.NET.Controllers
         private readonly IProject _projectService;
         private readonly ITask _taskService;
         private readonly IIssue _issueService;
+        private readonly IUserIdentity _userIdentityService;
+        private readonly Lazy<Task<int>> _lazyUserId;
 
-        public EmployeeController(IEmployee employeeService, IJwt jwtService, IProject projectService, ITask taskService, IIssue issueService)
+        public EmployeeController(IEmployee employeeService, IJwt jwtService, IProject projectService, ITask taskService, IIssue issueService, IUserIdentity userIdentityService)
         {
             _employeeService = employeeService;
             _jwtService = jwtService;
             _projectService = projectService;
             _taskService = taskService;
             _issueService = issueService;
+            _userIdentityService = userIdentityService;
+            _lazyUserId = new Lazy<Task<int>>(InitializeUserId);
+        }
+
+        private async Task<int> InitializeUserId()
+        {
+            return await _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+        }
+
+        private async Task<int> GetUserId()
+        {
+            return await _lazyUserId.Value;
         }
 
         [AllowAnonymous]
@@ -200,6 +214,18 @@ namespace CompanyPMO_.NET.Controllers
             var issues = await _issueService.GetIssuesShowcaseByEmployeeUsername(username, page, pageSize);
 
             return Ok(issues);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("me/tier")]
+        [ProducesResponseType(200, Type = typeof(Employee))]
+        public async Task<IActionResult> GetEmployeeByIdForClaims()
+        {
+            int employeeId = await GetUserId(); // * Get the employee Id from the cookie
+
+            TierDto tier = await _employeeService.GetEmployeeTier(employeeId);
+
+            return Ok(tier);
         }
     }
 }
