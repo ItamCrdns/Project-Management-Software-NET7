@@ -21,6 +21,7 @@ builder.Services.AddScoped<IUserIdentity, UserIdentityRepository>();
 builder.Services.AddScoped<IUtility, UtilityRepository>();
 builder.Services.AddScoped<IIssue, IssueRepository>();
 builder.Services.AddScoped<IJwt, JwtService>();
+builder.Services.AddScoped<ILatestStuff, LatestStuffRepository>();
 
 // Add services to the container.
 

@@ -601,5 +601,15 @@ namespace CompanyPMO_.NET.Repository
 
             return tier;
         }
+
+        public Task<string> GetEmployeeUsernameById(int employeeId)
+        {
+            var username = _context.Employees
+                .Where(e => e.EmployeeId.Equals(employeeId))
+                .Select(u => u.Username)
+                .FirstOrDefaultAsync();
+
+            return username;
+        }
     }
 }

@@ -227,5 +227,20 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(tier);
         }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("me")]
+        [ProducesResponseType(200, Type = typeof(EmployeeDto))]
+        public async Task<IActionResult> GetMyEmployee()
+        {
+            int employeeId = await GetUserId(); // * Get the employee Id from the cookie
+
+            // Get the username because im lazy
+            string username = await _employeeService.GetEmployeeUsernameById(employeeId);
+
+            EmployeeDto employee = await _employeeService.GetEmployeeByUsername(username);
+
+            return Ok(employee);
+        }
     }
 }
