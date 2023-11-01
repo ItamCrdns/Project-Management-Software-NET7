@@ -47,7 +47,8 @@ namespace CompanyPMO_.NET.Repository
                 Created = DateTimeOffset.UtcNow,
                 ProjectCreatorId = employeeSupervisorId,
                 Priority = project.Priority,
-                CompanyId = companyId
+                CompanyId = companyId,
+                ExpectedDeliveryDate = project.ExpectedDeliveryDate
             };
 
             // Save changed because we will need to access the projectId later when adding images
@@ -168,6 +169,8 @@ namespace CompanyPMO_.NET.Repository
                 }).ToList(),
                 Created = project.Created,
                 Finalized = project.Finalized,
+                ExpectedDeliveryDate = project.ExpectedDeliveryDate,
+                Lifecycle = project.Lifecycle,
                 Priority = project.Priority,
                 ProjectCreator = new EmployeeShowcaseDto
                 {

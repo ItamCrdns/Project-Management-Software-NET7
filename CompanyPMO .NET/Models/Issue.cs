@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using CompanyPMO_.NET.Dto;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CompanyPMO_.NET.Models
 {
@@ -19,6 +20,8 @@ namespace CompanyPMO_.NET.Models
 
         // Navigation properties
 
-        public List<Employee> Employees { get; set; }
+        public List<Employee>? Employees { get; set; }
+        public Employee IssueCreator { get; set; }
+        public Task Task { get; set; }
     }
 }

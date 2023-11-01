@@ -1,5 +1,4 @@
-﻿using CompanyPMO_.NET.Dto;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CompanyPMO_.NET.Models
 {
@@ -16,6 +15,9 @@ namespace CompanyPMO_.NET.Models
         [Column("company_id")]
         public int CompanyId { get; set; }
         public int Priority { get; set; }
+        [Column("expected_delivery_date")]
+        public DateTimeOffset? ExpectedDeliveryDate { get; set; }
+        public string? Lifecycle { get; set; }
 
         // Navigation properties
 

@@ -11,5 +11,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<bool> DoesCompanyExist(int companyId);
         Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingCompany(int companyId, List<IFormFile>? images);
         Task<IEnumerable<CompanyShowcaseDto>> GetCompaniesThatHaveProjects();
+        Task<IEnumerable<CompanyShowcaseDto>> GetAllCompanies();
     }
 }

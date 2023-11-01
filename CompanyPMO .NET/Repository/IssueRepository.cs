@@ -17,6 +17,36 @@ namespace CompanyPMO_.NET.Repository
             _utilityService = utilityService;
         }
 
+        public async Task<Dictionary<string, object>> GetAllIssues(int page, int pageSize)
+        {
+            int toSkip = (page - 1) * pageSize;
+
+            var issues = await _context.Issues
+                .OrderByDescending(i => i.IssueId)
+                .Include(i => i.IssueCreator)
+                .Include(i => i.Employees)
+                .Include(i => i.Task)
+                .Skip(toSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            int totalIssuesCount = await _context.Issues.CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalIssuesCount / pageSize);
+
+            var issueDtos = IssueSelectQuery(issues);
+
+            var result = new Dictionary<string, object>
+            {
+                { "data", issueDtos },
+                { "count", totalIssuesCount },
+                { "pages", totalPages }
+            };
+
+            return result;
+
+        }
+
         public async Task<Dictionary<string, object>> GetAllIssuesShowcase(int page, int pageSize)
         {
             int toSkip = (page - 1) * pageSize;
@@ -67,6 +97,35 @@ namespace CompanyPMO_.NET.Repository
             };
 
             return result;
+        }
+
+        public ICollection<IssueDto> IssueSelectQuery(ICollection<Issue> issues)
+        {
+            var issueDtos = issues.Select(issue => new IssueDto
+            {
+                IssueId = issue.IssueId,
+                Name = issue.Name,
+                Created = issue.Created,
+                Employees = issue.Employees.Select(employee => new EmployeeShowcaseDto
+                {
+                    EmployeeId = employee.EmployeeId,
+                    Username = employee.Username,
+                    ProfilePicture = employee.ProfilePicture
+                }).ToList(),
+                IssueCreator = new EmployeeShowcaseDto
+                {
+                    EmployeeId = issue.IssueCreator.EmployeeId,
+                    Username = issue.IssueCreator.Username,
+                    ProfilePicture = issue.IssueCreator.ProfilePicture
+                },
+                Task = new TaskShowcaseDto
+                {
+                    TaskId = issue.Task.TaskId,
+                    Name = issue.Task.Name
+                }
+            }).ToList();
+
+            return issueDtos;
         }
     }
 }

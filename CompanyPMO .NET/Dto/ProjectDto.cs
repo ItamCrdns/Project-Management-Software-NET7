@@ -8,6 +8,8 @@
         public PatchEntityImagesDto? Images { get; set; }
         public DateTimeOffset Created { get; set; }
         public DateTimeOffset? Finalized { get; set; }
+        public DateTimeOffset? ExpectedDeliveryDate { get; set; }
+        public string? Lifecycle { get; set; }
         public int Priority { get; set; }
         public EmployeeShowcaseDto ProjectCreator { get; set; }
         public CompanyShowcaseDto Company { get; set; }

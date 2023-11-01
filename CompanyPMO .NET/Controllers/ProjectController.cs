@@ -101,7 +101,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}")]
-        [ProducesResponseType(200, Type = typeof(Project))]
+        [ProducesResponseType(200, Type = typeof(ProjectDto))]
         public async Task<IActionResult> GetProjectById(int projectId)
         {
             var project = await _projectService.GetProjectById(projectId);

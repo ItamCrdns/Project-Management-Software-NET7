@@ -25,5 +25,15 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(issues);
         }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpGet("all")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<IssueDto>))]
+        public async Task<IActionResult> GetAllIssues(int page, int pageSize)
+        {
+            var issues = await _issueService.GetAllIssues(page, pageSize);
+
+            return Ok(issues);
+        }
     }
 }

@@ -74,6 +74,20 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<bool> DoesCompanyExist(int companyId) => await _context.Companies.AnyAsync(c => c.CompanyId.Equals(companyId));
 
+        public async Task<IEnumerable<CompanyShowcaseDto>> GetAllCompanies()
+        {
+            IEnumerable<CompanyShowcaseDto> companies = await _context.Companies
+                .Select(company => new CompanyShowcaseDto
+                {
+                    CompanyId = company.CompanyId,
+                    Name = company.Name,
+                    Logo = company.Logo
+                })
+                .ToListAsync();
+
+            return companies;
+        }
+
         public async Task<IEnumerable<CompanyShowcaseDto>> GetCompaniesThatHaveProjects()
         {
             // * List of company ids that have projects

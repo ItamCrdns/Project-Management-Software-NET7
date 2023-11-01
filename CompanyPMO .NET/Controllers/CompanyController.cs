@@ -112,6 +112,16 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(companies);
         }
 
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("all")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<CompanyShowcaseDto>))]
+        public async Task<IActionResult> GetAllCompanies()
+        {
+            var companies = await _companyService.GetAllCompanies();
+
+            return Ok(companies);
+        }
+
         [Authorize(Policy = "SupervisorOnly")]
         [HttpGet("{companyId}/employees")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
