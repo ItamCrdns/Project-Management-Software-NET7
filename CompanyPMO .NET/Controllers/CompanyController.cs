@@ -55,6 +55,21 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(returnedCompany);
         }
 
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpPost("new/nameonly")]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> CreateNewClientWithNameOnly([FromForm] string newCompanyName)
+        {
+            int companyId = await _companyService.CreateNewCompany(await GetUserId(), newCompanyName);
+
+            if(companyId.Equals(0))
+            {
+                return StatusCode(500, "Something went wrong");
+            }
+
+            return Ok(companyId);
+        }
+
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{companyId}")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Company>))]

@@ -8,15 +8,15 @@ namespace CompanyPMO_.NET.Models
         public int CompanyId { get; set; }
         public string Name { get; set; }
         [Column("ceo_user_id")]
-        public int CeoUserId { get; set; }
+        public int? CeoUserId { get; set; }
         [Column("address_id")]
-        public int AddressId { get; set; }
+        public int? AddressId { get; set; }
         [Column("contact_email")]
-        public string ContactEmail { get; set; }
+        public string? ContactEmail { get; set; }
         [Column("contact_phone_number")]
-        public string ContactPhoneNumber { get; set; }
+        public string? ContactPhoneNumber { get; set; }
         [Column("added_by_id")]
-        public int AddedById { get; set; }
+        public int? AddedById { get; set; }
         public string? Logo { get; set; }
 
         // Navigation properties

@@ -72,6 +72,24 @@ namespace CompanyPMO_.NET.Repository
             return await _imageService.AddImagesToExistingEntity(companyId, images, "Company", imageCountInCompanyEntity);
         }
 
+        public async Task<int> CreateNewCompany(int supervisorId, string name)
+        {
+            var company = new Company
+            {
+                Name = name,
+                AddedById = supervisorId
+            };
+
+            _context.Add(company);
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if(rowsAffected > 0)
+            {
+                return company.CompanyId;
+            }
+            return 0;
+        }
+
         public async Task<bool> DoesCompanyExist(int companyId) => await _context.Companies.AnyAsync(c => c.CompanyId.Equals(companyId));
 
         public async Task<IEnumerable<CompanyShowcaseDto>> GetAllCompanies()
