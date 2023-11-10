@@ -92,18 +92,32 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<bool> DoesCompanyExist(int companyId) => await _context.Companies.AnyAsync(c => c.CompanyId.Equals(companyId));
 
-        public async Task<IEnumerable<CompanyShowcaseDto>> GetAllCompanies()
+        public async Task<DataCountAndPagesizeDto<IEnumerable<CompanyShowcaseDto>>> GetAllCompanies(int page, int pageSize)
         {
+            int toSkip = (page - 1) * pageSize;
+
             IEnumerable<CompanyShowcaseDto> companies = await _context.Companies
                 .Select(company => new CompanyShowcaseDto
                 {
                     CompanyId = company.CompanyId,
                     Name = company.Name,
-                    Logo = company.Logo
                 })
+                .Skip(toSkip)
+                .Take(pageSize)
                 .ToListAsync();
 
-            return companies;
+            int totalCompaniesCount = await _context.Companies.CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalCompaniesCount / pageSize);
+
+            var result = new DataCountAndPagesizeDto<IEnumerable<CompanyShowcaseDto>>
+            {
+                Data = companies,
+                Count = totalCompaniesCount,
+                Pages = totalPages
+            };
+
+            return result;
         }
 
         public async Task<IEnumerable<CompanyShowcaseDto>> GetCompaniesThatHaveProjects()

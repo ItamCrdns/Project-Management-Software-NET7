@@ -1,5 +1,4 @@
 using CloudinaryDotNet;
-using CompanyPMO_.NET.Authorization;
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Repository;

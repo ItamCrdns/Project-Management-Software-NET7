@@ -130,9 +130,9 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("all")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<CompanyShowcaseDto>))]
-        public async Task<IActionResult> GetAllCompanies()
+        public async Task<IActionResult> GetAllCompanies(int page, int pageSize)
         {
-            var companies = await _companyService.GetAllCompanies();
+            var companies = await _companyService.GetAllCompanies(page, pageSize);
 
             return Ok(companies);
         }
