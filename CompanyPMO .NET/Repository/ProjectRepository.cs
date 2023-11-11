@@ -3,8 +3,9 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -90,43 +91,60 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetAllProjects(ProjectFilterParams filterParams)
         {
-            int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
-
-            // Create an expression to order the projects by the property name given in the query params
-            var parameter = Expression.Parameter(typeof(Project), "p");
-
-            var property = Expression.Property(parameter, filterParams.OrderBy);
-            var convertedProperty = Expression.Convert(property, typeof(object)); // handle properties of different types in a generic way
-
-            // Create the lambda expression we will give it a value later 
-            Expression<Func<Project, object>> lambdaExpression;
+            // * Check if the property name given in the query params exists in the Project entity
+            var filterProperty = typeof(Project).GetProperty(filterParams.OrderBy ?? "Created", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
 
             // * If ascending or descending orders are provided in the query params, we will use them
             bool ShallOrderAscending = filterParams.Ascending is not null && filterParams.Ascending.Value;
             bool ShallOrderDescending = filterParams.Descending is not null && filterParams.Descending.Value;
 
-            if(ShallOrderAscending)
+            // * Return nothing if invalid query parameters or an invalid combination has been provided
+            bool filterExists = filterProperty is not null;
+            if (!filterExists || (ShallOrderAscending && ShallOrderDescending))
             {
-                lambdaExpression = Expression.Lambda<Func<Project, object>>(convertedProperty, parameter);
-            } else if (ShallOrderDescending)
+                return new DataCountAndPagesizeDto<IEnumerable<ProjectDto>>
+                {
+                    Data = new Collection<ProjectDto>(),
+                    Count = 0,
+                    Pages = 0
+                };
+            }
+
+            int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
+
+            // Create an expression to order the projects by the property name given in the query params
+            var parameter = Expression.Parameter(typeof(Project), "p");
+
+            var property = Expression.Property(parameter, filterParams.OrderBy ?? "Created"); // If the property name is invalid, we will order by the Created property by default
+            var convertedProperty = Expression.Convert(property, typeof(object)); // handle properties of different types in a generic way
+
+            // Create the lambda expression we will give it a value later 
+            var lambdaExpression = Expression.Lambda<Func<Project, object>>(convertedProperty, parameter);
+
+            ICollection<Project> projects = new List<Project>();
+
+            if (ShallOrderAscending)
             {
-                var negatedLambdaExpression = Expression.Convert(Expression.Negate(property), typeof(object));
-                lambdaExpression = Expression.Lambda<Func<Project, object>>(negatedLambdaExpression, parameter);
+                projects = await _context.Projects
+                    .OrderBy(lambdaExpression)
+                    .Include(c => c.Company)
+                    .Include(e => e.Employees)
+                    .Include(p => p.ProjectCreator)
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
+                    .ToListAsync();
             }
             else
             {
-                // * Default value if no order is provided
-                lambdaExpression = Expression.Lambda<Func<Project, object>>(convertedProperty, parameter);
+                projects = await _context.Projects
+                    .OrderByDescending(lambdaExpression)
+                    .Include(c => c.Company)
+                    .Include(e => e.Employees)
+                    .Include(p => p.ProjectCreator)
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
+                    .ToListAsync();
             }
-
-            ICollection<Project> projects = await _context.Projects
-                .OrderBy(lambdaExpression)
-                .Include(c => c.Company)
-                .Include(e => e.Employees)
-                .Include(p => p.ProjectCreator)
-                .Skip(toSkip)
-                .Take(filterParams.PageSize)
-                .ToListAsync();
 
             int totalProjectsCount = await _context.Projects.CountAsync();
 
