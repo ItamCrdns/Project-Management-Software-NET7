@@ -11,11 +11,11 @@
         public DateTimeOffset? ExpectedDeliveryDate { get; set; }
         public string? Lifecycle { get; set; }
         public int Priority { get; set; }
-        public EmployeeShowcaseDto ProjectCreator { get; set; }
+        public EmployeeShowcaseDto Creator { get; set; }
         public CompanyShowcaseDto Company { get; set; }
         public int EmployeeCount { get; set; }
         public int TasksCount { get; set; }
-        public IEnumerable<EmployeeShowcaseDto>? Employees { get; set; }
+        public IEnumerable<EmployeeShowcaseDto>? Team { get; set; }
         public IEnumerable<ImageDto>? ImagesCollection { get; set; }
     }
 }

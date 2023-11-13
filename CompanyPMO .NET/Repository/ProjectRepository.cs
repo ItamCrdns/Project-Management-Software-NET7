@@ -95,12 +95,12 @@ namespace CompanyPMO_.NET.Repository
             var filterProperty = typeof(Project).GetProperty(filterParams.OrderBy ?? "Created", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
 
             // * If ascending or descending orders are provided in the query params, we will use them
-            bool ShallOrderAscending = filterParams.Ascending is not null && filterParams.Ascending.Value;
-            bool ShallOrderDescending = filterParams.Descending is not null && filterParams.Descending.Value;
+            bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
+            bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
 
             // * Return nothing if invalid query parameters or an invalid combination has been provided
             bool filterExists = filterProperty is not null;
-            if (!filterExists || (ShallOrderAscending && ShallOrderDescending))
+            if (!filterExists)
             {
                 return new DataCountAndPagesizeDto<IEnumerable<ProjectDto>>
                 {
@@ -115,7 +115,34 @@ namespace CompanyPMO_.NET.Repository
             // Create an expression to order the projects by the property name given in the query params
             var parameter = Expression.Parameter(typeof(Project), "p");
 
-            var property = Expression.Property(parameter, filterParams.OrderBy ?? "Created"); // If the property name is invalid, we will order by the Created property by default
+            // This might not be the best way of handling this, but it gets the job done  
+            if (filterParams.OrderBy.Equals("Employees"))
+            {
+                filterParams.OrderBy = "Employees.Count";
+            }
+
+            if (filterParams.OrderBy.Equals("ProjectCreator"))
+            {
+                filterParams.OrderBy = "ProjectCreator.employeeId"; // Or we can just do the project_creator_id, but this one does the same without polluting the result
+            }
+
+            if (filterParams.OrderBy.Equals("Company"))
+            {
+                filterParams.OrderBy = "Company.companyId";
+            }
+
+            MemberExpression property;
+
+            if(filterParams.OrderBy.Contains(".Count") || filterParams.OrderBy.Contains("employeeId") || filterParams.OrderBy.Contains("companyId")) // EmployeeId because we will sort the project creator by their employeeId
+            {
+                string[] parts = filterParams.OrderBy.Split(".");
+                var navProperty = Expression.Property(parameter, parts[0]);
+                property = Expression.Property(navProperty, parts[1]);
+            }
+            else
+            {
+                property = Expression.Property(parameter, filterParams.OrderBy ?? "Created"); // If the property name is invalid, we will order by the Created property by default
+            }
             var convertedProperty = Expression.Convert(property, typeof(object)); // handle properties of different types in a generic way
 
             // Create the lambda expression we will give it a value later 
@@ -134,7 +161,8 @@ namespace CompanyPMO_.NET.Repository
                     .Take(filterParams.PageSize)
                     .ToListAsync();
             }
-            else
+            // If no sort query param is provided, we will order by descending by default
+            else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
             {
                 projects = await _context.Projects
                     .OrderByDescending(lambdaExpression)
@@ -219,7 +247,7 @@ namespace CompanyPMO_.NET.Repository
                 ExpectedDeliveryDate = project.ExpectedDeliveryDate,
                 Lifecycle = project.Lifecycle,
                 Priority = project.Priority,
-                ProjectCreator = new EmployeeShowcaseDto
+                Creator = new EmployeeShowcaseDto
                 {
                     EmployeeId = project.ProjectCreator.EmployeeId,
                     Username = project.ProjectCreator.Username,
@@ -233,7 +261,7 @@ namespace CompanyPMO_.NET.Repository
                 },
                 EmployeeCount = totalEmployeesCount,
                 TasksCount = tasksCount,
-                Employees = project.Employees.Select(p => new EmployeeShowcaseDto
+                Team = project.Employees.Select(p => new EmployeeShowcaseDto
                 {
                     EmployeeId = p.EmployeeId,
                     Username = p.Username,
@@ -286,12 +314,12 @@ namespace CompanyPMO_.NET.Repository
                         Name = project.Company.Name,
                         Logo = project.Company.Logo
                     },
-                    Employees = project.Employees.Select(p => new EmployeeShowcaseDto
+                    Team = project.Employees.Select(p => new EmployeeShowcaseDto
                     {
                         Username = p.Username,
                         ProfilePicture = p.ProfilePicture
                     }).ToList(),
-                    ProjectCreator = new EmployeeShowcaseDto
+                    Creator = new EmployeeShowcaseDto
                     {
                         Username = project.ProjectCreator.Username,
                         ProfilePicture = project.ProjectCreator.ProfilePicture
@@ -326,13 +354,13 @@ namespace CompanyPMO_.NET.Repository
                     Name = project.Company.Name,
                     Logo = project.Company.Logo
                 },
-                Employees = project.Employees.Select(p => new EmployeeShowcaseDto
+                Team = project.Employees.Select(p => new EmployeeShowcaseDto
                 {
                     EmployeeId = p.EmployeeId,
                     Username = p.Username,
                     ProfilePicture = p.ProfilePicture
                 }).ToList(),
-                ProjectCreator = new EmployeeShowcaseDto
+                Creator = new EmployeeShowcaseDto
                 {
                     EmployeeId = project.ProjectCreator.EmployeeId,
                     Username = project.ProjectCreator.Username,
