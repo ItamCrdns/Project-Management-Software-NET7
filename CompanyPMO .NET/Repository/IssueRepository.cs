@@ -3,6 +3,9 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.ObjectModel;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -17,34 +20,99 @@ namespace CompanyPMO_.NET.Repository
             _utilityService = utilityService;
         }
 
-        public async Task<Dictionary<string, object>> GetAllIssues(int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<IEnumerable<IssueDto>>> GetAllIssues(FilterParams filterParams)
         {
-            int toSkip = (page - 1) * pageSize;
+            //  This should be just for testing. This is a lot of code repetition and its hard to mantain
+            var filterProperty = typeof(Issue).GetProperty(filterParams.OrderBy ?? "Created", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
 
-            var issues = await _context.Issues
-                .OrderByDescending(i => i.IssueId)
+            bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
+            bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
+
+            bool filterExists = filterProperty is not null;
+            if (!filterExists)
+            {
+                return new DataCountAndPagesizeDto<IEnumerable<IssueDto>>
+                {
+                    Data = new Collection<IssueDto>(),
+                    Count = 0,
+                    Pages = 0
+                };
+            }
+
+            int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
+
+            var parameter = Expression.Parameter(typeof(Issue), "i");
+
+            if (filterParams.OrderBy.Equals("Employees"))
+            {
+                filterParams.OrderBy = "Employees.Count";
+            }
+
+            if (filterParams.OrderBy.Equals("IssueCreator"))
+            {
+                filterParams.OrderBy = "IssueCreator.employeeId";
+            }
+
+            if (filterParams.OrderBy.Equals("Task"))
+            {
+                filterParams.OrderBy = "Task.taskId";
+            }
+
+            MemberExpression property;
+
+            if (filterParams.OrderBy.Contains('.'))
+            {
+                string[] parts = filterParams.OrderBy.Split(".");
+                var navProperty = Expression.Property(parameter, parts[0]);
+                property = Expression.Property(navProperty, parts[1]);
+            }
+            else
+            {
+                property = Expression.Property(parameter, filterParams.OrderBy ?? "Created");
+            }
+
+            var convertedProperty = Expression.Convert(property, typeof(object));
+
+            var lambdaExpression = Expression.Lambda<Func<Issue, object>>(convertedProperty, parameter);
+
+            ICollection<Issue> issues = new List<Issue>();
+
+            if (ShallOrderAscending)
+            {
+                issues = await _context.Issues
+                .OrderBy(lambdaExpression)
                 .Include(i => i.IssueCreator)
                 .Include(i => i.Employees)
                 .Include(i => i.Task)
                 .Skip(toSkip)
-                .Take(pageSize)
+                .Take(filterParams.PageSize)
                 .ToListAsync();
+            } else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
+            {
+                issues = await _context.Issues
+                .OrderByDescending(lambdaExpression)
+                .Include(i => i.IssueCreator)
+                .Include(i => i.Employees)
+                .Include(i => i.Task)
+                .Skip(toSkip)
+                .Take(filterParams.PageSize)
+                .ToListAsync();
+            }
 
             int totalIssuesCount = await _context.Issues.CountAsync();
 
-            int totalPages = (int)Math.Ceiling((double)totalIssuesCount / pageSize);
+            int totalPages = (int)Math.Ceiling((double)totalIssuesCount / filterParams.PageSize);
 
             var issueDtos = IssueSelectQuery(issues);
 
-            var result = new Dictionary<string, object>
+            var result = new DataCountAndPagesizeDto<IEnumerable<IssueDto>>
             {
-                { "data", issueDtos },
-                { "count", totalIssuesCount },
-                { "pages", totalPages }
+                Data = issueDtos,
+                Count = totalIssuesCount,
+                Pages = totalPages
             };
 
             return result;
-
         }
 
         public async Task<Dictionary<string, object>> GetAllIssuesShowcase(int page, int pageSize)

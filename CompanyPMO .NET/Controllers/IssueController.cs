@@ -2,6 +2,7 @@
 using CompanyPMO_.NET.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using CompanyPMO_.NET.Models;
 
 namespace CompanyPMO_.NET.Controllers
 {
@@ -29,9 +30,9 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "SupervisorOnly")]
         [HttpGet("all")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<IssueDto>))]
-        public async Task<IActionResult> GetAllIssues(int page, int pageSize)
+        public async Task<IActionResult> GetAllIssues([FromQuery] FilterParams filterParams)
         {
-            var issues = await _issueService.GetAllIssues(page, pageSize);
+            var issues = await _issueService.GetAllIssues(filterParams);
 
             return Ok(issues);
         }

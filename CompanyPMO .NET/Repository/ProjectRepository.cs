@@ -89,7 +89,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<bool> DoesProjectExist(int projectId) => await _context.Projects.AnyAsync(i => i.ProjectId == projectId);
 
-        public async Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetAllProjects(ProjectFilterParams filterParams)
+        public async Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetAllProjects(FilterParams filterParams)
         {
             // * Check if the property name given in the query params exists in the Project entity
             var filterProperty = typeof(Project).GetProperty(filterParams.OrderBy ?? "Created", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
@@ -115,45 +115,85 @@ namespace CompanyPMO_.NET.Repository
             // Create an expression to order the projects by the property name given in the query params
             var parameter = Expression.Parameter(typeof(Project), "p");
 
-            // This might not be the best way of handling this, but it gets the job done  
-            if (filterParams.OrderBy.Equals("Employees"))
-            {
-                filterParams.OrderBy = "Employees.Count";
-            }
+            // Initialize the empty WHERE expression
+            var whereExpression = Expression.Lambda<Func<Project, bool>>(Expression.Constant(true), Expression.Parameter(typeof(Project)));
+            var orderExpression = Expression.Lambda<Func<Project, object>>(Expression.Constant(null, typeof(object)), Expression.Parameter(typeof(Project)));
 
-            if (filterParams.OrderBy.Equals("ProjectCreator"))
+            if (filterParams.FilterBy is not null && filterParams.FilterValue is not null)
             {
-                filterParams.OrderBy = "ProjectCreator.employeeId"; // Or we can just do the project_creator_id, but this one does the same without polluting the result
-            }
+                if (filterParams.FilterBy.Equals("ProjectCreator"))
+                {
+                    filterParams.FilterBy = "ProjectCreator.employeeId";
+                }
 
-            if (filterParams.OrderBy.Equals("Company"))
-            {
-                filterParams.OrderBy = "Company.companyId";
-            }
+                if (filterParams.FilterBy.Equals("Company"))
+                {
+                    filterParams.FilterBy = "Company.companyId";
+                }
 
-            MemberExpression property;
-
-            if(filterParams.OrderBy.Contains(".Count") || filterParams.OrderBy.Contains("employeeId") || filterParams.OrderBy.Contains("companyId")) // EmployeeId because we will sort the project creator by their employeeId
-            {
-                string[] parts = filterParams.OrderBy.Split(".");
-                var navProperty = Expression.Property(parameter, parts[0]);
-                property = Expression.Property(navProperty, parts[1]);
+                // Create a lambda expression for the where clause if the filterBy and filterValue query params are provided
+                if (filterParams.FilterBy.Contains('.'))
+                {
+                    string[] parts = filterParams.FilterBy.Split(".");
+                    MemberExpression navProperty = Expression.Property(parameter, parts[0]);
+                    MemberExpression whereProperty = Expression.Property(navProperty, parts[1]);
+                    UnaryExpression convertedWhereProperty = Expression.Convert(whereProperty, typeof(object));
+                    BinaryExpression whereEquals = Expression.Equal(convertedWhereProperty, Expression.Constant(filterParams.FilterValue));
+                    whereExpression = Expression.Lambda<Func<Project, bool>>(whereEquals, parameter);
+                }
+                else
+                {
+                    MemberExpression whereProperty = Expression.Property(parameter, filterParams.FilterBy);
+                    UnaryExpression convertedWhereProperty = Expression.Convert(whereProperty, typeof(object));
+                    BinaryExpression whereEquals = Expression.Equal(convertedWhereProperty, Expression.Constant(filterParams.FilterValue));
+                    whereExpression = Expression.Lambda<Func<Project, bool>>(whereEquals, parameter);
+                }
             }
             else
             {
-                property = Expression.Property(parameter, filterParams.OrderBy ?? "Created"); // If the property name is invalid, we will order by the Created property by default
+                // Fallback if no filterBy and filterValue query params are provided
+                whereExpression = p => true; // Will have no effect
             }
-            var convertedProperty = Expression.Convert(property, typeof(object)); // handle properties of different types in a generic way
 
-            // Create the lambda expression we will give it a value later 
-            var lambdaExpression = Expression.Lambda<Func<Project, object>>(convertedProperty, parameter);
+            if (filterParams.OrderBy is not null && filterParams.OrderBy.Contains('.'))
+            {
+                if (filterParams.OrderBy.Equals("Employees"))
+                {
+                    filterParams.OrderBy = "Employees.Count";
+                }
+
+                if (filterParams.OrderBy.Equals("ProjectCreator"))
+                {
+                    filterParams.OrderBy = "ProjectCreator.employeeId";
+                }
+
+                if (filterParams.OrderBy.Equals("Company"))
+                {
+                    filterParams.OrderBy = "Company.companyId";
+                }
+
+                // Create a lambda expression for the order by clause if the orderBy query param is provided
+                string[] parts = filterParams.OrderBy.Split(".");
+                MemberExpression navProperty = Expression.Property(parameter, parts[0]);
+                MemberExpression orderByProperty = Expression.Property(navProperty, parts[1]);
+                UnaryExpression convertedOrderByProperty = Expression.Convert(orderByProperty, typeof(object));
+                orderExpression = Expression.Lambda<Func<Project, object>>(convertedOrderByProperty, parameter);
+            }
+            else
+            {
+                // Fallback if no orderBy query param is provided or if the orderBy query param is not a navigation property (does not have a dot '.')
+                MemberExpression orderByProperty = Expression.Property(parameter, filterParams.OrderBy ?? "Created");
+                UnaryExpression convertedOrderByProperty = Expression.Convert(orderByProperty, typeof(object));
+                orderExpression = Expression.Lambda<Func<Project, object>>(convertedOrderByProperty, parameter);
+            }
 
             ICollection<Project> projects = new List<Project>();
 
             if (ShallOrderAscending)
             {
                 projects = await _context.Projects
-                    .OrderBy(lambdaExpression)
+                    .OrderBy(orderExpression) // OrderBy and Where will filter based on the query params, and if no query params are provided it will fallback to a default quyering expression
+                    .Where(whereExpression)
                     .Include(c => c.Company)
                     .Include(e => e.Employees)
                     .Include(p => p.ProjectCreator)
@@ -165,7 +205,8 @@ namespace CompanyPMO_.NET.Repository
             else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
             {
                 projects = await _context.Projects
-                    .OrderByDescending(lambdaExpression)
+                    .OrderByDescending(orderExpression) // ! Same as above
+                    .Where(whereExpression)
                     .Include(c => c.Company)
                     .Include(e => e.Employees)
                     .Include(p => p.ProjectCreator)
@@ -174,7 +215,9 @@ namespace CompanyPMO_.NET.Repository
                     .ToListAsync();
             }
 
-            int totalProjectsCount = await _context.Projects.CountAsync();
+            int totalProjectsCount = await _context.Projects
+                .Where(whereExpression)
+                .CountAsync();
 
             int totalPages = (int)Math.Ceiling((double)totalProjectsCount / filterParams.PageSize);
 
