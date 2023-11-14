@@ -3,7 +3,9 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.ObjectModel;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text.Json;
 
 namespace CompanyPMO_.NET.Repository
@@ -92,6 +94,151 @@ namespace CompanyPMO_.NET.Repository
                 string response = "No employees were added. Are you trying to add employees that are already working in this project?";
                 return (response, null);
             }
+        }
+
+        public async Task<(ICollection<T> entity, int totalEntitiesCount, int totalPages)> GetAllEntities<T>(FilterParams filterParams, List<string> navigationProperties = null) where T : class
+        {
+            var filterProperty = typeof(T).GetProperty(filterParams.OrderBy ?? "Created", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+
+            // * If ascending or descending orders are provided in the query params, we will use them
+            bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
+            bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
+
+            bool filterExists = filterProperty is not null;
+
+            if (!filterExists)
+            {
+                var entity = new Collection<T>();
+                return (entity, 0, 0);
+            }
+
+            int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
+
+            var parameter = Expression.Parameter(typeof(T), "x");
+
+            // Initialize the empty WHERE and ORDERBY expression
+            var whereExpression = Expression.Lambda<Func<T, bool>>(Expression.Constant(true), Expression.Parameter(typeof(T)));
+            var orderExpression = Expression.Lambda<Func<T, object>>(Expression.Constant(null, typeof(object)), Expression.Parameter(typeof(T)));
+
+            if (filterParams.FilterBy is not null && filterParams.FilterValue is not null)
+            {
+                if (filterParams.FilterBy.Equals("ProjectCreator"))
+                {
+                    filterParams.FilterBy = "ProjectCreator.employeeId";
+                }
+
+                if (filterParams.FilterBy.Equals("Company"))
+                {
+                    filterParams.FilterBy = "Company.companyId";
+                }
+
+                // Create a lambda expression for the where clause if the filterBy and filterValue query params are provided
+                if (filterParams.FilterBy.Contains('.'))
+                {
+                    string[] parts = filterParams.FilterBy.Split(".");
+                    MemberExpression navProperty = Expression.Property(parameter, parts[0]);
+                    MemberExpression whereProperty = Expression.Property(navProperty, parts[1]);
+                    UnaryExpression convertedWhereProperty = Expression.Convert(whereProperty, typeof(object));
+                    BinaryExpression whereEquals = Expression.Equal(convertedWhereProperty, Expression.Constant(filterParams.FilterValue));
+                    whereExpression = Expression.Lambda<Func<T, bool>>(whereEquals, parameter);
+                }
+                else
+                {
+                    MemberExpression whereProperty = Expression.Property(parameter, filterParams.FilterBy);
+                    UnaryExpression convertedWhereProperty = Expression.Convert(whereProperty, typeof(object));
+                    BinaryExpression whereEquals = Expression.Equal(convertedWhereProperty, Expression.Constant(filterParams.FilterValue));
+                    whereExpression = Expression.Lambda<Func<T, bool>>(whereEquals, parameter);
+                }
+            }
+            else
+            {
+                // Fallback if no filterBy and filterValue query params are provided
+                whereExpression = p => true; // Will have no effect
+            }
+
+            if (filterParams.OrderBy is not null)
+            {
+                if (filterParams.OrderBy.Equals("Employees"))
+                {
+                    filterParams.OrderBy = "Employees.Count";
+                }
+
+                if (filterParams.OrderBy.Equals("ProjectCreator"))
+                {
+                    filterParams.OrderBy = "ProjectCreator.employeeId";
+                }
+
+                if (filterParams.OrderBy.Equals("Company"))
+                {
+                    filterParams.OrderBy = "Company.companyId";
+                }
+
+                if (filterParams.OrderBy.Equals("IssueCreator"))
+                {
+                    filterParams.OrderBy = "IssueCreator.employeeId";
+                }
+
+                if (filterParams.OrderBy.Equals("Task"))
+                {
+                    filterParams.OrderBy = "Task.taskId";
+                }
+
+                // Create a lambda expression for the order by clause if the orderBy query param is provided. Different output if the orderBy query param is a navigation property (has a dot '.')
+                if (filterParams.OrderBy.Contains('.'))
+                {
+                    string[] parts = filterParams.OrderBy.Split(".");
+                    MemberExpression navProperty = Expression.Property(parameter, parts[0]);
+                    MemberExpression orderByProperty = Expression.Property(navProperty, parts[1]);
+                    UnaryExpression convertedOrderByProperty = Expression.Convert(orderByProperty, typeof(object));
+                    orderExpression = Expression.Lambda<Func<T, object>>(convertedOrderByProperty, parameter);
+                }
+                else
+                {
+                    // Fallback if no orderBy query param is provided or if the orderBy query param is not a navigation property (does not have a dot '.')
+                    MemberExpression orderByProperty = Expression.Property(parameter, filterParams.OrderBy ?? "Created");
+                    UnaryExpression convertedOrderByProperty = Expression.Convert(orderByProperty, typeof(object));
+                    orderExpression = Expression.Lambda<Func<T, object>>(convertedOrderByProperty, parameter);
+                }
+            }
+
+            ICollection<T> entities = new List<T>();
+
+            IQueryable<T> query = _context.Set<T>();
+
+            if (navigationProperties is not null)
+            {
+                foreach (var navProperty in navigationProperties)
+                {
+                    query = query.Include(navProperty);
+                }
+            }
+            
+            if (ShallOrderAscending)
+            {
+                entities = await query
+                    .OrderBy(orderExpression)
+                    .Where(whereExpression)
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
+                    .ToListAsync();
+            }
+            else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
+            {
+                entities = await query
+                    .OrderByDescending(orderExpression)
+                    .Where(whereExpression)
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
+                    .ToListAsync();
+            }
+
+            int totalEntitiesCount = await query
+                .Where(whereExpression)
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / filterParams.PageSize);
+
+            return (entities, totalEntitiesCount, totalPages);
         }
 
         public async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEmployeeUsername<TEntity>(string username, string entityName, int? page, int? pageSize) where TEntity : class, IEmployeeEntity // TEntity is constrained with IEmployeeEntity
