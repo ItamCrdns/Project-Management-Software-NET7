@@ -102,9 +102,9 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "SupervisorOnly")]
         [HttpGet("all")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Models.Task>))]
-        public async Task<IActionResult> GetAllTasks(int page, int pageSize)
+        public async Task<IActionResult> GetAllTasks([FromQuery] FilterParams filterParams)
         {
-            var tasks = await _taskService.GetAllTasks(page, pageSize);
+            var tasks = await _taskService.GetAllTasks(filterParams);
 
             return Ok(tasks);
         }

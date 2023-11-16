@@ -9,7 +9,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images);
         Task<ProjectDto> GetProjectById(int projectId);
         Task<Project> GetProjectEntityById(int projectId);
-        Task<IEnumerable<ProjectDto>> GetProjectsByCompanyName(int companyId, int page, int pageSize);
+        Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetProjectsByCompanyName(int companyId, FilterParams filterParams);
         Task<bool> SetProjectFinalized(int projectId);
         Task<bool> DoesProjectExist(int projectId);
         Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images);

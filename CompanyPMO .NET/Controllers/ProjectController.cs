@@ -150,9 +150,9 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("company/{companyId}")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<ProjectDto>))]
-        public async Task<IActionResult> GetProjectsByCompanyName(int companyId, int page, int pageSize)
+        public async Task<IActionResult> GetProjectsByCompanyName(int companyId, [FromQuery] FilterParams filterParams)
         {
-            var projects = await _projectService.GetProjectsByCompanyName(companyId, page, pageSize);
+            var projects = await _projectService.GetProjectsByCompanyName(companyId, filterParams);
 
             return Ok(projects);
         }

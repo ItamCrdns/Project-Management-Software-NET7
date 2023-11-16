@@ -270,30 +270,19 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<Dictionary<string, object>> GetAllTasks(int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<IEnumerable<TaskDto>>> GetAllTasks(FilterParams filterParams)
         {
-            int toSkip = (page - 1) * pageSize;
+            List<string> navProperties = new() { "Employees", "TaskCreator", "Project" };
 
-            var tasks = await _context.Tasks
-                .OrderByDescending(t => t.Created)
-                .Include(e => e.Employees)
-                .Include(t => t.TaskCreator)
-                .Include(p => p.Project)
-                .Skip(toSkip)
-                .Take(pageSize)
-                .ToListAsync();
-
-            int totalTasksCount = await _context.Tasks.CountAsync();
-
-            int totalPages = (int)Math.Ceiling((double)totalTasksCount / pageSize);
+            var (tasks, totalTasksCount, totalPages) = await _utilityService.GetAllEntities<Models.Task>(filterParams, navProperties);
 
             var taskDtos = TaskDtoSelectQuery(tasks);
 
-            var result = new Dictionary<string, object>
+            var result = new DataCountAndPagesizeDto<IEnumerable<TaskDto>>
             {
-                { "data", taskDtos },
-                { "count", totalTasksCount },
-                { "pages", totalPages }
+                Data = taskDtos,
+                Count = totalTasksCount,
+                Pages = totalPages
             };
 
             return result;

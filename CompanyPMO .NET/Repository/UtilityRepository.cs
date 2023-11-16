@@ -183,6 +183,16 @@ namespace CompanyPMO_.NET.Repository
                     filterParams.OrderBy = "Task.taskId";
                 }
 
+                if (filterParams.OrderBy.Equals("TaskCreator"))
+                {
+                    filterParams.OrderBy = "TaskCreator.employeeId";
+                }
+
+                if (filterParams.OrderBy.Equals("Project"))
+                {
+                    filterParams.OrderBy = "Project.projectId";
+                }
+
                 // Create a lambda expression for the order by clause if the orderBy query param is provided. Different output if the orderBy query param is a navigation property (has a dot '.')
                 if (filterParams.OrderBy.Contains('.'))
                 {

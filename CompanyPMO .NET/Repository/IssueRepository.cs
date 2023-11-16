@@ -3,9 +3,6 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.ObjectModel;
-using System.Linq.Expressions;
-using System.Reflection;
 
 namespace CompanyPMO_.NET.Repository
 {

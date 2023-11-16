@@ -61,6 +61,9 @@ namespace CompanyPMO_.NET.Interfaces
             where TEntity : class, IEmployeeEntity // TEntity will be used to represent the junction table
             where UEntity : class; // UEntity will be used to represent the entity itself (i.e Project, Task, Issue)
 
-        Task<(ICollection<T> entity, int totalEntitiesCount, int totalPages)> GetAllEntities<T>(FilterParams filterParams, List<string> navigationProperties = null) where T : class;
+        Task<(ICollection<T> entity, int totalEntitiesCount, int totalPages)> GetAllEntities<T>(
+            FilterParams filterParams, 
+            List<string>? navigationProperties = null)
+            where T : class;
     }
 }

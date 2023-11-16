@@ -3,9 +3,6 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.ObjectModel;
-using System.Linq.Expressions;
-using System.Reflection;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -107,23 +104,41 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<IEnumerable<ProjectDto>> GetProjectsByCompanyName(int companyId, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetProjectsByCompanyName(int companyId, FilterParams filterParams)
         {
-            int toSkip = (page - 1) * pageSize;
+            List<string> navProperties = new() { "Company", "Employees", "ProjectCreator" };
+
+            // * Pass the companyId as the third optional parameter
+            //var (projects, totalProjectsCount, totalPages) = await _utilityService.GetAllEntities<Project>(filterParams, navProperties, companyId);
+
+            int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
 
             var projects = await _context.Projects
                 .Where(i => i.CompanyId.Equals(companyId))
-                .OrderByDescending(c => c.Created)
+                .OrderByDescending(x => x.Employees.Count)
                 .Include(c => c.Company)
                 .Include(e => e.Employees)
                 .Include(p => p.ProjectCreator)
                 .Skip(toSkip)
-                .Take(pageSize)
+                .Take(filterParams.PageSize)
                 .ToListAsync();
+
+            int totalProjectsCount = await _context.Projects
+                .Where(i => i.CompanyId.Equals(companyId))
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalProjectsCount / filterParams.PageSize);
 
             var projectDtos = ProjectSelectQuery(projects);
 
-            return projectDtos;
+            var result = new DataCountAndPagesizeDto<IEnumerable<ProjectDto>>
+            {
+                Data = projectDtos,
+                Count = totalProjectsCount,
+                Pages = totalPages
+            };
+
+            return result;
         }
 
         public async Task<ProjectDto> GetProjectById(int projectId)
