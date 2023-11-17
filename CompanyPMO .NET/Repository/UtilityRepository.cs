@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Reflection.Metadata;
 using System.Text.Json;
 
 namespace CompanyPMO_.NET.Repository
@@ -100,38 +99,43 @@ namespace CompanyPMO_.NET.Repository
         public MemberExpression FilterStringSplitter(ParameterExpression parameter, string filterString)
         {
             // * FilterBy and OrderBy
+            // * Returns a property: 
+            // Creating expression for a single property if the filter string does not have a dot (Ex: {x.Priority})
+            // If the filter string has a dot, we will split it and create a nested expression for each property (Ex: {x.TaskCreator.EmployeeId})
 
-            if (filterString.Equals("Employees"))
+            string lowerCaseFilterString = filterString.ToLower();
+
+            if (lowerCaseFilterString.Equals("employees"))
             {
                 filterString = "Employees.Count";
             }
 
-            if (filterString.Equals("ProjectCreator"))
+            if (lowerCaseFilterString.Equals("projectcreator"))
             {
                 filterString = "ProjectCreator.employeeId";
             }
 
-            if (filterString.Equals("Company"))
+            if (lowerCaseFilterString.Equals("company"))
             {
                 filterString = "Company.companyId";
             }
 
-            if (filterString.Equals("IssueCreator"))
+            if (lowerCaseFilterString.Equals("issuecreator"))
             {
                 filterString = "IssueCreator.employeeId";
             }
 
-            if (filterString.Equals("Task"))
+            if (lowerCaseFilterString.Equals("task"))
             {
                 filterString = "Task.taskId";
             }
 
-            if (filterString.Equals("TaskCreator"))
+            if (lowerCaseFilterString.Equals("taskcreator"))
             {
                 filterString = "TaskCreator.employeeId";
             }
 
-            if (filterString.Equals("Project"))
+            if (lowerCaseFilterString.Equals("project"))
             {
                 filterString = "Project.projectId";
             }

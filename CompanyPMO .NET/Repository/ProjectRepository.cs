@@ -109,40 +109,60 @@ namespace CompanyPMO_.NET.Repository
         {
             var parameter = Expression.Parameter(typeof(Project), "x");
 
+            // * Build the wheres expressions
             var property = Expression.Property(parameter, filterParams.FilterWhere ?? "CompanyId");
             var constant = Expression.Constant(companyId);
             var equals = Expression.Equal(property, constant);
 
-            //string filterBy = _utilityService.FilterStringSplitter(filterParams.FilterBy ?? "Priority");
+            BinaryExpression otherEquals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
 
-            //ConstantExpression otherConstant = Expression.Constant(Convert.ToInt32(filterParams.FilterValue));
-            //var otherEquals = Expression.Equal(true, true);
+            if (filterParams.FilterBy is not null && filterParams.FilterValue is not null)
+            {
+                MemberExpression newFilterString = _utilityService.FilterStringSplitter(parameter, filterParams.FilterBy);
+                // Might need to Expression.Convert
+                var otherConstant = Expression.Constant(Convert.ToInt32(filterParams.FilterValue));
+                otherEquals = Expression.Equal(newFilterString, otherConstant);
+            }
 
-            //if (filterBy.Contains('.'))
-            //{
-            //    string[] parts = filterBy.Split('.');
-            //    MemberExpression splitPropertyExpression = Expression.Property(parameter, parts[0]);
-            //    MemberExpression splitPropertyExpression2 = Expression.Property(splitPropertyExpression, parts[1]);
-            //    BinaryExpression splitEquals = Expression.Equal(splitPropertyExpression2, otherConstant);
-            //}
-            var otherProperty = Expression.Property(parameter, filterParams.FilterBy);
-            var otherConstant = Expression.Constant(Convert.ToInt32(filterParams.FilterValue));
-            var otherEquals = Expression.Equal(otherProperty, otherConstant);
-
+            // * Join the two where expressions (Exp1 && exp2)
             var combinedExpression = Expression.AndAlso(equals, otherEquals);
             var whereExpression = Expression.Lambda<Func<Project, bool>>(combinedExpression, parameter);
 
+            MemberExpression newOrderString = _utilityService.FilterStringSplitter(parameter, filterParams.OrderBy ?? "Created");
+            UnaryExpression orderConvert = Expression.Convert(newOrderString, typeof(object));
+            var orderByExpression = Expression.Lambda<Func<Project, object>>(orderConvert, parameter);
+
+            bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
+            bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
+
             int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
 
-            var projects = await _context.Projects
-                .Where(whereExpression)
-                .OrderByDescending(x => x.Employees.Count)
-                .Include(c => c.Company)
-                .Include(e => e.Employees)
-                .Include(p => p.ProjectCreator)
-                .Skip(toSkip)
-                .Take(filterParams.PageSize)
-                .ToListAsync();
+            List<Project> projects = new();
+
+            if (ShallOrderAscending)
+            {
+                projects = await _context.Projects
+                    .Where(whereExpression)
+                    .OrderBy(orderByExpression)
+                    .Include(c => c.Company)
+                    .Include(e => e.Employees)
+                    .Include(p => p.ProjectCreator)
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
+                    .ToListAsync();
+            }
+            else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
+            {
+                projects = await _context.Projects
+                    .Where(whereExpression)
+                    .OrderByDescending(orderByExpression)
+                    .Include(c => c.Company)
+                    .Include(e => e.Employees)
+                    .Include(p => p.ProjectCreator)
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
+                    .ToListAsync();
+            }
 
             int totalProjectsCount = await _context.Projects
                 .Where(whereExpression)
