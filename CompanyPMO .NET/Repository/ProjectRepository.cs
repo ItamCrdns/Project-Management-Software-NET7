@@ -3,6 +3,7 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -106,15 +107,35 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetProjectsByCompanyName(int companyId, FilterParams filterParams)
         {
-            List<string> navProperties = new() { "Company", "Employees", "ProjectCreator" };
+            var parameter = Expression.Parameter(typeof(Project), "x");
 
-            // * Pass the companyId as the third optional parameter
-            //var (projects, totalProjectsCount, totalPages) = await _utilityService.GetAllEntities<Project>(filterParams, navProperties, companyId);
+            var property = Expression.Property(parameter, filterParams.FilterWhere ?? "CompanyId");
+            var constant = Expression.Constant(companyId);
+            var equals = Expression.Equal(property, constant);
+
+            //string filterBy = _utilityService.FilterStringSplitter(filterParams.FilterBy ?? "Priority");
+
+            //ConstantExpression otherConstant = Expression.Constant(Convert.ToInt32(filterParams.FilterValue));
+            //var otherEquals = Expression.Equal(true, true);
+
+            //if (filterBy.Contains('.'))
+            //{
+            //    string[] parts = filterBy.Split('.');
+            //    MemberExpression splitPropertyExpression = Expression.Property(parameter, parts[0]);
+            //    MemberExpression splitPropertyExpression2 = Expression.Property(splitPropertyExpression, parts[1]);
+            //    BinaryExpression splitEquals = Expression.Equal(splitPropertyExpression2, otherConstant);
+            //}
+            var otherProperty = Expression.Property(parameter, filterParams.FilterBy);
+            var otherConstant = Expression.Constant(Convert.ToInt32(filterParams.FilterValue));
+            var otherEquals = Expression.Equal(otherProperty, otherConstant);
+
+            var combinedExpression = Expression.AndAlso(equals, otherEquals);
+            var whereExpression = Expression.Lambda<Func<Project, bool>>(combinedExpression, parameter);
 
             int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
 
             var projects = await _context.Projects
-                .Where(i => i.CompanyId.Equals(companyId))
+                .Where(whereExpression)
                 .OrderByDescending(x => x.Employees.Count)
                 .Include(c => c.Company)
                 .Include(e => e.Employees)
@@ -124,7 +145,7 @@ namespace CompanyPMO_.NET.Repository
                 .ToListAsync();
 
             int totalProjectsCount = await _context.Projects
-                .Where(i => i.CompanyId.Equals(companyId))
+                .Where(whereExpression)
                 .CountAsync();
 
             int totalPages = (int)Math.Ceiling((double)totalProjectsCount / filterParams.PageSize);

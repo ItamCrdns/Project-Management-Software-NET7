@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Text.Json;
 
 namespace CompanyPMO_.NET.Repository
@@ -96,6 +97,60 @@ namespace CompanyPMO_.NET.Repository
             }
         }
 
+        public MemberExpression FilterStringSplitter(ParameterExpression parameter, string filterString)
+        {
+            // * FilterBy and OrderBy
+
+            if (filterString.Equals("Employees"))
+            {
+                filterString = "Employees.Count";
+            }
+
+            if (filterString.Equals("ProjectCreator"))
+            {
+                filterString = "ProjectCreator.employeeId";
+            }
+
+            if (filterString.Equals("Company"))
+            {
+                filterString = "Company.companyId";
+            }
+
+            if (filterString.Equals("IssueCreator"))
+            {
+                filterString = "IssueCreator.employeeId";
+            }
+
+            if (filterString.Equals("Task"))
+            {
+                filterString = "Task.taskId";
+            }
+
+            if (filterString.Equals("TaskCreator"))
+            {
+                filterString = "TaskCreator.employeeId";
+            }
+
+            if (filterString.Equals("Project"))
+            {
+                filterString = "Project.projectId";
+            }
+
+            if (filterString.Contains('.'))
+            {
+                string[] parts = filterString.Split(".");
+                MemberExpression splitPropertyExpression = Expression.Property(parameter, parts[0]);
+                MemberExpression splitPropertyExpression2 = Expression.Property(splitPropertyExpression, parts[1]);
+
+                return splitPropertyExpression2;
+            }
+            else
+            {
+                MemberExpression property = Expression.Property(parameter, filterString);
+                return property;
+            }
+        }
+
         public async Task<(ICollection<T> entity, int totalEntitiesCount, int totalPages)> GetAllEntities<T>(FilterParams filterParams, List<string> navigationProperties = null) where T : class
         {
             var filterProperty = typeof(T).GetProperty(filterParams.OrderBy ?? "Created", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
@@ -122,33 +177,10 @@ namespace CompanyPMO_.NET.Repository
 
             if (filterParams.FilterBy is not null && filterParams.FilterValue is not null)
             {
-                if (filterParams.FilterBy.Equals("ProjectCreator"))
-                {
-                    filterParams.FilterBy = "ProjectCreator.employeeId";
-                }
-
-                if (filterParams.FilterBy.Equals("Company"))
-                {
-                    filterParams.FilterBy = "Company.companyId";
-                }
-
-                // Create a lambda expression for the where clause if the filterBy and filterValue query params are provided
-                if (filterParams.FilterBy.Contains('.'))
-                {
-                    string[] parts = filterParams.FilterBy.Split(".");
-                    MemberExpression navProperty = Expression.Property(parameter, parts[0]);
-                    MemberExpression whereProperty = Expression.Property(navProperty, parts[1]);
-                    UnaryExpression convertedWhereProperty = Expression.Convert(whereProperty, typeof(object));
-                    BinaryExpression whereEquals = Expression.Equal(convertedWhereProperty, Expression.Constant(filterParams.FilterValue));
-                    whereExpression = Expression.Lambda<Func<T, bool>>(whereEquals, parameter);
-                }
-                else
-                {
-                    MemberExpression whereProperty = Expression.Property(parameter, filterParams.FilterBy);
-                    UnaryExpression convertedWhereProperty = Expression.Convert(whereProperty, typeof(object));
-                    BinaryExpression whereEquals = Expression.Equal(convertedWhereProperty, Expression.Constant(filterParams.FilterValue));
-                    whereExpression = Expression.Lambda<Func<T, bool>>(whereEquals, parameter);
-                }
+                MemberExpression newFilterString = FilterStringSplitter(parameter, filterParams.FilterBy);
+                UnaryExpression convertedWhereProperty = Expression.Convert(newFilterString, typeof(object));
+                BinaryExpression whereEquals = Expression.Equal(convertedWhereProperty, Expression.Constant(filterParams.FilterValue));
+                whereExpression = Expression.Lambda<Func<T, bool>>(whereEquals, parameter);
             }
             else
             {
@@ -158,57 +190,9 @@ namespace CompanyPMO_.NET.Repository
 
             if (filterParams.OrderBy is not null)
             {
-                if (filterParams.OrderBy.Equals("Employees"))
-                {
-                    filterParams.OrderBy = "Employees.Count";
-                }
-
-                if (filterParams.OrderBy.Equals("ProjectCreator"))
-                {
-                    filterParams.OrderBy = "ProjectCreator.employeeId";
-                }
-
-                if (filterParams.OrderBy.Equals("Company"))
-                {
-                    filterParams.OrderBy = "Company.companyId";
-                }
-
-                if (filterParams.OrderBy.Equals("IssueCreator"))
-                {
-                    filterParams.OrderBy = "IssueCreator.employeeId";
-                }
-
-                if (filterParams.OrderBy.Equals("Task"))
-                {
-                    filterParams.OrderBy = "Task.taskId";
-                }
-
-                if (filterParams.OrderBy.Equals("TaskCreator"))
-                {
-                    filterParams.OrderBy = "TaskCreator.employeeId";
-                }
-
-                if (filterParams.OrderBy.Equals("Project"))
-                {
-                    filterParams.OrderBy = "Project.projectId";
-                }
-
-                // Create a lambda expression for the order by clause if the orderBy query param is provided. Different output if the orderBy query param is a navigation property (has a dot '.')
-                if (filterParams.OrderBy.Contains('.'))
-                {
-                    string[] parts = filterParams.OrderBy.Split(".");
-                    MemberExpression navProperty = Expression.Property(parameter, parts[0]);
-                    MemberExpression orderByProperty = Expression.Property(navProperty, parts[1]);
-                    UnaryExpression convertedOrderByProperty = Expression.Convert(orderByProperty, typeof(object));
-                    orderExpression = Expression.Lambda<Func<T, object>>(convertedOrderByProperty, parameter);
-                }
-                else
-                {
-                    // Fallback if no orderBy query param is provided or if the orderBy query param is not a navigation property (does not have a dot '.')
-                    MemberExpression orderByProperty = Expression.Property(parameter, filterParams.OrderBy ?? "Created");
-                    UnaryExpression convertedOrderByProperty = Expression.Convert(orderByProperty, typeof(object));
-                    orderExpression = Expression.Lambda<Func<T, object>>(convertedOrderByProperty, parameter);
-                }
+                MemberExpression newFilterString = FilterStringSplitter(parameter, filterParams.OrderBy);
+                UnaryExpression convertedOrderByProperty = Expression.Convert(newFilterString, typeof(object));
+                orderExpression = Expression.Lambda<Func<T, object>>(convertedOrderByProperty, parameter);
             }
 
             ICollection<T> entities = new List<T>();

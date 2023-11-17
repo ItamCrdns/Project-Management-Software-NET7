@@ -1,5 +1,6 @@
 ﻿using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Models;
+using System.Linq.Expressions;
 
 namespace CompanyPMO_.NET.Interfaces
 {
@@ -65,5 +66,8 @@ namespace CompanyPMO_.NET.Interfaces
             FilterParams filterParams, 
             List<string>? navigationProperties = null)
             where T : class;
+
+        // Splits the given filter from 'FilterExample' to 'Filter.Example' for linq querying purposes
+        MemberExpression FilterStringSplitter(ParameterExpression parameter, string filterString);
     }
 }
