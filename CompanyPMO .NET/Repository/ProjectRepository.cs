@@ -135,9 +135,25 @@ namespace CompanyPMO_.NET.Repository
             bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
 
-            int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
-
             List<Project> projects = new();
+
+            int totalProjectsCount = await _context.Projects
+                .Where(whereExpression)
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalProjectsCount / filterParams.PageSize);
+
+            if (filterParams.Page > totalPages)
+            {
+                filterParams.Page = totalPages; // If trying to reach a page that does not exist fallback to the last page
+            }
+
+            if (filterParams.PageSize > totalProjectsCount)
+            {
+                filterParams.PageSize = totalProjectsCount; // If the page size is bigger than the total count fallback to the total count
+            }
+
+            int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
 
             if (ShallOrderAscending)
             {
@@ -163,12 +179,6 @@ namespace CompanyPMO_.NET.Repository
                     .Take(filterParams.PageSize)
                     .ToListAsync();
             }
-
-            int totalProjectsCount = await _context.Projects
-                .Where(whereExpression)
-                .CountAsync();
-
-            int totalPages = (int)Math.Ceiling((double)totalProjectsCount / filterParams.PageSize);
 
             var projectDtos = ProjectSelectQuery(projects);
 
@@ -457,6 +467,27 @@ namespace CompanyPMO_.NET.Repository
             };
 
             return result;
+        }
+
+        public async Task<bool> IsParticipant(int projectId, int employeeId)
+        {
+            List<int> employeeIdsInProject = await _context.Projects
+                .Where(p => p.ProjectId.Equals(projectId))
+                .SelectMany(e => e.Employees)
+                .Select(e => e.EmployeeId)
+                .ToListAsync();
+
+            return employeeIdsInProject.Contains(employeeId);
+        }
+
+        public async Task<bool> IsOwner(int projectId, int employeeId)
+        {
+            int projectCreatorId = await _context.Projects
+                .Where(p => p.ProjectId.Equals(projectId))
+                .Select(p => p.ProjectCreatorId)
+                .FirstOrDefaultAsync();
+
+            return projectCreatorId.Equals(employeeId);
         }
     }
 }

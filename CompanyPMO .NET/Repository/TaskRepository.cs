@@ -140,7 +140,7 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<Dictionary<string, object>> GetTasksByProjectId(int projectId, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<IEnumerable<TaskDto>>> GetTasksByProjectId(int projectId, int page, int pageSize)
         {
             var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEntityId<Models.Task>(projectId, "ProjectId", "TaskId", page, pageSize);
 
@@ -154,11 +154,11 @@ namespace CompanyPMO_.NET.Repository
 
             var taskDtos = TaskDtoSelectQuery(tasks);
 
-            var result = new Dictionary<string, object>
+            var result = new DataCountAndPagesizeDto<IEnumerable<TaskDto>>
             {
-                { "data", taskDtos },
-                { "count", totalTasksCount },
-                { "pages", totalPages }
+                Data = taskDtos,
+                Count = totalTasksCount,
+                Pages = totalPages
             };
 
             return result;

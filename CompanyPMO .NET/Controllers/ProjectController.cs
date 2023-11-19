@@ -101,12 +101,27 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}")]
-        [ProducesResponseType(200, Type = typeof(ProjectDto))]
+        [ProducesResponseType(200, Type = typeof(EntityParticipantOrOwnerDTO<ProjectDto>))]
         public async Task<IActionResult> GetProjectById(int projectId)
         {
             var project = await _projectService.GetProjectById(projectId);
 
-            return Ok(project);
+            bool isParticipant = await _projectService.IsParticipant(projectId, await GetUserId());
+
+            bool isOwner = false;
+            if (!isParticipant)
+            {
+                isOwner = await _projectService.IsOwner(projectId, await GetUserId());
+            }
+
+            var result = new EntityParticipantOrOwnerDTO<ProjectDto>
+            {
+                Entity = project,
+                IsParticipant = isParticipant,
+                IsOwner = isOwner
+            };
+
+            return Ok(result);
         }
 
         [Authorize(Policy = "SupervisorOnly")]
@@ -179,12 +194,27 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}/tasks/all")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Models.Task>))]
+        [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
         public async Task<IActionResult> GetTasksByProjectId(int projectId, int page, int pageSize)
         {
             var tasks = await _taskService.GetTasksByProjectId(projectId, page, pageSize);
 
-            return Ok(tasks);
+            bool isParticipantOfProject = await _projectService.IsParticipant(projectId, await GetUserId());
+
+            bool isOwner = false;
+            if (!isParticipantOfProject)
+            {
+                isOwner = await _projectService.IsOwner(projectId, await GetUserId());
+            }
+
+            var result = new Dictionary<string, object>
+            {
+                { "entity", tasks },
+                { "isProjectParticipant", isParticipantOfProject },
+                { "isProjectOwner", isOwner }
+            };
+
+            return Ok(result);
         }
     }
 }

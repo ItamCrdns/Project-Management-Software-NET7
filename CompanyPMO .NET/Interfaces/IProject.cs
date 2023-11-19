@@ -22,5 +22,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<Dictionary<string, object>> GetProjectsByEmployeeUsername(string username, int page, int pageSize);
         Task<Dictionary<string, object>> GetProjectsShowcaseByEmployeeUsername(string username, int page, int pageSize);
         Task<Dictionary<string, object>> GetAllProjectsShowcase(int page, int pageSize);
+        Task<bool> IsParticipant(int projectId, int employeeId); // Used for checking if the employee is a participant in the project
+        Task<bool> IsOwner(int projectId, int employeeId); // Used for checking if the employee is the owner of the project
     }
 }

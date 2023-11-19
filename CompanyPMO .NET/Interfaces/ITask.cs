@@ -20,7 +20,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<bool> IsEmployeeAlreadyInTask(int employeeId, int taskId);
         Task<Dictionary<string, object>> GetTasksByEmployeeUsername(string username, int page, int pageSize);
         Task<Dictionary<string, object>> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize);
-        Task<Dictionary<string, object>> GetTasksByProjectId(int projectId, int page, int pageSize);
+        Task<DataCountAndPagesizeDto<IEnumerable<TaskDto>>> GetTasksByProjectId(int projectId, int page, int pageSize);
         Task<Dictionary<string, object>> GetAllTasksShowcase(int page, int pageSize);
         IEnumerable<TaskDto> TaskDtoSelectQuery(ICollection<Models.Task> tasks);
     }
