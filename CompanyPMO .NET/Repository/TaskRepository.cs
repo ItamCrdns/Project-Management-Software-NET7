@@ -3,6 +3,7 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.Design;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -140,17 +141,37 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<DataCountAndPagesizeDto<IEnumerable<TaskDto>>> GetTasksByProjectId(int projectId, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<IEnumerable<TaskDto>>> GetTasksByProjectId(int projectId, FilterParams filterParams)
         {
-            var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEntityId<Models.Task>(projectId, "ProjectId", "TaskId", page, pageSize);
+            var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEntityId<Models.Task>(projectId, "ProjectId", "TaskId", filterParams.Page, filterParams.PageSize);
 
-            var tasks = await _context.Tasks
-                .OrderByDescending(t => t.Created)
-                .Where(task => taskIds.Contains(task.TaskId))
-                .Include(t => t.TaskCreator)
-                .Include(e => e.Employees)
-                .Include(p => p.Project)
-                .ToListAsync();
+            var (whereExpression, orderByExpression) = _utilityService.BuilWhereAndOrderByExpressions<Models.Task>(projectId, taskIds, "TaskId", "ProjectId", "Created", filterParams);
+
+            bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
+            bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
+
+            List<Models.Task> tasks = new();
+
+            if (ShallOrderAscending)
+            {
+                tasks = await _context.Tasks
+                    .Where(whereExpression)
+                    //.Where(x => taskIds.Contains(x.TaskId) && x.TaskCreatorId == 3 && x.Employees.Count > 3)
+                    .OrderBy(orderByExpression)
+                    .Include(t => t.TaskCreator)
+                    .Include(e => e.Employees)
+                    .Include(p => p.Project)
+                    .ToListAsync();
+            } else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
+            {
+                tasks = await _context.Tasks
+                    .Where(whereExpression)
+                    .OrderByDescending(orderByExpression)
+                    .Include(t => t.TaskCreator)
+                    .Include(e => e.Employees)
+                    .Include(p => p.Project)
+                    .ToListAsync();
+            }
 
             var taskDtos = TaskDtoSelectQuery(tasks);
 

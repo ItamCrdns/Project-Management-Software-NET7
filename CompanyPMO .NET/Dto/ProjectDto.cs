@@ -18,4 +18,14 @@
         public IEnumerable<EmployeeShowcaseDto>? Team { get; set; }
         public IEnumerable<ImageDto>? ImagesCollection { get; set; }
     }
+
+    public class ProjectSomeInfoDto
+    {
+        public int ProjectId { get; set; }
+        public string? Name { get; set; }
+        public string? Lifecycle { get; set; }
+        public int Priority { get; set; }
+        public EmployeeShowcaseDto Creator { get; set; }
+        public IEnumerable<EmployeeShowcaseDto>? Team { get; set; }
+    }
 }

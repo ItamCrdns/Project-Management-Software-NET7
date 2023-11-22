@@ -124,6 +124,31 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(result);
         }
 
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{projectId}/limited")]
+        [ProducesResponseType(200, Type = typeof(ProjectSomeInfoDto))]
+        public async Task<IActionResult> GetProjectNameCreatorAndTeam(int projectId)
+        {
+            var project = await _projectService.GetProjectNameCreatorLifecyclePriorityAndTeam(projectId);
+
+            bool isParticipantOfProject = await _projectService.IsParticipant(projectId, await GetUserId());
+
+            bool isOwner = false;
+            if (!isParticipantOfProject)
+            {
+                isOwner = await _projectService.IsOwner(projectId, await GetUserId());
+            }
+
+            var result = new EntityParticipantOrOwnerDTO<ProjectSomeInfoDto>
+            {
+                Entity = project,
+                IsParticipant = isParticipantOfProject,
+                IsOwner = isOwner
+            };
+
+            return Ok(result);
+        }
+
         [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("{projectId}/set/ended")]
         [ProducesResponseType(204)]
@@ -195,9 +220,9 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}/tasks/all")]
         [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
-        public async Task<IActionResult> GetTasksByProjectId(int projectId, int page, int pageSize)
+        public async Task<IActionResult> GetTasksByProjectId(int projectId, [FromQuery] FilterParams filterParams)
         {
-            var tasks = await _taskService.GetTasksByProjectId(projectId, page, pageSize);
+            var tasks = await _taskService.GetTasksByProjectId(projectId, filterParams);
 
             bool isParticipantOfProject = await _projectService.IsParticipant(projectId, await GetUserId());
 

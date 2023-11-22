@@ -8,6 +8,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<int> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees);
         Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images);
         Task<ProjectDto> GetProjectById(int projectId);
+        Task<ProjectSomeInfoDto> GetProjectNameCreatorLifecyclePriorityAndTeam(int projectId);
         Task<Project> GetProjectEntityById(int projectId);
         Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetProjectsByCompanyName(int companyId, FilterParams filterParams);
         Task<bool> SetProjectFinalized(int projectId);
@@ -24,5 +25,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<Dictionary<string, object>> GetAllProjectsShowcase(int page, int pageSize);
         Task<bool> IsParticipant(int projectId, int employeeId); // Used for checking if the employee is a participant in the project
         Task<bool> IsOwner(int projectId, int employeeId); // Used for checking if the employee is the owner of the project
+
     }
 }

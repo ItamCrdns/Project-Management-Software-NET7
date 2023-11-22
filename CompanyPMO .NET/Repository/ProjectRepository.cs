@@ -107,30 +107,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetProjectsByCompanyName(int companyId, FilterParams filterParams)
         {
-            var parameter = Expression.Parameter(typeof(Project), "x");
-
-            // * Build the wheres expressions
-            var property = Expression.Property(parameter, filterParams.FilterWhere ?? "CompanyId");
-            var constant = Expression.Constant(companyId);
-            var equals = Expression.Equal(property, constant);
-
-            BinaryExpression otherEquals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
-
-            if (filterParams.FilterBy is not null && filterParams.FilterValue is not null)
-            {
-                MemberExpression newFilterString = _utilityService.FilterStringSplitter(parameter, filterParams.FilterBy);
-                // Might need to Expression.Convert
-                var otherConstant = Expression.Constant(Convert.ToInt32(filterParams.FilterValue));
-                otherEquals = Expression.Equal(newFilterString, otherConstant);
-            }
-
-            // * Join the two where expressions (Exp1 && exp2)
-            var combinedExpression = Expression.AndAlso(equals, otherEquals);
-            var whereExpression = Expression.Lambda<Func<Project, bool>>(combinedExpression, parameter);
-
-            MemberExpression newOrderString = _utilityService.FilterStringSplitter(parameter, filterParams.OrderBy ?? "Created");
-            UnaryExpression orderConvert = Expression.Convert(newOrderString, typeof(object));
-            var orderByExpression = Expression.Lambda<Func<Project, object>>(orderConvert, parameter);
+            var (whereExpression, orderByExpression) = _utilityService.BuilWhereAndOrderByExpressions<Project>(companyId, null, null, "CompanyId", "Created", filterParams);
 
             bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
@@ -488,6 +465,36 @@ namespace CompanyPMO_.NET.Repository
                 .FirstOrDefaultAsync();
 
             return projectCreatorId.Equals(employeeId);
+        }
+
+        public async Task<ProjectSomeInfoDto> GetProjectNameCreatorLifecyclePriorityAndTeam(int projectId)
+        {
+            Project project = await _context.Projects
+                .Include(p => p.ProjectCreator)
+                .Include(e => e.Employees)
+                .FirstOrDefaultAsync(x => x.ProjectId.Equals(projectId));
+
+            ProjectSomeInfoDto projectDto = new()
+            {
+                ProjectId = project.ProjectId,
+                Name = project.Name,
+                Lifecycle = project.Lifecycle,
+                Priority = project.Priority,
+                Creator = new EmployeeShowcaseDto
+                {
+                    EmployeeId = project.ProjectCreator.EmployeeId,
+                    Username = project.ProjectCreator.Username,
+                    ProfilePicture = project.ProjectCreator.ProfilePicture
+                },
+                Team = project.Employees.Select(p => new EmployeeShowcaseDto
+                {
+                    EmployeeId = p.EmployeeId,
+                    Username = p.Username,
+                    ProfilePicture = p.ProfilePicture
+                }).Take(5).ToList()
+            };
+
+            return projectDto;
         }
     }
 }

@@ -325,6 +325,53 @@ namespace CompanyPMO_.NET.Repository
             return (entityIds, totalEntitiesCount, totalPages);
         }
 
+        public (Expression<Func<T, bool>>, Expression<Func<T, object>>?) BuilWhereAndOrderByExpressions<T>(int constantId, IEnumerable<int>? whereIds, string? whereId, string defaultWhere, string defaultOrderBy, FilterParams filterParams)
+        {
+            // This method will build and return two expressions that can be used by LINQ "Where" and "OrderBy" or "OrderByDescending" methods
+            var parameter = Expression.Parameter(typeof(T), "x");
+
+            // * Build the first where expression (x => x.EntityId EQUALS constantId)
+            var property = Expression.Property(parameter, filterParams.FilterWhere ?? defaultWhere);
+            var constant = Expression.Constant(constantId);
+            var equals = Expression.Equal(property, constant);
+
+            BinaryExpression otherEquals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
+
+            // * If filterParams are filterValue are provided, build the second expression. (x => x.FilterBy EQUALS filterValue)
+            if (filterParams.FilterBy is not null && filterParams.FilterValue is not null)
+            {
+                MemberExpression newFilterString = FilterStringSplitter(parameter, filterParams.FilterBy);
+                var otherConstant = Expression.Constant(Convert.ToInt32(filterParams.FilterValue));
+                otherEquals = Expression.Equal(newFilterString, otherConstant);
+            }
+
+            // * Join the two where expressions (Exp1 && exp2) (x => x.EntityId EQUALS constantId && x => x.FilterBy EQUALS filterValue)
+            var combinedExpression = Expression.AndAlso(equals, otherEquals);
+
+            // If whereIds its not null, we are going to create a new expression to filter by the given ids. Example: Get all the tasks that belong to the projectIds 1, 2 and 3
+            // This is so it can work together with the GetEntitiesByEntityId method. (x => x.TaskIds.Contains("TaskId")
+            if (whereIds is not null)
+            {
+                ConstantExpression whereIdsConstant = Expression.Constant(whereIds);
+                Expression whereIdsProperty = Expression.Property(parameter, whereId);
+                MethodInfo containsMethod = typeof(List<int>).GetMethod("Contains"); // Retrieving the Contains method from the List<int> class
+
+                Expression containsCall = Expression.Call(whereIdsConstant, containsMethod, whereIdsProperty); // Check if the whereIds list contains the whereId property
+
+                // Updates combinedExpression by combining the previous combinedExpression with the new containsCall expression using
+                combinedExpression = Expression.AndAlso(combinedExpression, containsCall);
+            }
+
+            var whereExpression = Expression.Lambda<Func<T, bool>>(combinedExpression, parameter);
+
+
+            MemberExpression newOrderString = FilterStringSplitter(parameter, filterParams.OrderBy ?? defaultOrderBy);
+            UnaryExpression orderConvert = Expression.Convert(newOrderString, typeof(object));
+            var orderByExpression = Expression.Lambda<Func<T, object>>(orderConvert, parameter);
+
+            return (whereExpression, orderByExpression);
+        }
+
         public int MinutesUntilTimeArrival(DateTimeOffset? time)
         {
             DateTimeOffset currentTime = DateTimeOffset.Now;
