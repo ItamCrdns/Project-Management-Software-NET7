@@ -611,5 +611,67 @@ namespace CompanyPMO_.NET.Repository
 
             return username;
         }
+
+        public async Task<DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>> GetEmployeesThatHaveCreatedProjectsInACertainClient(int clientId, int page, int pageSize)
+        {
+            // Default values if no queryparams are passed
+            int requestedPage = page == 0 ? 1 : page;
+            int requestedPageSize = pageSize == 0 ? 10 : pageSize;
+
+            int toSkip = (requestedPage - 1) * requestedPageSize;
+
+            List<EmployeeShowcaseDto> employees = await _context.Projects
+                .Where(x => x.CompanyId.Equals(clientId))
+                .Select(employee => new EmployeeShowcaseDto
+                {
+                    EmployeeId = employee.ProjectCreator.EmployeeId,
+                    Username = employee.ProjectCreator.Username,
+                    ProfilePicture = employee.ProjectCreator.ProfilePicture
+                })
+                .Distinct()
+                .Skip(toSkip)
+                .Take(requestedPageSize)
+                .ToListAsync();
+
+            int totalEmployeesCount = await _context.Projects
+                .Where(x => x.CompanyId.Equals(clientId))
+                .Select(x => x.ProjectCreator.EmployeeId) // Fix counting the same employee multiple times
+                .Distinct()
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / requestedPageSize);
+
+            var result = new DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>
+            {
+                Data = employees,
+                Count = totalEmployeesCount,
+                Pages = totalPages
+            };
+
+            return result;
+        }
+
+        public async Task<IEnumerable<EmployeeShowcaseDto>> GetEmployeesFromAListOfEmployeeIds(string employeeIds)
+        {
+            if (string.IsNullOrEmpty(employeeIds))
+            {
+                // Return an empty array if the employeeIds string are not provided
+                return Enumerable.Empty<EmployeeShowcaseDto>();
+            }
+
+            int[] employeeIdsArray = employeeIds.Split('-').Select(int.Parse).ToArray();
+
+            IEnumerable<EmployeeShowcaseDto> employees = await  _context.Employees
+                .Where(e => employeeIdsArray.Contains(e.EmployeeId))
+                .Select(employee => new EmployeeShowcaseDto
+                {
+                    EmployeeId = employee.EmployeeId,
+                    Username = employee.Username,
+                    ProfilePicture = employee.ProfilePicture
+                })
+                .ToListAsync();
+
+            return employees;
+        }
     }
 }

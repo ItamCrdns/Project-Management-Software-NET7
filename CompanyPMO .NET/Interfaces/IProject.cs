@@ -20,7 +20,7 @@ namespace CompanyPMO_.NET.Interfaces
         ICollection<ProjectDto> ProjectSelectQuery(ICollection<Project> projects);
         Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToProject(int projectId, List<int> employees);
         Task<bool> IsEmployeeAlreadyInProject(int employeeId, int projectId);
-        Task<Dictionary<string, object>> GetProjectsByEmployeeUsername(string username, int page, int pageSize);
+        Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetProjectsByEmployeeUsername(string username, FilterParams filterParams);
         Task<Dictionary<string, object>> GetProjectsShowcaseByEmployeeUsername(string username, int page, int pageSize);
         Task<Dictionary<string, object>> GetAllProjectsShowcase(int page, int pageSize);
         Task<bool> IsParticipant(int projectId, int employeeId); // Used for checking if the employee is a participant in the project

@@ -24,5 +24,8 @@ namespace CompanyPMO_.NET.Interfaces
         IEnumerable<EmployeeShowcaseDto> EmployeeShowcaseQuery(IEnumerable<Employee> employees);
         Task<TierDto> GetEmployeeTier(int employeeId);
         Task<string> GetEmployeeUsernameById(int employeeId);
+        Task<DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>> GetEmployeesThatHaveCreatedProjectsInACertainClient(int clientId, int page, int pageSize);
+        // * Will take a list of integers (employeeIds) and will return a list of employees, will remove non existing Ids
+        Task<IEnumerable<EmployeeShowcaseDto>> GetEmployeesFromAListOfEmployeeIds(string employeeIds); // * STRING SHOULD BE A LIST OF INTEGERS SEPARATED BY '-' (i.e 1-2-3-4-5)
     }
 }

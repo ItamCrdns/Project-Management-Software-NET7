@@ -143,9 +143,10 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountAndPagesizeDto<IEnumerable<TaskDto>>> GetTasksByProjectId(int projectId, FilterParams filterParams)
         {
+            // ATM We are just ordering the entities so this count and pages are actually good i think
             var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEntityId<Models.Task>(projectId, "ProjectId", "TaskId", filterParams.Page, filterParams.PageSize);
 
-            var (whereExpression, orderByExpression) = _utilityService.BuilWhereAndOrderByExpressions<Models.Task>(projectId, taskIds, "TaskId", "ProjectId", "Created", filterParams);
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Models.Task>(projectId, taskIds, "TaskId", "ProjectId", "Created", filterParams);
 
             bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
@@ -156,7 +157,6 @@ namespace CompanyPMO_.NET.Repository
             {
                 tasks = await _context.Tasks
                     .Where(whereExpression)
-                    //.Where(x => taskIds.Contains(x.TaskId) && x.TaskCreatorId == 3 && x.Employees.Count > 3)
                     .OrderBy(orderByExpression)
                     .Include(t => t.TaskCreator)
                     .Include(e => e.Employees)

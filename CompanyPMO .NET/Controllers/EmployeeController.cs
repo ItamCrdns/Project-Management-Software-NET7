@@ -169,9 +169,9 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{username}/projects/all")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<ProjectDto>))]
-        public async Task<IActionResult> GetProjectsByEmployeeUsername(string username, int page, int pageSize)
+        public async Task<IActionResult> GetProjectsByEmployeeUsername(string username, [FromQuery] FilterParams filterParams)
         {
-            var projects = await _projectService.GetProjectsByEmployeeUsername(username, page, pageSize);
+            var projects = await _projectService.GetProjectsByEmployeeUsername(username, filterParams);
 
             return Ok(projects);
         }
@@ -241,6 +241,27 @@ namespace CompanyPMO_.NET.Controllers
             EmployeeDto employee = await _employeeService.GetEmployeeByUsername(username);
 
             return Ok(employee);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{clientId}/projects/created")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        public async Task<IActionResult> GetEmployeesThatHaveCreatedProjectsInACertainClient(int clientId, int page, int pageSize)
+        {
+            var employees = await _employeeService.GetEmployeesThatHaveCreatedProjectsInACertainClient(clientId, page, pageSize);
+
+            return Ok(employees);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("employees/by-employee-ids")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        public async Task<IActionResult> GetEmployeesFromAListOfEmployeeIds([FromQuery] string? employeeIds)
+        {
+            // Make sure that the string you pass its in the following format: 1-2-3-4-5.
+            var employees = await _employeeService.GetEmployeesFromAListOfEmployeeIds(employeeIds);
+
+            return Ok(employees);
         }
     }
 }

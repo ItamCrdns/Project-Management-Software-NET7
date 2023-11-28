@@ -107,7 +107,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetProjectsByCompanyName(int companyId, FilterParams filterParams)
         {
-            var (whereExpression, orderByExpression) = _utilityService.BuilWhereAndOrderByExpressions<Project>(companyId, null, null, "CompanyId", "Created", filterParams);
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Project>(companyId, null, null, "CompanyId", "Created", filterParams);
 
             bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
@@ -367,25 +367,43 @@ namespace CompanyPMO_.NET.Repository
             return await _utilityService.UpdateEntity(employeeId, projectId, projectDto, images, AddImagesToExistingProject, GetProjectById);
         }
 
-        public async Task<Dictionary<string, object>> GetProjectsByEmployeeUsername(string username, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetProjectsByEmployeeUsername(string username, FilterParams filterParams)
         {
-            // Returns a list of actual projects. containing a lot of information
-            var (projectIds, totalProjectsCount, totalPages) = await _utilityService.GetEntitiesEmployeeCreatedOrParticipates<EmployeeProject, Project>(username, "ProjectCreatorId", "ProjectId", page, pageSize);
+            var (projectIds, totalProjectsCount, totalPages) = await _utilityService.GetEntitiesEmployeeCreatedOrParticipates<EmployeeProject, Project>(username, "ProjectCreatorId", "ProjectId", filterParams.Page, filterParams.PageSize);
 
-            ICollection<Project> projects = await _context.Projects
-                .Where(p => projectIds.Contains(p.ProjectId))
-                .Include(c => c.Company)
-                .Include(e => e.Employees)
-                .Include(p => p.ProjectCreator)
-                .ToListAsync();
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Project>(null, projectIds, "ProjectId", "ProjectId", "Created", filterParams);
 
+            bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
+            bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
+
+            List<Project> projects = new();
+
+            if (ShallOrderAscending)
+            {
+                projects = await _context.Projects
+                    .Where(whereExpression)
+                    .OrderBy(orderByExpression)
+                    .Include(c => c.Company)
+                    .Include(e => e.Employees)
+                    .Include(p => p.ProjectCreator)
+                    .ToListAsync();
+            } else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
+            {
+                projects = await _context.Projects
+                    .Where(whereExpression)
+                    .OrderByDescending(orderByExpression)
+                    .Include(c => c.Company)
+                    .Include(e => e.Employees)
+                    .Include(p => p.ProjectCreator)
+                    .ToListAsync();
+            }
             var projectDtos = ProjectSelectQuery(projects);
 
-            var result = new Dictionary<string, object>
+            var result = new DataCountAndPagesizeDto<IEnumerable<ProjectDto>>
             {
-                { "data", projectDtos },
-                { "count", totalProjectsCount },
-                { "pages", totalPages }
+                Data = projectDtos,
+                Count = totalProjectsCount,
+                Pages = totalPages
             };
 
             return result;

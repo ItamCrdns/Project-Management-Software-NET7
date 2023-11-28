@@ -30,7 +30,7 @@ namespace CompanyPMO_.NET.Repository
             }
 
             if (employeeIds.Count is 0)
-            { 
+            {
                 return ("No employees were provided.", null);
             }
 
@@ -51,7 +51,7 @@ namespace CompanyPMO_.NET.Repository
                 foreach (var prop in props)
                 {
                     if (prop.Name.Equals("RelationId")) continue; // Primary key. Skip iteration
-                    if(prop.Name.Equals("EmployeeId"))
+                    if (prop.Name.Equals("EmployeeId"))
                     {
                         prop.SetValue(newEntity, employeeId);
                         addedEmployees.Add((employeeId, entityId));
@@ -85,7 +85,8 @@ namespace CompanyPMO_.NET.Repository
                 string response = "All employees were added successfully";
                 return (response, employeesAdded);
             }
-            else if (rowsAffected > 0) {
+            else if (rowsAffected > 0)
+            {
                 string response = "Operation was completed. However, not all employees could be added. Are you trying to add employees that are already working in this project?";
                 return (response, employeesAdded);
             }
@@ -210,7 +211,7 @@ namespace CompanyPMO_.NET.Repository
                     query = query.Include(navProperty);
                 }
             }
-            
+
             if (ShallOrderAscending)
             {
                 entities = await query
@@ -256,14 +257,14 @@ namespace CompanyPMO_.NET.Repository
                 .CountAsync();
 
             // If the pageSize is null, return all the entities
-            
+
             int pageValue = page ?? 1;
             int pageValueSize = pageSize ?? totalEntitiesCount;
 
             int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / pageValueSize);
 
             int toSkip = (pageValue - 1) * pageValueSize;
-            
+
             // Use reflection to get the EntityId
             var entityId = typeof(TEntity).GetProperty(entityName);
 
@@ -325,28 +326,75 @@ namespace CompanyPMO_.NET.Repository
             return (entityIds, totalEntitiesCount, totalPages);
         }
 
-        public (Expression<Func<T, bool>>, Expression<Func<T, object>>?) BuilWhereAndOrderByExpressions<T>(int constantId, IEnumerable<int>? whereIds, string? whereId, string defaultWhere, string defaultOrderBy, FilterParams filterParams)
+        public (Expression<Func<T, bool>>, Expression<Func<T, object>>?) BuildWhereAndOrderByExpressions<T>(int? constantId, IEnumerable<int>? whereIds, string? whereId, string defaultWhere, string defaultOrderBy, FilterParams filterParams)
         {
             // This method will build and return two expressions that can be used by LINQ "Where" and "OrderBy" or "OrderByDescending" methods
             var parameter = Expression.Parameter(typeof(T), "x");
 
-            // * Build the first where expression (x => x.EntityId EQUALS constantId)
-            var property = Expression.Property(parameter, filterParams.FilterWhere ?? defaultWhere);
-            var constant = Expression.Constant(constantId);
-            var equals = Expression.Equal(property, constant);
+            // * If constantId is provided, build the first expression. (x => x.EntityId EQUALS constantId)
+            BinaryExpression firstEquals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
+
+            if (constantId is not null && constantId > 0)
+            {
+                MemberExpression newFilterString = FilterStringSplitter(parameter, defaultWhere);
+                var constant = Expression.Constant(constantId);
+                firstEquals = Expression.Equal(newFilterString, constant);
+            }
 
             BinaryExpression otherEquals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
+
+            // Start an empty expression, to hold all of the values. Defaulting to true.
+            BinaryExpression combinedExpression = Expression.Equal(firstEquals, otherEquals);
 
             // * If filterParams are filterValue are provided, build the second expression. (x => x.FilterBy EQUALS filterValue)
             if (filterParams.FilterBy is not null && filterParams.FilterValue is not null)
             {
-                MemberExpression newFilterString = FilterStringSplitter(parameter, filterParams.FilterBy);
-                var otherConstant = Expression.Constant(Convert.ToInt32(filterParams.FilterValue));
-                otherEquals = Expression.Equal(newFilterString, otherConstant);
+                // We will handle multiple filterBy properties by separting them with an underscore. Example: "FilterBy": "Priority_Author"
+                //// If the string contains underscore, split it, and create a new expression for each property. (x => x.Priority EQUALS constantId && x => x.Author EQUALS constantId)
+                // Generate arrays for each properties. They should have the same number of elements, if they are different: a wrong query param were provided
+                // If they are different, just do a fallback and return the default expressions. No error its necessary to be returned.
+                // newFilterBys[0] will be the first property, newFilterValues[0] will be the first value, and so on. And they are equal to each other (i.e newFilterBys[0] EQUALS newFilterValues[0])
+                string[] newFilterBys = filterParams.FilterBy.Split('_');
+                string[] newFilterValues = filterParams.FilterValue.Split('_');
+
+                if (newFilterBys.Length == newFilterValues.Length)
+                {
+                    var pairs = newFilterBys.Zip(newFilterValues, (fBy, fValue) => new { fBy, fValue }).ToArray();
+
+                    foreach (var pair in pairs)
+                    {
+                        MemberExpression property = Expression.Property(parameter, pair.fBy);
+
+                        if (pair.fValue.Contains('-'))
+                        {
+                            // If the filterValue contains a '-', that means we need to convert the string (i.e "1-2-3") to a list of ints (i.e [1, 2, 3]) (list and not array because we need the .Contains method)
+                            List<int> valueInts = pair.fValue.Split('-').Select(int.Parse).ToList();
+                            ConstantExpression valueIntsConstant = Expression.Constant(valueInts);
+                            MethodInfo containsMethod = typeof(List<int>).GetMethod("Contains");
+
+                            // Checks if x.Whatever is in the list of ints (x => valueInts.Contains(x.Whatever))
+                            Expression containsCall = Expression.Call(valueIntsConstant, containsMethod, property);
+                            combinedExpression = Expression.AndAlso(combinedExpression, containsCall);
+                        }
+                        else
+                        {
+                            // If it does not contain a '-', we will just compare the property with the value (x => x.Whatever EQUALS value)
+                            ConstantExpression constant = Expression.Constant(Convert.ToInt32(pair.fValue)); // Well, It'll only work with ints for now
+                            BinaryExpression equals = Expression.Equal(property, constant);
+                            combinedExpression = Expression.AndAlso(combinedExpression, equals);
+                        }
+                    }
+                }
+                else
+                {
+                    MemberExpression newFilterString = FilterStringSplitter(parameter, filterParams.FilterBy);
+                    var otherConstant = Expression.Constant(Convert.ToInt32(filterParams.FilterValue));
+                    otherEquals = Expression.Equal(newFilterString, otherConstant);
+                }
             }
 
             // * Join the two where expressions (Exp1 && exp2) (x => x.EntityId EQUALS constantId && x => x.FilterBy EQUALS filterValue)
-            var combinedExpression = Expression.AndAlso(equals, otherEquals);
+            combinedExpression = Expression.AndAlso(combinedExpression, otherEquals);
 
             // If whereIds its not null, we are going to create a new expression to filter by the given ids. Example: Get all the tasks that belong to the projectIds 1, 2 and 3
             // This is so it can work together with the GetEntitiesByEntityId method. (x => x.TaskIds.Contains("TaskId")
@@ -404,7 +452,7 @@ namespace CompanyPMO_.NET.Repository
 
                 foreach (var prop in props)
                 {
-                    if(prop.PropertyType.Equals(typeof(int))) // Check if the value its integer
+                    if (prop.PropertyType.Equals(typeof(int))) // Check if the value its integer
                     {
                         int propValue = (int)prop.GetValue(dto); // Skip iteration if value is zero
                         if (propValue is 0)
@@ -493,7 +541,7 @@ namespace CompanyPMO_.NET.Repository
 
             // Build a predicate value for the where clause of UEntity
             var parameter = Expression.Parameter(typeof(UEntity), "x");
-            
+
             var entityProperty = typeof(TEntity).GetProperty("EmployeeId"); // Always employee Id. This generic method its to get employees so we dont need any other property
             var entityPropertyJunctionTable = typeof(UEntity).GetProperty(entityNameForEntityCreatorId);
 

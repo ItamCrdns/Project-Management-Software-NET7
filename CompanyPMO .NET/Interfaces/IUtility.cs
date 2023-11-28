@@ -71,8 +71,8 @@ namespace CompanyPMO_.NET.Interfaces
         MemberExpression FilterStringSplitter(ParameterExpression parameter, string filterString);
 
         // * Build Where and orderBy expressions during runtime
-        (Expression<Func<T, bool>>, Expression<Func<T, object>>?) BuilWhereAndOrderByExpressions<T>(
-            int constantId,
+        (Expression<Func<T, bool>>, Expression<Func<T, object>>?) BuildWhereAndOrderByExpressions<T>(
+            int? constantId,
             // ! Just pass null, null if you dont want to use the whereIds and whereId parameters. This will disable the extra .Where (x => x.whereIds.Contains(x.whereId) expression
             IEnumerable<int>? whereIds, // * Pass a list of ids here: example: new List<int> { 1, 2, 3 }. This will be used to filter the data and will only return the data that matches the given ids
             string? whereId, // * Used to build the where expression along with the whereIds list. Example: x => whereIds.Contains(x.whereId)
