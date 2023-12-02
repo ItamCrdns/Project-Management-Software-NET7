@@ -246,9 +246,15 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{clientId}/projects/created")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> GetEmployeesThatHaveCreatedProjectsInACertainClient(int clientId, int page, int pageSize)
         {
             var employees = await _employeeService.GetEmployeesThatHaveCreatedProjectsInACertainClient(clientId, page, pageSize);
+
+            if(!employees.Data.Any())
+            {
+                return NotFound();
+            }
 
             return Ok(employees);
         }
@@ -256,10 +262,16 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("employees/by-employee-ids")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> GetEmployeesFromAListOfEmployeeIds([FromQuery] string? employeeIds)
         {
             // Make sure that the string you pass its in the following format: 1-2-3-4-5.
             var employees = await _employeeService.GetEmployeesFromAListOfEmployeeIds(employeeIds);
+
+            if (!employees.Any())
+            {
+                return NotFound();
+            }
 
             return Ok(employees);
         }

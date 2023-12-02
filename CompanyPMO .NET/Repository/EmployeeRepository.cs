@@ -130,17 +130,17 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<Employee> GetEmployeeById(int employeeId)
         {
-            var employee = await _context.Employees
-                .Where(e => e.EmployeeId.Equals(employeeId))
-                .Include(p => p.Projects)
-                .Include(c => c.Company)
-                .Include(t => t.Tier)
-                .Include(t => t.Tasks)
-                .Include(i => i.Issues)
-                .Include(s => s.Supervisor)
-                .FirstOrDefaultAsync();
+            return await _context.Employees
+                .FindAsync(employeeId);
+                //.Include(p => p.Projects)
+                //.Include(c => c.Company)
+                //.Include(t => t.Tier)
+                //.Include(t => t.Tasks)
+                //.Include(i => i.Issues)
+                //.Include(s => s.Supervisor)
+                //.FirstOrDefaultAsync();
 
-            return EmployeeQuery(employee);
+            //return EmployeeQuery(employee);
         }
 
         public async Task<IEnumerable<Employee>> GetEmployeeBySupervisorId(int supervisorId)
