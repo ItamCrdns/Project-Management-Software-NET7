@@ -132,21 +132,12 @@ namespace CompanyPMO_.NET.Repository
         {
             return await _context.Employees
                 .FindAsync(employeeId);
-                //.Include(p => p.Projects)
-                //.Include(c => c.Company)
-                //.Include(t => t.Tier)
-                //.Include(t => t.Tasks)
-                //.Include(i => i.Issues)
-                //.Include(s => s.Supervisor)
-                //.FirstOrDefaultAsync();
-
-            //return EmployeeQuery(employee);
         }
 
         public async Task<IEnumerable<Employee>> GetEmployeeBySupervisorId(int supervisorId)
         {
             var employees = await _context.Employees
-                .Where(s => s.SupervisorId.Equals(supervisorId))
+                .Where(x => x.SupervisorId == supervisorId)
                 .Include(t => t.Tier)
                 .Include(c => c.Company)
                 .ToListAsync();
@@ -161,6 +152,11 @@ namespace CompanyPMO_.NET.Repository
                 .Include(t => t.Tier)
                 .Include(s => s.Supervisor)
                 .FirstOrDefaultAsync();
+
+            if (employee is null)
+            {
+                return null;
+            }
                 
             // Projects user is working on or created
             int projectsParticipantCount = await _context.EmployeeProjects
@@ -394,6 +390,11 @@ namespace CompanyPMO_.NET.Repository
 
             var (imageUrl, _) = await _imageService.UploadToCloudinary(image, 300, 300);
 
+            if(employee.Email is null || employee.PhoneNumber is null || employee.FirstName is null || employee.Gender is null || employee.LastName is null || employee.Role is null)
+            {
+                return ("Email, first name, last name, gender, phone number and role cannot be null", false);
+            }
+
             var newEmployee = new Employee
             {
                 Username = employee.Username,
@@ -514,7 +515,7 @@ namespace CompanyPMO_.NET.Repository
             return employeeDtos;
         }
 
-        public async Task<Dictionary<string, object>> SearchEmployeesByCompanyPaginated(string search, int companyId, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>> SearchEmployeesByCompanyPaginated(string search, int companyId, int page, int pageSize)
         {
             int toSkip = (page - 1) * pageSize;
 
@@ -538,17 +539,17 @@ namespace CompanyPMO_.NET.Repository
                 .Take(pageSize)
                 .ToListAsync();
 
-            var result = new Dictionary<string, object>
+            var result = new DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>
             {
-                { "data", employees },
-                { "count", totalEmployeesCount },
-                { "pages", totalPages }
+                Data = employees,
+                Count = totalEmployeesCount,
+                Pages = totalPages
             };
 
             return result;
         }
 
-        public async Task<Dictionary<string, object>> SearchEmployeesWorkingInTheSameCompany(string search, string username, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>> SearchEmployeesWorkingInTheSameCompany(string search, string username, int page, int pageSize)
         {
             int toSkip = (page - 1) * pageSize;
 
@@ -577,11 +578,11 @@ namespace CompanyPMO_.NET.Repository
                 .Take(pageSize)
                 .ToListAsync();
 
-            var result = new Dictionary<string, object>
+            var result = new DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>
             {
-                { "data", employees },
-                { "count", totalEmployeesCount },
-                { "pages", totalPages }
+                Data = employees,
+                Count = totalEmployeesCount,
+                Pages = totalPages
             };
 
             return result;
