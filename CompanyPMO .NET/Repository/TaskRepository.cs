@@ -118,7 +118,7 @@ namespace CompanyPMO_.NET.Repository
             return tasks;
         }
 
-        public async Task<Dictionary<string, object>> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize)
         {
             var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesEmployeeCreatedOrParticipates<EmployeeTask, Models.Task>(username, "TaskCreatorId", "TaskId", page, pageSize);
 
@@ -131,11 +131,11 @@ namespace CompanyPMO_.NET.Repository
                 })
                 .ToListAsync();
 
-            var result = new Dictionary<string, object>
+            var result = new DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>
             {
-                { "data", tasks },
-                { "count", totalTasksCount },
-                { "pages", totalPages}
+                Data = tasks,
+                Count = totalTasksCount,
+                Pages = totalPages
             };
 
             return result;
@@ -229,7 +229,7 @@ namespace CompanyPMO_.NET.Repository
             return false; // Task to update was null
         }
 
-        public async Task<Dictionary<string, object>> GetTasksByEmployeeUsername(string username, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<ICollection<TaskDto>>> GetTasksByEmployeeUsername(string username, int page, int pageSize)
         {
             var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeTask>(username, "TaskId", page, pageSize);
 
@@ -246,11 +246,11 @@ namespace CompanyPMO_.NET.Repository
                 })
                 .ToListAsync();
 
-            var result = new Dictionary<string, object>
+            var result = new DataCountAndPagesizeDto<ICollection<TaskDto>>
             {
-                { "data", tasks },
-                { "count", totalTasksCount },
-                { "pages", totalPages }
+                Data = tasks,
+                Count = totalTasksCount,
+                Pages = totalPages
             };
 
             return result;

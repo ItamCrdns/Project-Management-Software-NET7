@@ -134,7 +134,7 @@ namespace CompanyPMO_.NET.Repository
                 .FindAsync(employeeId);
         }
 
-        public async Task<IEnumerable<Employee>> GetEmployeeBySupervisorId(int supervisorId)
+        public async Task<IEnumerable<Employee>> GetEmployeesBySupervisorId(int supervisorId)
         {
             var employees = await _context.Employees
                 .Where(x => x.SupervisorId == supervisorId)
@@ -285,7 +285,7 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<Dictionary<string, object>> GetEmployeesWorkingInTheSameCompany(string username, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>> GetEmployeesWorkingInTheSameCompany(string username, int page, int pageSize)
         {
             int toSkip = (page - 1) * pageSize;
 
@@ -318,11 +318,11 @@ namespace CompanyPMO_.NET.Repository
                 .Take(pageSize)
                 .ToListAsync();
 
-            var result = new Dictionary<string, object>
+            var result = new DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>
             {
-                { "data", employees },
-                { "count", totalEmployeesCount },
-                { "pages", totalPages }
+                Data = employees,
+                Count = totalEmployeesCount,
+                Pages = totalPages
             };
 
             return result;

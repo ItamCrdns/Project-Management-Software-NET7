@@ -141,7 +141,7 @@ namespace tests.Repository
             var dbContext = await GetDatabaseContext();
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 
-            var result = await employeeRepository.GetEmployeeBySupervisorId(id);
+            var result = await employeeRepository.GetEmployeesBySupervisorId(id);
 
             result.Should().NotBeNull();
             result.Should().HaveCount(1);
@@ -239,7 +239,7 @@ namespace tests.Repository
             var result = await employeeRepository.GetEmployeesWorkingInTheSameCompany(username, page, pageSize);
 
             result.Should().NotBeNull();
-            result.Should().BeOfType(typeof(Dictionary<string, object>));
+            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>));
         }
 
         [Fact]

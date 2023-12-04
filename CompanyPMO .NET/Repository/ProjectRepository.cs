@@ -409,7 +409,7 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<Dictionary<string, object>> GetProjectsShowcaseByEmployeeUsername(string username, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>>> GetProjectsShowcaseByEmployeeUsername(string username, int page, int pageSize)
         {
             var (projectIds, totalProjectsCount, totalPages) = await _utilityService.GetEntitiesEmployeeCreatedOrParticipates<EmployeeProject, Project>(username, "ProjectCreatorId", "ProjectId", page, pageSize);
 
@@ -423,11 +423,11 @@ namespace CompanyPMO_.NET.Repository
                 })
                 .ToListAsync();
 
-            var result = new Dictionary<string, object>
+            var result = new DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>>
             {
-                { "data", projects },
-                { "count", totalProjectsCount },
-                { "pages", totalPages }
+                Data = projects,
+                Count = totalProjectsCount,
+                Pages = totalPages
             };
 
             return result;

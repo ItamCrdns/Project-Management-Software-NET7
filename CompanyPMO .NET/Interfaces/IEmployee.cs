@@ -12,9 +12,9 @@ namespace CompanyPMO_.NET.Interfaces
         Task<Employee> GetEmployeeForClaims(string username);
         Task<Employee> GetEmployeeById(int employeeId);
         Task<EmployeeDto> GetEmployeeByUsername(string username);
-        Task<IEnumerable<Employee>> GetEmployeeBySupervisorId(int supervisorId);
+        Task<IEnumerable<Employee>> GetEmployeesBySupervisorId(int supervisorId);
         Employee EmployeeQuery(Employee employee);
-        Task<Dictionary<string, object>> GetEmployeesWorkingInTheSameCompany(string username, int page, int pageSize);
+        Task<DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>> GetEmployeesWorkingInTheSameCompany(string username, int page, int pageSize);
         Task<DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>> SearchEmployeesWorkingInTheSameCompany(string search, string username, int page, int pageSize);
         Task<Dictionary<string, object>> GetProjectEmployees(int projectId, int page, int pageSize);
         Task<Dictionary<string, object>> SearchProjectEmployees(string search, int projectId, int page, int pageSize);
