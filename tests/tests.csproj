@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CompanyPMO .NET\CompanyPMO .NET.csproj" />
+    <ProjectReference Include="..\CompanyPMO .NET\CompanyPMONet.csproj" />
   </ItemGroup>
 
 </Project>
