@@ -2,8 +2,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
 WORKDIR /App
 
-# Copy only necessary files (excluding tests)
-COPY CompanyPMO.csproj ./
+# Copy only necessary project file for restore (excluding tests)
+COPY CompanyPMO.NET.csproj ./
 RUN dotnet restore
 
 # Copy the rest of the application (excluding tests)
