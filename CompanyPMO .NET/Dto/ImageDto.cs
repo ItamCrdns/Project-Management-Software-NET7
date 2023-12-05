@@ -7,6 +7,6 @@
         public int EntityId { get; set; }
         public string ImageUrl { get; set; }
         public string PublicId { get; set; }
-        public DateTimeOffset Created { get; set; }
+        public DateTime Created { get; set; }
     }
 }

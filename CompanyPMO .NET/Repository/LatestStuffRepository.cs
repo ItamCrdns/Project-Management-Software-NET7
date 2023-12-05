@@ -16,9 +16,9 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<LatestStuffDto> GetEntitiesCreatedLastWeek()
         {
-            int projectsLastWeek = await _context.Projects.Where(p => p.Created >= DateTime.Now.AddDays(-7)).CountAsync();
-            int tasksLastWeek = await _context.Tasks.Where(t => t.Created >= DateTime.Now.AddDays(-7)).CountAsync();
-            int issuesLastWeek = await _context.Issues.Where(i => i.Created >= DateTime.Now.AddDays(-7)).CountAsync();
+            int projectsLastWeek = await _context.Projects.Where(p => p.Created >= DateTime.UtcNow.AddDays(-7)).CountAsync();
+            int tasksLastWeek = await _context.Tasks.Where(t => t.Created >= DateTime.UtcNow.AddDays(-7)).CountAsync();
+            int issuesLastWeek = await _context.Issues.Where(i => i.Created >= DateTime.UtcNow.AddDays(-7)).CountAsync();
 
             LatestStuffDto latestStuffDto = new()
             {

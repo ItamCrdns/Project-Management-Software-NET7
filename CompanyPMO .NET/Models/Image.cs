@@ -2,6 +2,7 @@
 
 namespace CompanyPMO_.NET.Models
 {
+    [Table("images")]
     public class Image
     {
         [Column("image_id")]
@@ -14,7 +15,8 @@ namespace CompanyPMO_.NET.Models
         public string ImageUrl { get; set; }
         [Column("public_id")]
         public string PublicId { get; set; }
-        public DateTimeOffset Created { get; set; }
+        [Column("created")]
+        public DateTime Created { get; set; }
         [Column("uploader_id")]
         public int UploaderId { get; set; }
 

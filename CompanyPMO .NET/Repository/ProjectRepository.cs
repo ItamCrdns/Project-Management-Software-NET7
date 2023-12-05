@@ -3,7 +3,6 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -45,7 +44,7 @@ namespace CompanyPMO_.NET.Repository
             {
                 Name = project.Name,
                 Description = project.Description,
-                Created = DateTimeOffset.UtcNow,
+                Created = DateTime.UtcNow,
                 ProjectCreatorId = employeeSupervisorId,
                 Priority = project.Priority,
                 CompanyId = companyId,
@@ -179,7 +178,8 @@ namespace CompanyPMO_.NET.Repository
                 .Include(e => e.Employees)
                 .FirstOrDefaultAsync();
 
-            var images = project.Images = SelectImages(project.Images);
+            //var images = project.Images = SelectImages(project.Images);
+            // Will handle images later
 
             int totalEmployeesCount = await _context.Projects
                 .Where(p => p.ProjectId.Equals(projectId))
@@ -195,13 +195,13 @@ namespace CompanyPMO_.NET.Repository
                 ProjectId = project.ProjectId,
                 Name = project.Name,
                 Description = project.Description,
-                ImagesCollection = images.Select(i => new ImageDto
-                {
-                    ImageId = i.ImageId,
-                    ImageUrl = i.ImageUrl,
-                    PublicId = i.PublicId,
-                    Created = i.Created
-                }).ToList(),
+                //ImagesCollection = images.Select(i => new ImageDto
+                //{
+                //    ImageId = i.ImageId,
+                //    ImageUrl = i.ImageUrl,
+                //    PublicId = i.PublicId,
+                //    Created = i.Created
+                //}).ToList(),
                 Created = project.Created,
                 Finalized = project.Finalized,
                 ExpectedDeliveryDate = project.ExpectedDeliveryDate,
@@ -354,7 +354,7 @@ namespace CompanyPMO_.NET.Repository
 
             if(project is not null && project.Finalized is null)
             {
-                project.Finalized = DateTimeOffset.UtcNow;
+                project.Finalized = DateTime.UtcNow;
                 _context.Update(project);
                 return await _context.SaveChangesAsync() > 0;
             }

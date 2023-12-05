@@ -507,7 +507,7 @@ namespace CompanyPMO_.NET.Repository
                         EntityId = entityId,
                         Operation = "PATCH",
                         EmployeeId = employeeId,
-                        Modified = DateTimeOffset.UtcNow,
+                        Modified = DateTime.UtcNow,
                         OldData = oldEntityToJson, // Save the old and new data as a plain json 
                         NewData = newEntityToJson
                     };

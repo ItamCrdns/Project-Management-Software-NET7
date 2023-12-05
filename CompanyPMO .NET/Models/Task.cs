@@ -2,16 +2,21 @@
 
 namespace CompanyPMO_.NET.Models
 {
+    [Table("tasks")]
     public class Task
     {
         [Column("task_id")]
         public int TaskId { get; set; }
+        [Column("name")]
         public string Name { get; set; }
+        [Column("description")]
         public string Description { get; set; }
-        public DateTimeOffset Created { get; set; }
+        [Column("created")]
+        public DateTime Created { get; set; }
         [Column("started_working")]
-        public DateTimeOffset? StartedWorking { get; set; }
-        public DateTimeOffset? Finished { get; set; }
+        public DateTime? StartedWorking { get; set; }
+        [Column("finished")]
+        public DateTime? Finished { get; set; }
         [Column("task_creator_id")]
         public int TaskCreatorId { get; set; }
         [Column("project_id")]

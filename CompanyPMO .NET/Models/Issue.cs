@@ -3,16 +3,21 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CompanyPMO_.NET.Models
 {
+    [Table("issues")]
     public class Issue
     {
         [Column("issue_id")]
         public int IssueId { get; set; }
+        [Column("name")]
         public string Name { get; set; }
+        [Column("description")]
         public string Description { get; set; }
-        public DateTimeOffset Created { get; set; }
+        [Column("created")]
+        public DateTime Created { get; set; }
         [Column("started_working")]
-        public DateTimeOffset? StartedWorking { get; set; }
-        public DateTimeOffset? Fixed { get; set; }
+        public DateTime? StartedWorking { get; set; }
+        [Column("fixed")]
+        public DateTime? Fixed { get; set; }
         [Column("issue_creator_id")]
         public int IssueCreatorId { get; set; }
         [Column("task_id")]

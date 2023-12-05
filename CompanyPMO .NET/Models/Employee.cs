@@ -3,26 +3,33 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CompanyPMO_.NET.Models
 {
+    [Table("employees")]
     public class Employee : IEmployeeEntity
     {
         [Column("employee_id")]
         public int EmployeeId { get; set; }
+        [Column("username")]
         public string Username { get; set; }
+        [Column("role")]
         public string Role { get; set; }
+        [Column("email")]
         public string Email { get; set; }
         [Column("phone_number")]
         public string PhoneNumber { get; set; }
+        [Column("password")]
         public string Password { get; set; }
         [Column("first_name")]
         public string FirstName { get; set; }
         [Column("last_name")]
         public string LastName { get; set; }
+        [Column("gender")]
         public string Gender { get; set; }
-        public DateTimeOffset Created { get; set; }
+        [Column("created")]
+        public DateTime Created { get; set; }
         [Column("profile_picture")]
         public string? ProfilePicture { get; set; }
         [Column("last_login")]
-        public DateTimeOffset? LastLogin { get; set; }
+        public DateTime? LastLogin { get; set; }
         [Column("company_id")]
         public int CompanyId { get; set; }
         [Column("tier_id")]
@@ -32,7 +39,7 @@ namespace CompanyPMO_.NET.Models
         [Column("login_attempts")]
         public int LoginAttempts { get; set; }
         [Column("locked_until")]
-        public DateTimeOffset? LockedUntil { get; set; }
+        public DateTime? LockedUntil { get; set; }
         [Column("supervisor_id")]
         public int? SupervisorId { get; set; }
 

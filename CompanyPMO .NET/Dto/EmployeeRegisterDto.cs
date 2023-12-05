@@ -10,9 +10,9 @@
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Gender { get; set; }
-        public DateTimeOffset Created { get; set; }
+        public DateTime Created { get; set; }
         public string? ProfilePicture { get; set; }
-        public DateTimeOffset LastLogin { get; set; }
+        public DateTime LastLogin { get; set; }
         public int CompanyId { get; set; }
         public int TierId { get; set; }
         public int? SupervisorId { get; set; }

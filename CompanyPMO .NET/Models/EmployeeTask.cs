@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CompanyPMO_.NET.Models
 {
+    [Table("employeetasks")]
     public class EmployeeTask : IEmployeeEntity
     {
         // Relations table

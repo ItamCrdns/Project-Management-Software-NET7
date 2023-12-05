@@ -2,6 +2,7 @@
 
 namespace CompanyPMO_.NET.Models
 {
+    [Table("changelog")]
     public class Changelog
     {
         [Column("log_id")]
@@ -10,10 +11,12 @@ namespace CompanyPMO_.NET.Models
         public string EntityType { get; set; }
         [Column("entity_id")]
         public int EntityId { get; set; }
+        [Column("operation")]
         public string Operation { get; set; }
         [Column("employee_id")]
         public int EmployeeId { get; set; }
-        public DateTimeOffset Modified { get; set; }
+        [Column("modified")]
+        public DateTime Modified { get; set; }
         [Column("old_data")]
         public string OldData { get; set; }
         [Column("new_data")]

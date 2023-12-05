@@ -342,13 +342,13 @@ namespace CompanyPMO_.NET.Repository
             {
                 employee.LockedEnabled = true;
                 employee.LoginAttempts = 0;
-                employee.LockedUntil = DateTimeOffset.UtcNow.AddMinutes(5);
+                employee.LockedUntil = DateTime.UtcNow.AddMinutes(5);
 
                 var notification = new Notification
                 {
                     Name = "System notification",
                     Content = "Your account was temporary blocked because of multiple failed login attempts.",
-                    Created = DateTimeOffset.UtcNow,
+                    Created = DateTime.UtcNow,
                     ReceiverId = employee.EmployeeId
                 };
 
@@ -405,9 +405,9 @@ namespace CompanyPMO_.NET.Repository
                 FirstName = employee.FirstName,
                 LastName = employee.LastName,
                 Gender = employee.Gender,
-                Created = DateTimeOffset.UtcNow,
+                Created = DateTime.UtcNow,
                 ProfilePicture = imageUrl,
-                LastLogin = DateTimeOffset.UtcNow,
+                LastLogin = DateTime.UtcNow,
                 CompanyId = employee.CompanyId,
                 TierId = employee.TierId,
                 SupervisorId = employee.SupervisorId // CHANGE THIS !

@@ -26,21 +26,7 @@ namespace CompanyPMO_.NET.Controllers
             _taskService = taskService;
             _issueService = issueService;
             _userIdentityService = userIdentityService;
-            //_lazyUserId = new Lazy<Task<int>>(InitializeUserId);
         }
-
-        //private async Task<int> InitializeUserId()
-        //{
-        //    return await _userIdentityService.GetUserIdFromClaims(HttpContext.User);
-        //}
-
-        // Fix Ambiguous HTTP method when making it public
-        //[ApiExplorerSettings(IgnoreApi = true)]
-        //public async Task<int> GetUserId()
-        //{
-        //    //return await _lazyUserId.Value;
-        //    return await _userIdentityService.GetUserIdFromClaims(HttpContext.User);
-        //}
 
         [AllowAnonymous]
         [HttpPost("login")]

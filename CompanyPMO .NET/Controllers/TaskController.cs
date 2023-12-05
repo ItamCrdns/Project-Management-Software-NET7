@@ -43,7 +43,7 @@ namespace CompanyPMO_.NET.Controllers
                 TaskId = newTask.TaskId,
                 Name = newTask.Name,
                 Description = newTask.Description,
-                Created = DateTimeOffset.UtcNow,
+                Created = DateTime.UtcNow,
                 TaskCreatorId = await GetUserId(),
                 Images = imageCollection
             };

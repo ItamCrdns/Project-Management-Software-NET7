@@ -6,7 +6,7 @@ namespace CompanyPMO_.NET.Dto
     {
         public int IssueId { get; set; }
         public string Name { get; set; }
-        public DateTimeOffset Created { get; set; }
+        public DateTime Created { get; set; }
         public IEnumerable<EmployeeShowcaseDto>? Employees { get; set; }
         public EmployeeShowcaseDto IssueCreator { get; set; }
         public TaskShowcaseDto Task { get; set; }

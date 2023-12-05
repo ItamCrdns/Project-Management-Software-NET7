@@ -32,7 +32,7 @@ namespace CompanyPMO_.NET.Repository
             {
                 Name = task.Name,
                 Description = task.Description,
-                Created = DateTimeOffset.UtcNow,
+                Created = DateTime.UtcNow,
                 TaskCreatorId = employeeId,
                 ProjectId = projectId
             };
@@ -67,7 +67,7 @@ namespace CompanyPMO_.NET.Repository
 
                 if (taskToUpdate is not null && taskToUpdate.StartedWorking is not null) // If tasks does not have a startedWorking date do not change
                 {
-                    taskToUpdate.Finished = DateTimeOffset.UtcNow;
+                    taskToUpdate.Finished = DateTime.UtcNow;
                     _context.Update(taskToUpdate);
                     return await _context.SaveChangesAsync() > 0;
                 }
@@ -220,7 +220,7 @@ namespace CompanyPMO_.NET.Repository
 
                 if (taskToUpdate is not null)
                 {
-                    taskToUpdate.StartedWorking = DateTimeOffset.UtcNow;
+                    taskToUpdate.StartedWorking = DateTime.UtcNow;
                     _context.Update(taskToUpdate);
                     return await _context.SaveChangesAsync() > 0;
                 }

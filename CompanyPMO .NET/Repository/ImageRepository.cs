@@ -71,7 +71,7 @@ namespace CompanyPMO_.NET.Repository
                     EntityId = entityId,
                     ImageUrl = imageUrl,
                     PublicId = publicId,
-                    Created = DateTimeOffset.Now
+                    Created = DateTime.Now
                 };
 
                 imageCount++; // Add one image for every iteration
