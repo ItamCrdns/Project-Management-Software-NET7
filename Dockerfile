@@ -3,11 +3,11 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-env
 WORKDIR /App
 
 # Copy only necessary files for the main project (excluding tests)
-COPY CompanyPMO\ .NET/CompanyPMO\ .NET.csproj ./CompanyPMO\ .NET/
+COPY ./CompanyPMO\ .NET/CompanyPMO\ .NET.csproj ./CompanyPMO\ .NET/
 RUN dotnet restore ./CompanyPMO\ .NET/CompanyPMO\ .NET.csproj
 
 # Copy the rest of the application (excluding tests)
-COPY . ./
+COPY . .
 
 # Build and publish a release
 RUN dotnet publish -c Release -o out
