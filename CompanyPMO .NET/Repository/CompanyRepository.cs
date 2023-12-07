@@ -44,7 +44,7 @@ namespace CompanyPMO_.NET.Repository
 
             List<Image> imageCollection = new();
 
-            if (images is not null && images.Any(i => i.Length > 0))
+            if (images is not null && images.Any())
             {
                 imageCollection = await _imageService.AddImagesToNewEntity(images, company.CompanyId, "Company", null);
             }
@@ -74,6 +74,11 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<int> CreateNewCompany(int supervisorId, string name)
         {
+            if (string.IsNullOrEmpty(name) || supervisorId == 0)
+            {
+                return 0;
+            }
+
             var company = new Company
             {
                 Name = name,
@@ -83,10 +88,11 @@ namespace CompanyPMO_.NET.Repository
             _context.Add(company);
             int rowsAffected = await _context.SaveChangesAsync();
 
-            if(rowsAffected > 0)
+            if (rowsAffected > 0)
             {
                 return company.CompanyId;
             }
+
             return 0;
         }
 
@@ -155,19 +161,22 @@ namespace CompanyPMO_.NET.Repository
                 .Include(i => i.Images)
                 .FirstOrDefaultAsync();
 
-            var companyImages = company.Images
-                .Where(et => et.EntityType.Equals("Company"))
-                .Select(i => new Image
-                {
-                    ImageId = i.ImageId,
-                    EntityType = i.EntityType,
-                    EntityId = i.EntityId,
-                    ImageUrl = i.ImageUrl,
-                    PublicId = i.PublicId,
-                    Created = i.Created,
-                }).ToList();
+            if (company?.Images is not null && company.Images.Count > 0)
+            {
+                var companyImages = company?.Images?
+                    .Where(et => et.EntityType.Equals("Company"))
+                    .Select(i => new Image
+                    {
+                        ImageId = i.ImageId,
+                        EntityType = i.EntityType,
+                        EntityId = i.EntityId,
+                        ImageUrl = i.ImageUrl,
+                        PublicId = i.PublicId,
+                        Created = i.Created,
+                    }).ToList();
 
-            company.Images = companyImages;
+                company.Images = companyImages;
+            }
 
             return company;
         }
