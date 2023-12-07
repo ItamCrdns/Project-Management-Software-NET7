@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using FakeItEasy;
 using Microsoft.AspNetCore.Http;
 using CompanyPMO_.NET.Models;
-using System.Collections.Generic;
 using System.Security.Claims;
 
 namespace Tests.EmployeeControllerTests

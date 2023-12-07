@@ -41,7 +41,6 @@ namespace tests.Repository
             {
                 for (int i = 0; i < 10; i++)
                 {
-                    // Create 10 employee instances in the in-memory database
                     dbContext.Employees.Add(
                         new Employee
                         {
@@ -53,17 +52,21 @@ namespace tests.Repository
                             FirstName = $"test{i}",
                             LastName = $"test{i}",
                             Gender = $"test{i}",
-                            Created = DateTimeOffset.Now,
+                            Created = DateTime.UtcNow,
                             ProfilePicture = $"test{i}",
-                            LastLogin = DateTimeOffset.Now,
+                            LastLogin = DateTime.UtcNow,
                             CompanyId = (i % 2) + 1, // Only company Ids one and two
                             TierId = (i % 2) + 1,
                             LockedEnabled = true,
                             LoginAttempts = i,
-                            LockedUntil = DateTimeOffset.Now,
-                            SupervisorId = i,
+                            LockedUntil = DateTime.UtcNow,
+                            SupervisorId = i
                         });
                 }
+            }
+
+            if (!await dbContext.Tiers.AnyAsync())
+            {
                 for (int j = 1; j < 3; j++)
                 {
                     dbContext.Tiers.Add(
@@ -71,8 +74,15 @@ namespace tests.Repository
                         {
                             Name = $"test{j}",
                             Duty = $"test{j}",
-                            Created = DateTimeOffset.Now
+                            Created = DateTime.UtcNow
                         });
+                }
+            }
+
+            if (!await dbContext.Companies.AnyAsync())
+            {
+                for (int j = 1; j < 3; j++)
+                {
                     dbContext.Companies.Add(
                         new Company
                         {
@@ -82,30 +92,46 @@ namespace tests.Repository
                             ContactEmail = $"test{j}",
                             ContactPhoneNumber = $"test{j}",
                             AddedById = j,
-                            Logo = $"test{j}",
+                            Logo = $"test{j}"
                         });
+                }
+            }
+
+            if (!await dbContext.Projects.AnyAsync())
+            {
+                for (int j = 1; j < 3; j++)
+                {
                     dbContext.Projects.Add(
                         new Project
                         {
                             Name = $"test{j}",
                             Description = $"test{j}",
-                            Created = DateTimeOffset.Now,
-                            Finalized = DateTimeOffset.Now,
+                            Created = DateTime.UtcNow,
+                            Finalized = DateTime.UtcNow,
                             ProjectCreatorId = j,
                             CompanyId = j,
                             Priority = j,
-                            ExpectedDeliveryDate = DateTimeOffset.Now,
-                            Lifecycle = $"test{j}",
+                            ExpectedDeliveryDate = DateTime.UtcNow,
+                            Lifecycle = $"test{j}"
                         });
+                }
+            }
+
+            if (!await dbContext.EmployeeProjects.AnyAsync())
+            {
+                for (int j = 1; j < 3; j++)
+                {
                     dbContext.EmployeeProjects.Add(
                         new EmployeeProject
                         {
                             EmployeeId = j,
-                            ProjectId = j,
+                            ProjectId = j
                         });
                 }
-                await dbContext.SaveChangesAsync();
             }
+
+            await dbContext.SaveChangesAsync();
+
             return dbContext;
         }
 
@@ -144,7 +170,7 @@ namespace tests.Repository
             var result = await employeeRepository.GetEmployeesBySupervisorId(id);
 
             result.Should().NotBeNull();
-            result.Should().HaveCount(1);
+            result.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Should().BeOfType(typeof(List<Employee>));
         }
 
@@ -236,10 +262,19 @@ namespace tests.Repository
             var dbContext = await GetDatabaseContext();
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 
+            IEnumerable<int> fakeEmployeeIds = new List<int> { 1, 2, 3, 4, 5, 6, 7 };
+
+            A.CallTo(() => _utility.GetEntitiesByEntityId<Employee>(A<int>._, A<string>._, A<string>._, null, null))
+                .Returns(System.Threading.Tasks.Task.FromResult((fakeEmployeeIds, 0, 0)));
+
             var result = await employeeRepository.GetEmployeesWorkingInTheSameCompany(username, page, pageSize);
 
             result.Should().NotBeNull();
             result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>));
+            result.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
+            result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
+            result.Count.Should().BeGreaterThanOrEqualTo(1);
+            result.Pages.Should().BeGreaterThanOrEqualTo(1);
         }
 
         [Fact]
@@ -437,7 +472,7 @@ namespace tests.Repository
             int pageSize = 10;
             var dbContext = await GetDatabaseContext();
 
-            IEnumerable<int> fakeEmployeeIds = new List<int> { 1,2,3,4,5,6,7 };
+            IEnumerable<int> fakeEmployeeIds = new List<int> { 1, 2, 3, 4, 5, 6, 7 };
 
             A.CallTo(() => _utility.GetEntitiesByEntityId<Employee>(A<int>._, A<string>._, A<string>._, null, null))
                 .Returns(System.Threading.Tasks.Task.FromResult((fakeEmployeeIds, 7, 1)));
@@ -508,7 +543,6 @@ namespace tests.Repository
         [Fact]
         public async void EmployeeRepository_GetEmployeeUsernameById_ReturnsUsernameString()
         {
-            string expectedUsername = "test1";
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();

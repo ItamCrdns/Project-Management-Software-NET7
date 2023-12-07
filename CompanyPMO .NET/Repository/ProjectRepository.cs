@@ -178,6 +178,11 @@ namespace CompanyPMO_.NET.Repository
                 .Include(e => e.Employees)
                 .FirstOrDefaultAsync();
 
+            if(project is null)
+            {
+                return null;
+            }
+
             //var images = project.Images = SelectImages(project.Images);
             // Will handle images later
 
@@ -242,15 +247,19 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<Dictionary<string, List<ProjectDto>>> GetProjectsGroupedByCompany(int page, int pageSize)
         {
+            // * Switch to in memory grouping because apparently EF Core has problems if grouping without aggregation?
             int entitiesToSkip = (page - 1) * pageSize;
 
             // * This will load all of the projects to memory
-            var groupedProjects = await _context.Projects
+            var nonGroupedProjects = await _context.Projects
                 .Include(c => c.Company)
                 .Include(e => e.Employees)
                 .Include(p => p.ProjectCreator)
-                .GroupBy(p => p.Company.Name)
                 .ToListAsync();
+
+            var groupedProjects = nonGroupedProjects
+                .GroupBy(p => p.Company.Name)
+                .ToList();
             
             // Create a dictionary to store the grouped projects by their Company Name
             var result = new Dictionary<string, List<ProjectDto>>();
@@ -352,7 +361,9 @@ namespace CompanyPMO_.NET.Repository
         {
             var project = await _context.Projects.FindAsync(projectId);
 
-            if(project is not null && project.Finalized is null)
+            bool isProjectNullOrNotFinalized = project?.Finalized is null || project?.ExpectedDeliveryDate > DateTime.UtcNow;
+
+            if(project is not null && isProjectNullOrNotFinalized)
             {
                 project.Finalized = DateTime.UtcNow;
                 _context.Update(project);
@@ -364,6 +375,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images)
         {
+            // TODO: Test it
             return await _utilityService.UpdateEntity(employeeId, projectId, projectDto, images, AddImagesToExistingProject, GetProjectById);
         }
 
@@ -433,7 +445,7 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<Dictionary<string, object>> GetAllProjectsShowcase(int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>>> GetAllProjectsShowcase(int page, int pageSize)
         {
             // Admin only endpoint. Get all projects without any additional information (showcase only)
 
@@ -454,11 +466,11 @@ namespace CompanyPMO_.NET.Repository
 
             int totalPages = (int)Math.Ceiling((double)totalProjectsCount / pageSize);
 
-            var result = new Dictionary<string, object>
+            var result = new DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>>
             {
-                { "data", projects },
-                { "count", totalProjectsCount },
-                { "pages", totalPages }
+                Data = projects,
+                Count = totalProjectsCount,
+                Pages = totalPages
             };
 
             return result;
@@ -491,6 +503,11 @@ namespace CompanyPMO_.NET.Repository
                 .Include(p => p.ProjectCreator)
                 .Include(e => e.Employees)
                 .FirstOrDefaultAsync(x => x.ProjectId.Equals(projectId));
+
+            if (project is null)
+            {
+                return null;
+            }
 
             ProjectSomeInfoDto projectDto = new()
             {

@@ -22,7 +22,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<bool> IsEmployeeAlreadyInProject(int employeeId, int projectId);
         Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetProjectsByEmployeeUsername(string username, FilterParams filterParams);
         Task<DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>>> GetProjectsShowcaseByEmployeeUsername(string username, int page, int pageSize);
-        Task<Dictionary<string, object>> GetAllProjectsShowcase(int page, int pageSize);
+        Task<DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>>> GetAllProjectsShowcase(int page, int pageSize);
         Task<bool> IsParticipant(int projectId, int employeeId); // Used for checking if the employee is a participant in the project
         Task<bool> IsOwner(int projectId, int employeeId); // Used for checking if the employee is the owner of the project
 
