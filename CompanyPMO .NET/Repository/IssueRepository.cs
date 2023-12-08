@@ -10,7 +10,6 @@ namespace CompanyPMO_.NET.Repository
     {
         private readonly ApplicationDbContext _context;
         private readonly IUtility _utilityService;
-
         public IssueRepository(ApplicationDbContext context, IUtility utilityService)
         {
             _context = context;
@@ -35,7 +34,7 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<Dictionary<string, object>> GetAllIssuesShowcase(int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<IEnumerable<IssueShowcaseDto>>> GetAllIssuesShowcase(int page, int pageSize)
         {
             int toSkip = (page - 1) * pageSize;
             IEnumerable<IssueShowcaseDto> issues = await _context.Issues
@@ -53,11 +52,11 @@ namespace CompanyPMO_.NET.Repository
 
             int totalPages = (int)Math.Ceiling((double)totalIssuesCount / pageSize);
 
-            var result = new Dictionary<string, object>
+            var result = new DataCountAndPagesizeDto<IEnumerable<IssueShowcaseDto>>
             {
-                { "data", issues },
-                { "count", totalIssuesCount },
-                { "pages", totalPages }
+                Data = issues,
+                Count = totalIssuesCount,
+                Pages = totalPages
             };
 
             return result;
@@ -72,8 +71,7 @@ namespace CompanyPMO_.NET.Repository
                 .Select(i => new IssueShowcaseDto
                 {
                     IssueId = i.IssueId,
-                    Name = i.Name,
-                    //IsCreator = i.IssueCreator.Equals(issueCreatorId) // Used to identify if the requested user is the creator of the issue
+                    Name = i.Name
                 })
                 .ToListAsync();
 

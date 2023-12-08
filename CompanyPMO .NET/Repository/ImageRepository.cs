@@ -20,7 +20,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingEntity(int entityId, List<IFormFile>? images, string entityType, int? imagesInEntity)
         {
-            if (images is not null && images.Any(i => i.Length > 0))
+            if (images is not null && images.Count > 0)
             {
                 // If more than 10 images in the entity the count of this collection will be 0
                 var imageCollection = await AddImagesToNewEntity(images, entityId, entityType, imagesInEntity);

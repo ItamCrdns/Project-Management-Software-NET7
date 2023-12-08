@@ -7,7 +7,6 @@ using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System.Formats.Tar;
 using System.Text;
 
 namespace Tests.Repository
@@ -193,12 +192,11 @@ namespace Tests.Repository
                 {
                     // Simulate the behavior of adding images to the entity here based on inputs
                     var imageList = new List<Image>();
+                    var imageUrl = "Fake Url";
+                    var publicId = "Fake publicId";
 
                     foreach (var image in images)
                     {
-                        var imageUrl = "Fake Url";
-                        var publicId = "Fake publicId";
-
                         var newImage = new Image
                         {
                             EntityType = entityType,
@@ -369,7 +367,7 @@ namespace Tests.Repository
             // Arrange
             int companyId = 1000;
             var dbContext = await GetDatabaseContext();
-
+            
             var companyRepository = new CompanyRepository(dbContext, _image, _utility);
 
             // Act
