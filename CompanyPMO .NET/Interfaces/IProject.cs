@@ -18,7 +18,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<Dictionary<string, List<ProjectDto>>> GetProjectsGroupedByCompany(int page, int pageSize);
         ICollection<Image> SelectImages(ICollection<Image> images);
         ICollection<ProjectDto> ProjectSelectQuery(ICollection<Project> projects);
-        Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToProject(int projectId, List<int> employees);
+        Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToProject(int projectId, List<int> employees);
         Task<bool> IsEmployeeAlreadyInProject(int employeeId, int projectId);
         Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetProjectsByEmployeeUsername(string username, FilterParams filterParams);
         Task<DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>>> GetProjectsShowcaseByEmployeeUsername(string username, int page, int pageSize);

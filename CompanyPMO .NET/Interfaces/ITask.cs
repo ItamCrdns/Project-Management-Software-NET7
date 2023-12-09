@@ -15,13 +15,13 @@ namespace CompanyPMO_.NET.Interfaces
         Task<List<Models.Task>> GetTasks(int page, int pageSize);
         Task<DataCountAndPagesizeDto<IEnumerable<TaskDto>>> GetAllTasks(FilterParams filterParams);
         ICollection<Image> SelectImages(ICollection<Image> images);
-        Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds);
+        Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds);
         Task<bool> DoesTaskExist(int taskId);
         Task<bool> IsEmployeeAlreadyInTask(int employeeId, int taskId);
         Task<DataCountAndPagesizeDto<ICollection<TaskDto>>> GetTasksByEmployeeUsername(string username, int page, int pageSize);
         Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize);
         Task<DataCountAndPagesizeDto<IEnumerable<TaskDto>>> GetTasksByProjectId(int projectId, FilterParams filterParams);
-        Task<Dictionary<string, object>> GetAllTasksShowcase(int page, int pageSize);
+        Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetAllTasksShowcase(int page, int pageSize);
         IEnumerable<TaskDto> TaskDtoSelectQuery(ICollection<Models.Task> tasks);
     }
 }

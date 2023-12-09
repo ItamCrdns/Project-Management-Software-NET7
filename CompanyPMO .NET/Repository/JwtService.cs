@@ -19,9 +19,9 @@ namespace CompanyPMO_.NET.Repository
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, employee.EmployeeId.ToString()),
-                new Claim(ClaimTypes.Name, employee.Username),
-                new Claim(ClaimTypes.Role, employee.Role)
+                new(ClaimTypes.NameIdentifier, employee.EmployeeId.ToString()),
+                new(ClaimTypes.Name, employee.Username),
+                new(ClaimTypes.Role, employee.Role)
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();

@@ -3,7 +3,6 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.Design;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -20,7 +19,7 @@ namespace CompanyPMO_.NET.Repository
             _utilityService = utilityService;
         }
 
-        public async Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds)
+        public async Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds)
         {
             // Later: check if employee its working in the project & company the task is in
             return await _utilityService.AddEmployeesToEntity<EmployeeTask, Models.Task>(employeeIds, "TaskId", taskId, IsEmployeeAlreadyInTask);
@@ -28,26 +27,35 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<(Models.Task, List<Image>)> CreateTask(Models.Task task, int employeeId, int projectId, List<IFormFile>? images)
         {
-            var newTask = new Models.Task
+            bool taskNameIsntNull = !string.IsNullOrWhiteSpace(task.Name);
+            bool taskDescriptionIsntNull = !string.IsNullOrWhiteSpace(task.Description);
+
+            if (taskNameIsntNull && taskDescriptionIsntNull)
             {
-                Name = task.Name,
-                Description = task.Description,
-                Created = DateTime.UtcNow,
-                TaskCreatorId = employeeId,
-                ProjectId = projectId
-            };
+                var newTask = new Models.Task
+                {
+                    Name = task.Name,
+                    Description = task.Description,
+                    Created = DateTime.UtcNow,
+                    TaskCreatorId = employeeId,
+                    ProjectId = projectId
+                };
 
-            _context.Add(newTask);
-            _ = await _context.SaveChangesAsync();
+                _context.Add(newTask);
+                _ = await _context.SaveChangesAsync();
 
-            List<Image> imageCollection = new();
+                List<Image> imageCollection = new();
 
-            if(images is not null && images.Any(i => i.Length >  0))
+                if (images is not null && images.Count > 0)
+                {
+                    imageCollection = await _imageService.AddImagesToNewEntity(images, newTask.TaskId, "Task", null);
+                }
+
+                return (newTask, imageCollection);
+            } else
             {
-                imageCollection = await _imageService.AddImagesToNewEntity(images, newTask.TaskId, "Task", null);
+                return (null, null);
             }
-
-            return (newTask, imageCollection);
         }
 
         public async Task<bool> DoesTaskExist(int taskId)
@@ -72,32 +80,12 @@ namespace CompanyPMO_.NET.Repository
                     return await _context.SaveChangesAsync() > 0;
                 }
             }
-
             return false;
         }
 
-        public async Task<List<Employee>> GetEmployeesWorkingOnTask(int taskId)
-        {
-            var employees = await _context.Tasks
-                .Where(t => t.TaskId.Equals(taskId))
-                .Include(e => e.Employees)
-                .SelectMany(e => e.Employees)
-                .ToListAsync();
+        public async Task<List<Employee>> GetEmployeesWorkingOnTask(int taskId) => await _context.Tasks.Where(t => t.TaskId.Equals(taskId)).Include(e => e.Employees).SelectMany(e => e.Employees).ToListAsync();
 
-            return employees;
-        }
-
-        public async Task<Models.Task> GetTaskById(int taskId)
-        {
-            var task = await _context.Tasks
-                .Where(t => t.TaskId.Equals(taskId))
-                .Include(i => i.Images)
-                .FirstOrDefaultAsync();
-
-            //var tasksImages = task.Images
-
-            return task;
-        }
+        public async Task<Models.Task> GetTaskById(int taskId) => await _context.Tasks.FindAsync(taskId);
 
         public async Task<List<Models.Task>> GetTasks(int page, int pageSize)
         {
@@ -185,11 +173,7 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<bool> IsEmployeeAlreadyInTask(int employeeId, int taskId)
-        {
-            return await _context.EmployeeTasks
-                .AnyAsync(et => et.EmployeeId.Equals(employeeId) && et.TaskId.Equals(taskId));
-        }
+        public async Task<bool> IsEmployeeAlreadyInTask(int employeeId, int taskId) => await _context.EmployeeTasks.AnyAsync(x => x.EmployeeId.Equals(employeeId) && x.TaskId.Equals(taskId));
 
         public ICollection<Image> SelectImages(ICollection<Image> images)
         {
@@ -202,7 +186,8 @@ namespace CompanyPMO_.NET.Repository
                     EntityId = i.EntityId,
                     ImageUrl = i.ImageUrl,
                     PublicId = i.PublicId,
-                    Created = i.Created
+                    Created = i.Created,
+                    UploaderId = i.UploaderId
                 }).ToList();
 
             return projectImages;
@@ -261,12 +246,13 @@ namespace CompanyPMO_.NET.Repository
             throw new NotImplementedException();
         }
 
-        public async Task<Dictionary<string, object>> GetAllTasksShowcase(int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetAllTasksShowcase(int page, int pageSize)
         {
             // Admin only endpoint. Get all projects without any additional information (showcase only)
 
             int toSkip = (page - 1) * pageSize;
-            IEnumerable<TaskShowcaseDto> tasks = await _context.Tasks
+
+            ICollection<TaskShowcaseDto> tasks = await _context.Tasks
                 .OrderByDescending(t => t.Created)
                 .Select(t => new TaskShowcaseDto
                 {
@@ -281,11 +267,11 @@ namespace CompanyPMO_.NET.Repository
 
             int totalPages = (int)Math.Ceiling((double)totalTasksCount / pageSize);
 
-            var result = new Dictionary<string, object>
+            var result = new DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>
             {
-                { "data", tasks },
-                { "count", totalTasksCount },
-                { "pages", totalPages }
+                Data = tasks,
+                Count = totalTasksCount,
+                Pages = totalPages
             };
 
             return result;
@@ -325,7 +311,7 @@ namespace CompanyPMO_.NET.Repository
                     Username = task.TaskCreator.Username,
                     ProfilePicture = task.TaskCreator.ProfilePicture
                 },
-                Employees = task.Employees.Select(employee => new EmployeeShowcaseDto
+                Employees = task?.Employees?.Select(employee => new EmployeeShowcaseDto
                 {
                     EmployeeId = employee.EmployeeId,
                     Username = employee.Username,
@@ -337,7 +323,7 @@ namespace CompanyPMO_.NET.Repository
                     Name = task.Project.Name,
                     Priority = task.Project.Priority
                 }
-            });
+            }).ToList();
 
             return taskDtos;
         }

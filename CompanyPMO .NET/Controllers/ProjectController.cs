@@ -167,8 +167,8 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("{projectId}/add/employees")]
-        [ProducesResponseType(204)]
         [ProducesResponseType(400)]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
         public async Task<IActionResult> AddEmployeesToProject(int projectId, [FromForm] List<int> employees)
         {
             var (response, employeesAdded) = await _projectService.AddEmployeesToProject(projectId, employees);

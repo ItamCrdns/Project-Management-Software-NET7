@@ -23,7 +23,7 @@ namespace CompanyPMO_.NET.Interfaces
             where TEntity : class;
 
         // TEntity represents the junction table. UEntity represents the entity irself (i.e Project, Task, Issue)
-        Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToEntity<TEntity, UEntity>(
+        Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToEntity<TEntity, UEntity>(
             List<int> employeeIds, // List of employees to add
             // Takes two integers as arguments one for the entityId and the other one for the employeeId
             string entityName, // Entity name used to identify whether its a task, project or issue

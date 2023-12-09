@@ -25,7 +25,7 @@ namespace tests.Repository
             get
             {
                 var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                    .UseInMemoryDatabase(databaseName: "CompanyPMO")
+                    .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                     .Options;
 
                 return options;

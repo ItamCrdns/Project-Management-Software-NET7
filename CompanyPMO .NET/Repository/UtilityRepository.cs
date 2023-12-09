@@ -19,7 +19,7 @@ namespace CompanyPMO_.NET.Repository
             _context = context;
         }
 
-        public async Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToEntity<TEntity, UEntity>(List<int> employeeIds, string entityName, int entityId, Func<int, int, Task<bool>> isEmployeeAlreadyInEntity) where TEntity : class, new() where UEntity : class
+        public async Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToEntity<TEntity, UEntity>(List<int> employeeIds, string entityName, int entityId, Func<int, int, Task<bool>> isEmployeeAlreadyInEntity) where TEntity : class, new() where UEntity : class
         {
             // Check if entity exists (i.e "api/Project/3/add/employees" will check if Project with ID #3 existts)
             bool entityExists = await _context.Set<UEntity>().FindAsync(entityId) is not null;
@@ -69,14 +69,13 @@ namespace CompanyPMO_.NET.Repository
 
             int rowsAffected = await _context.SaveChangesAsync();
 
-            IEnumerable<EmployeeDto> employeesAdded = await _context.Employees
+            IEnumerable<EmployeeShowcaseDto> employeesAdded = await _context.Employees
                 .Where(e => addedEmployees.Select(e => e.employeeId).Contains(e.EmployeeId))
-                .Select(e => new EmployeeDto
+                .Select(e => new EmployeeShowcaseDto
                 {
                     EmployeeId = e.EmployeeId,
                     Username = e.Username,
-                    ProfilePicture = e.ProfilePicture,
-                    Role = e.Role,
+                    ProfilePicture = e.ProfilePicture
                 }).ToListAsync();
 
             // Check whether all employees were added, some or none and return an appropiate response

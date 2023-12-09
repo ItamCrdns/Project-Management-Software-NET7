@@ -19,7 +19,7 @@ namespace CompanyPMO_.NET.Repository
             _utilityService = utilityService;
         }
 
-        public async Task<(string status, IEnumerable<EmployeeDto>)> AddEmployeesToProject(int projectId, List<int> employees)
+        public async Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToProject(int projectId, List<int> employees)
         {
             // * Adds the employees to a certain project and returns a list of the added employees
 

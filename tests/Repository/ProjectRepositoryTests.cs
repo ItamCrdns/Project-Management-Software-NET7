@@ -27,7 +27,7 @@ namespace Tests.Repository
             get
             {
                 var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                 .UseInMemoryDatabase(databaseName: "CompanyPMO")
+                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                  .Options;
 
                 return options;
@@ -165,48 +165,18 @@ namespace Tests.Repository
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility);
 
-            IEnumerable<EmployeeDto> fakeEmployeeDtos = new List<EmployeeDto>
+            IEnumerable<EmployeeShowcaseDto> fakeEmployeeDtos = new List<EmployeeShowcaseDto>
             {
                 new() {
+                    EmployeeId = 1,
                     Username = "Test",
-                    Role = "Test",
-                    ProfilePicture = "Test",
-                    Tier = new Tier
-                    {
-                        Name = "Test",
-                        Duty = "Test",
-                        Created = DateTime.UtcNow
-                    },
-                    ProjectTotalCount = 1,
-                    ProjectsCreated = 1,
-                    ProjectsParticipant = 1,
-                    TaskTotalCount = 1,
-                    TasksCreated = 1,
-                    TasksParticipant = 1,
-                    IssueTotalCount = 1,
-                    IssuesCreated = 1,
-                    IssuesParticipant = 1
+                    ProfilePicture = "Test"
                 },
                 new()
                 {
+                    EmployeeId = 2,
                     Username = "Test2",
-                    Role = "Test2",
-                    ProfilePicture = "Test2",
-                    Tier = new Tier
-                    {
-                        Name = "Test2",
-                        Duty = "Test2",
-                        Created = DateTime.UtcNow
-                    },
-                    ProjectTotalCount = 2,
-                    ProjectsCreated = 2,
-                    ProjectsParticipant = 2,
-                    TaskTotalCount = 2,
-                    TasksCreated = 2,
-                    TasksParticipant = 2,
-                    IssueTotalCount = 2,
-                    IssuesCreated = 2,
-                    IssuesParticipant = 2
+                    ProfilePicture = "Test2"
                 }
             };
 
@@ -221,7 +191,7 @@ namespace Tests.Repository
             result.Should().BeEquivalentTo(tupleResult);
             result.Item2.Should().BeEquivalentTo(fakeEmployeeDtos);
             result.Item2.Should().HaveCountGreaterThan(1);
-            result.Item2.Should().BeOfType(typeof(List<EmployeeDto>));
+            result.Item2.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
             result.status.Should().Be("Success").And.BeOfType<string>();
         }
 
