@@ -48,7 +48,7 @@ namespace Tests.Repository
                         {
                             Name = $"Task {i}",
                             Description = $"Description {i}",
-                            Created = DateTime.Now,
+                            Created = DateTime.Now.AddMinutes(i), // Increment on iteration
                             StartedWorking = DateTime.Now.AddMinutes(15),
                             Finished = DateTime.Now.AddHours(1),
                             TaskCreatorId = 1,
@@ -179,12 +179,12 @@ namespace Tests.Repository
 
             var taskRepository = new TaskRepository(dbContext, _image, _utility);
 
-            var fakeTask = A.Fake<CompanyPMO_.NET.Models.Task>();
+            var fakeTask = A.Fake<TaskDto>();
             fakeTask.Name = "Test";
             fakeTask.Description = "Test Description";
             fakeTask.Created = DateTime.Now;
-            fakeTask.TaskCreatorId = 1;
-            fakeTask.ProjectId = 1;
+            //fakeTask.TaskCreatorId = 1;
+            //fakeTask.ProjectId = 1;
 
             var result = await taskRepository.CreateTask(fakeTask, employeeId, projectId, fakeIFormFileList);
 
@@ -205,7 +205,7 @@ namespace Tests.Repository
 
             var taskRepository = new TaskRepository(dbContext, _image, _utility);
 
-            var fakeTask = A.Fake<CompanyPMO_.NET.Models.Task>();
+            var fakeTask = A.Fake<TaskDto>();
 
             var result = await taskRepository.CreateTask(fakeTask, employeeId, projectId, fakeIFormFileList);
 
@@ -230,12 +230,12 @@ namespace Tests.Repository
 
             var taskRepository = new TaskRepository(dbContext, _image, _utility);
 
-            var fakeTask = A.Fake<CompanyPMO_.NET.Models.Task>();
+            var fakeTask = A.Fake<TaskDto>();
             fakeTask.Name = "Test";
             fakeTask.Description = "Test Description";
             fakeTask.Created = DateTime.Now;
-            fakeTask.TaskCreatorId = 1;
-            fakeTask.ProjectId = 1;
+            //fakeTask.TaskCreatorId = 1;
+            //fakeTask.ProjectId = 1;
 
             List<Image> imageCollection = [
                 new Image
@@ -835,6 +835,35 @@ namespace Tests.Repository
             result.Should().BeOfType<List<TaskDto>>();
             result.Should().NotBeEmpty();
             result.Should().HaveCountGreaterThanOrEqualTo(1);
+        }
+
+        [Fact]
+        public async void TaskRepository_GetTasksGroupedByProject_ReturnsGroupedTasks()
+        {
+            var dbContext = await GetDatabaseContext();
+
+            var taskRepository = new TaskRepository(dbContext, _image, _utility);
+
+            FilterParams filterParams = new()
+            {
+                Page = 1,
+                PageSize = 10,
+            };
+
+            var result = await taskRepository.GetTasksGroupedByProject(filterParams, 1, 5);
+
+            result.Data.Should().BeOfType<List<ProjectTaskGroup>>();
+            result.Data.Should().NotBeEmpty();
+            result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
+            result.Should().NotBeNull();
+            foreach (var data in result.Data)
+            {
+                data.Tasks.Should().NotBeEmpty();
+                data.Tasks.Should().HaveCountGreaterThanOrEqualTo(1);
+                data.Count.Should().BeGreaterThanOrEqualTo(1);
+                data.Pages.Should().BeGreaterThanOrEqualTo(1);
+                data.Tasks.Should().BeOfType<List<TaskShowcaseDto>>();
+            }
         }
     }
 }

@@ -25,7 +25,7 @@ namespace CompanyPMO_.NET.Repository
             return await _utilityService.AddEmployeesToEntity<EmployeeTask, Models.Task>(employeeIds, "TaskId", taskId, IsEmployeeAlreadyInTask);
         }
 
-        public async Task<(Models.Task, List<Image>)> CreateTask(Models.Task task, int employeeId, int projectId, List<IFormFile>? images)
+        public async Task<(Models.Task, List<Image>)> CreateTask(TaskDto task, int employeeId, int projectId, List<IFormFile>? images)
         {
             bool taskNameIsntNull = !string.IsNullOrWhiteSpace(task.Name);
             bool taskDescriptionIsntNull = !string.IsNullOrWhiteSpace(task.Description);
@@ -326,6 +326,39 @@ namespace CompanyPMO_.NET.Repository
             }).ToList();
 
             return taskDtos;
+        }
+
+        public async Task<DataCountAndPagesizeDto<List<ProjectTaskGroup>>> GetTasksGroupedByProject(FilterParams filterParams, int projectsPage, int projectsPageSize)
+        {
+            List<ProjectTaskGroup> tasks = await _context.Tasks
+                .GroupBy(t => t.Project)
+                .Select(x => new ProjectTaskGroup
+                {
+                    ProjectName = x.Key.Name,
+                    Tasks = x.Select(t => new TaskShowcaseDto
+                    {
+                        TaskId = t.TaskId,
+                        Name = t.Name,
+                        Created = t.Created
+                    }).OrderBy(t => t.Created).Skip((filterParams.Page - 1) * filterParams.PageSize).Take(filterParams.PageSize),
+                    Count = x.Count(),
+                    Pages = (int)Math.Ceiling((double)x.Count() / filterParams.PageSize),
+                    LatestTaskCreation = x.Key.Created
+                    //LatestTaskCreation = x.Max(t => t.Created)
+                    //LatestTaskCreation = x.Key.
+                })
+                .Skip((projectsPage - 1) * projectsPageSize)
+                .Take(projectsPageSize)
+                .OrderByDescending(t => t.LatestTaskCreation)
+                .ToListAsync();
+
+            int totalProjectsWithTasks = await _context.Projects.CountAsync(p => _context.Tasks.Any(t => t.ProjectId == p.ProjectId));
+
+            return new DataCountAndPagesizeDto<List<ProjectTaskGroup>>
+            {
+                Data = tasks,
+                Count = totalProjectsWithTasks
+            };
         }
     }
 }

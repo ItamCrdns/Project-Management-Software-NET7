@@ -34,7 +34,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [HttpPost("new")]
         [ProducesResponseType(200, Type = typeof(Models.Task))]
-        public async Task<IActionResult> NewTask([FromForm] Models.Task task, [FromForm] int projectId, [FromForm] List<IFormFile>? images)
+        public async Task<IActionResult> NewTask([FromForm] TaskDto task, [FromForm] int projectId, [FromForm] List<IFormFile>? images)
         {
             var (newTask, imageCollection) = await _taskService.CreateTask(task, await GetUserId(), projectId, images);
 
@@ -138,6 +138,14 @@ namespace CompanyPMO_.NET.Controllers
             };
 
             return Ok(toReturn);
+        }
+
+        [HttpGet("grouped")]
+        public async Task<IActionResult> GetTasksGroupedByProject([FromQuery] FilterParams filterParams, [FromQuery] int projectsPage, [FromQuery] int projectsPageSize)
+        {
+            var tasks = await _taskService.GetTasksGroupedByProject(filterParams, projectsPage, projectsPageSize);
+
+            return Ok(tasks);
         }
     }
 }

@@ -20,9 +20,13 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "SupervisorOnly")]
         [HttpGet("all/showcase")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<IssueShowcaseDto>))]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> GetAllIssuesShowcase(int page, int pageSize)
         {
             var issues = await _issueService.GetAllIssuesShowcase(page, pageSize);
+
+            if (issues is null || issues.Count == 0)
+                return NotFound();
 
             return Ok(issues);
         }

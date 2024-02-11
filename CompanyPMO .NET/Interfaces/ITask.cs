@@ -5,7 +5,7 @@ namespace CompanyPMO_.NET.Interfaces
 {
     public interface ITask
     {
-        Task<(Models.Task, List<Image>)> CreateTask(Models.Task task, int employeeId, int projectId, List<IFormFile>? images);
+        Task<(Models.Task, List<Image>)> CreateTask(TaskDto task, int employeeId, int projectId, List<IFormFile>? images);
         // When hitting those two endpoints, update their dates
         Task<bool> StartingWorkingOnTask(int userId, int taskId);
         Task<bool> FinishedWorkingOnTask(int userId, int taskId);
@@ -22,6 +22,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize);
         Task<DataCountAndPagesizeDto<IEnumerable<TaskDto>>> GetTasksByProjectId(int projectId, FilterParams filterParams);
         Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetAllTasksShowcase(int page, int pageSize);
+        Task<DataCountAndPagesizeDto<List<ProjectTaskGroup>>> GetTasksGroupedByProject(FilterParams filterParams, int projectsPage, int projectsPageSize);
         IEnumerable<TaskDto> TaskDtoSelectQuery(ICollection<Models.Task> tasks);
     }
 }
