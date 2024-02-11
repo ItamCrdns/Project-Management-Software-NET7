@@ -39,6 +39,8 @@ namespace Tests.Repository
             var dbContext = new ApplicationDbContext(CreateNewContextOptions);
             dbContext.Database.EnsureCreated();
 
+            await ResetDb.Reset(dbContext);
+
             if (!await dbContext.Projects.AnyAsync())
             {
                 for (int i = 0; i < 10; i++)

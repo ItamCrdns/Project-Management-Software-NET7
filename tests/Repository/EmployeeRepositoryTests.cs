@@ -7,6 +7,7 @@ using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Tests;
 
 namespace tests.Repository
 {
@@ -36,6 +37,8 @@ namespace tests.Repository
         {
             var dbContext = new ApplicationDbContext(CreateNewContextOptions);
             dbContext.Database.EnsureCreated();
+
+            await ResetDb.Reset(dbContext);
 
             if (!await dbContext.Employees.AnyAsync())
             {
