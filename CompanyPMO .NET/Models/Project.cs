@@ -25,6 +25,8 @@ namespace CompanyPMO_.NET.Models
         public DateTime? ExpectedDeliveryDate { get; set; }
         [Column("lifecycle")]
         public string? Lifecycle { get; set; }
+        [Column("latest_task_creation")]
+        public DateTime LatestTaskCreation { get; set; } // Used to order projects based on their latest task creation.
 
         // Navigation properties
 

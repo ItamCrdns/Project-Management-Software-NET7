@@ -13,9 +13,9 @@ namespace CompanyPMO_.NET.Models
         public string? FirstName { get; set; }
         [Column("last_name")]
         public string? LastName { get; set; }
-        [Column("email")]
+        [Column("gender")]
         public string Gender { get; set; }
-        [Column("password")]
+        [Column("created")]
         public DateTime Created { get; set; }
         [Column("profile_picture")]
         public string? ProfilePicture { get; set; }

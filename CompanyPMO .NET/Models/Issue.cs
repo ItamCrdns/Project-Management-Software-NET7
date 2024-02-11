@@ -1,5 +1,4 @@
-﻿using CompanyPMO_.NET.Dto;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CompanyPMO_.NET.Models
 {
