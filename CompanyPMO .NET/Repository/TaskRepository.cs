@@ -30,7 +30,9 @@ namespace CompanyPMO_.NET.Repository
             bool taskNameIsntNull = !string.IsNullOrWhiteSpace(task.Name);
             bool taskDescriptionIsntNull = !string.IsNullOrWhiteSpace(task.Description);
 
-            if (taskNameIsntNull && taskDescriptionIsntNull)
+            var project = await _context.Projects.FindAsync(projectId);
+
+            if (taskNameIsntNull && taskDescriptionIsntNull && project is not null)
             {
                 var newTask = new Models.Task
                 {
@@ -42,7 +44,16 @@ namespace CompanyPMO_.NET.Repository
                 };
 
                 _context.Add(newTask);
-                _ = await _context.SaveChangesAsync();
+
+                project.LatestTaskCreation = DateTime.UtcNow;
+                _context.Update(project);
+
+                int rowsAffected = await _context.SaveChangesAsync();
+
+                if (rowsAffected is 0)
+                {
+                    return (null, null);
+                }
 
                 List<Image> imageCollection = new();
 
@@ -343,7 +354,7 @@ namespace CompanyPMO_.NET.Repository
                     }).OrderBy(t => t.Created).Skip((filterParams.Page - 1) * filterParams.PageSize).Take(filterParams.PageSize),
                     Count = x.Count(),
                     Pages = (int)Math.Ceiling((double)x.Count() / filterParams.PageSize),
-                    LatestTaskCreation = x.Key.Created
+                    LatestTaskCreation = x.Key.LatestTaskCreation
                     //LatestTaskCreation = x.Max(t => t.Created)
                     //LatestTaskCreation = x.Key.
                 })

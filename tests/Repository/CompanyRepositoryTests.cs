@@ -369,7 +369,7 @@ namespace Tests.Repository
             // Arrange
             int companyId = 1000;
             var dbContext = await GetDatabaseContext();
-            
+
             var companyRepository = new CompanyRepository(dbContext, _image, _utility);
 
             // Act
