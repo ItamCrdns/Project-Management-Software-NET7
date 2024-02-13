@@ -2,8 +2,8 @@
 {
     public class FilterParams
     {
-        public int Page { get; set; }
-        public int PageSize { get; set; }
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 5;
         public string? OrderBy { get; set; }
         public string? Sort { get; set; }
         public string? FilterBy { get; set; }

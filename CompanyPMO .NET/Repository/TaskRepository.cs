@@ -339,7 +339,7 @@ namespace CompanyPMO_.NET.Repository
             return taskDtos;
         }
 
-        public async Task<DataCountAndPagesizeDto<List<ProjectTaskGroup>>> GetTasksGroupedByProject(FilterParams filterParams, int projectsPage, int projectsPageSize)
+        public async Task<DataCountAndPagesizeDto<List<ProjectTaskGroup>>> GetTasksGroupedByProject(FilterParams filterParams, int tasksPage, int tasksPageSize)
         {
             List<ProjectTaskGroup> tasks = await _context.Tasks
                 .GroupBy(t => t.Project)
@@ -350,25 +350,44 @@ namespace CompanyPMO_.NET.Repository
                     {
                         TaskId = t.TaskId,
                         Name = t.Name,
-                        Created = t.Created
-                    }).OrderBy(t => t.Created).Skip((filterParams.Page - 1) * filterParams.PageSize).Take(filterParams.PageSize),
+                        Created = t.Created,
+                        Project = new ProjectShowcaseDto
+                        {
+                            ProjectId = t.Project.ProjectId,
+                            Name = t.Project.Name,
+                            Priority = t.Project.Priority
+                        },
+                        TaskCreator = new EmployeeShowcaseDto
+                        {
+                            EmployeeId = t.TaskCreator.EmployeeId,
+                            Username = t.TaskCreator.Username,
+                            ProfilePicture = t.TaskCreator.ProfilePicture
+                        },
+                        Employees = t.Employees.Select(employee => new EmployeeShowcaseDto
+                        {
+                            EmployeeId = employee.EmployeeId,
+                            Username = employee.Username,
+                            ProfilePicture = employee.ProfilePicture,
+                        }).ToList()
+                    }).OrderBy(t => t.Created).Skip((tasksPage - 1) * tasksPageSize).Take(tasksPageSize),
                     Count = x.Count(),
-                    Pages = (int)Math.Ceiling((double)x.Count() / filterParams.PageSize),
+                    Pages = (int)Math.Ceiling((double)x.Count() / tasksPageSize),
                     LatestTaskCreation = x.Key.LatestTaskCreation
-                    //LatestTaskCreation = x.Max(t => t.Created)
-                    //LatestTaskCreation = x.Key.
                 })
-                .Skip((projectsPage - 1) * projectsPageSize)
-                .Take(projectsPageSize)
+                .Skip((filterParams.Page - 1) * filterParams.PageSize)
+                .Take(filterParams.PageSize)
                 .OrderByDescending(t => t.LatestTaskCreation)
                 .ToListAsync();
 
             int totalProjectsWithTasks = await _context.Projects.CountAsync(p => _context.Tasks.Any(t => t.ProjectId == p.ProjectId));
 
+            int totalPages = (int)Math.Ceiling((double)totalProjectsWithTasks / filterParams.PageSize);
+
             return new DataCountAndPagesizeDto<List<ProjectTaskGroup>>
             {
                 Data = tasks,
-                Count = totalProjectsWithTasks
+                Count = totalProjectsWithTasks,
+                Pages = totalPages
             };
         }
     }

@@ -232,22 +232,15 @@ namespace CompanyPMO_.NET.Data
                 new Tier
                 {
                     TierId = 1,
-                    Name = "Tier 1",
-                    Duty = "Duty for Tier 1",
+                    Name = "Supervisor",
+                    Duty = "Duty for Supervisor",
                     Created = DateTime.UtcNow
                 },
                 new Tier
                 {
                     TierId = 2,
-                    Name = "Tier 2",
-                    Duty = "Duty for Tier 2",
-                    Created = DateTime.UtcNow
-                },
-                new Tier
-                {
-                    TierId = 3,
-                    Name = "Tier 3",
-                    Duty = "Duty for Tier 3",
+                    Name = "Employee",
+                    Duty = "Duty for Employee",
                     Created = DateTime.UtcNow
                 });
 

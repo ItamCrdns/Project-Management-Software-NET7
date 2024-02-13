@@ -22,7 +22,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize);
         Task<DataCountAndPagesizeDto<IEnumerable<TaskDto>>> GetTasksByProjectId(int projectId, FilterParams filterParams);
         Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetAllTasksShowcase(int page, int pageSize);
-        Task<DataCountAndPagesizeDto<List<ProjectTaskGroup>>> GetTasksGroupedByProject(FilterParams filterParams, int projectsPage, int projectsPageSize);
+        Task<DataCountAndPagesizeDto<List<ProjectTaskGroup>>> GetTasksGroupedByProject(FilterParams filterParams, int tasksPage, int tasksPageSize);
         IEnumerable<TaskDto> TaskDtoSelectQuery(ICollection<Models.Task> tasks);
     }
 }

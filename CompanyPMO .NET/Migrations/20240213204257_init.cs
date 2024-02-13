@@ -401,9 +401,8 @@ namespace CompanyPMO_.NET.Migrations
                 columns: new[] { "tier_id", "created", "duty", "name" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2024, 2, 13, 17, 23, 36, 230, DateTimeKind.Utc).AddTicks(7700), "Duty for Tier 1", "Tier 1" },
-                    { 2, new DateTime(2024, 2, 13, 17, 23, 36, 230, DateTimeKind.Utc).AddTicks(7702), "Duty for Tier 2", "Tier 2" },
-                    { 3, new DateTime(2024, 2, 13, 17, 23, 36, 230, DateTimeKind.Utc).AddTicks(7703), "Duty for Tier 3", "Tier 3" }
+                    { 1, new DateTime(2024, 2, 13, 20, 42, 56, 662, DateTimeKind.Utc).AddTicks(2725), "Duty for Supervisor", "Supervisor" },
+                    { 2, new DateTime(2024, 2, 13, 20, 42, 56, 662, DateTimeKind.Utc).AddTicks(2726), "Duty for Employee", "Employee" }
                 });
 
             migrationBuilder.InsertData(
@@ -411,9 +410,9 @@ namespace CompanyPMO_.NET.Migrations
                 columns: new[] { "user_id", "created", "first_name", "gender", "last_login", "last_name", "profile_picture", "username" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2024, 2, 13, 17, 23, 36, 230, DateTimeKind.Utc).AddTicks(7314), "First", "Male", new DateTime(2024, 2, 13, 17, 23, 36, 230, DateTimeKind.Utc).AddTicks(7316), "User", null, "User1" },
-                    { 2, new DateTime(2024, 2, 13, 17, 23, 36, 230, DateTimeKind.Utc).AddTicks(7320), "Second", "Female", new DateTime(2024, 2, 13, 17, 23, 36, 230, DateTimeKind.Utc).AddTicks(7320), "User", null, "User2" },
-                    { 3, new DateTime(2024, 2, 13, 17, 23, 36, 230, DateTimeKind.Utc).AddTicks(7325), "Third", "Male", new DateTime(2024, 2, 13, 17, 23, 36, 230, DateTimeKind.Utc).AddTicks(7326), "User", null, "User3" }
+                    { 1, new DateTime(2024, 2, 13, 20, 42, 56, 662, DateTimeKind.Utc).AddTicks(2356), "First", "Male", new DateTime(2024, 2, 13, 20, 42, 56, 662, DateTimeKind.Utc).AddTicks(2359), "User", null, "User1" },
+                    { 2, new DateTime(2024, 2, 13, 20, 42, 56, 662, DateTimeKind.Utc).AddTicks(2363), "Second", "Female", new DateTime(2024, 2, 13, 20, 42, 56, 662, DateTimeKind.Utc).AddTicks(2363), "User", null, "User2" },
+                    { 3, new DateTime(2024, 2, 13, 20, 42, 56, 662, DateTimeKind.Utc).AddTicks(2365), "Third", "Male", new DateTime(2024, 2, 13, 20, 42, 56, 662, DateTimeKind.Utc).AddTicks(2365), "User", null, "User3" }
                 });
 
             migrationBuilder.InsertData(
@@ -421,8 +420,8 @@ namespace CompanyPMO_.NET.Migrations
                 columns: new[] { "employee_id", "company_id", "created", "email", "first_name", "gender", "last_login", "last_name", "lockout_enabled", "locked_until", "login_attempts", "password", "phone_number", "profile_picture", "role", "supervisor_id", "tier_id", "username" },
                 values: new object[,]
                 {
-                    { 1, 1, new DateTime(2024, 2, 13, 17, 23, 36, 355, DateTimeKind.Utc).AddTicks(8831), "employee1@example.com", "First", "Male", null, "Employee", false, null, 0, "$2a$11$8E8lGHr6Mjiy7FuCVSoThuTpeG9rK0H/5ndU9K23ju/BElmXIOklu", "1234567890", null, "supervisor", null, 1, "FakeEmployee1" },
-                    { 2, 2, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(104), "employee2@example.com", "Second", "Female", null, "Employee", false, null, 0, "$2a$11$R7b6Vqlj3QqiY/M7E3HIeOQSGvaSxEDtNJ4Yc8iZyi2HcAnU7xEum", "0987654321", null, "employee", 1, 2, "FakeEmployee2" }
+                    { 1, 1, new DateTime(2024, 2, 13, 20, 42, 56, 787, DateTimeKind.Utc).AddTicks(5714), "employee1@example.com", "First", "Male", null, "Employee", false, null, 0, "$2a$11$wwfqaUQnEpnmOVDAx2sRY.wW5meZEYfjADufdlZKpG5IG2CjsTQIa", "1234567890", null, "supervisor", null, 1, "FakeEmployee1" },
+                    { 2, 2, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4147), "employee2@example.com", "Second", "Female", null, "Employee", false, null, 0, "$2a$11$t49UaYXbcrwHFuqd6Ru61ORES2wB3LXgXVvYB5Gst33gMZo60gbsG", "0987654321", null, "employee", 1, 2, "FakeEmployee2" }
                 });
 
             migrationBuilder.InsertData(
@@ -430,9 +429,9 @@ namespace CompanyPMO_.NET.Migrations
                 columns: new[] { "project_id", "company_id", "created", "description", "expected_delivery_date", "finalized", "latest_task_creation", "lifecycle", "name", "priority", "project_creator_id" },
                 values: new object[,]
                 {
-                    { 1, 1, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(445), "Description for Project 1", new DateTime(2024, 3, 14, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(447), null, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(457), "Planning", "Project 1", 1, 1 },
-                    { 2, 2, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(460), "Description for Project 2", new DateTime(2024, 4, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(460), null, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(463), "Development", "Project 2", 2, 1 },
-                    { 3, 3, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(464), "Description for Project 3", new DateTime(2024, 5, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(465), null, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(466), "Testing", "Project 3", 3, 1 }
+                    { 1, 1, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4561), "Description for Project 1", new DateTime(2024, 3, 14, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4562), null, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4575), "Planning", "Project 1", 1, 1 },
+                    { 2, 2, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4576), "Description for Project 2", new DateTime(2024, 4, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4577), null, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4579), "Development", "Project 2", 2, 1 },
+                    { 3, 3, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4580), "Description for Project 3", new DateTime(2024, 5, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4580), null, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4581), "Testing", "Project 3", 3, 1 }
                 });
 
             migrationBuilder.InsertData(
@@ -450,15 +449,15 @@ namespace CompanyPMO_.NET.Migrations
                 columns: new[] { "task_id", "created", "description", "finished", "name", "project_id", "started_working", "task_creator_id" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(513), "Description for Task 1", null, "Task 1", 1, null, 1 },
-                    { 2, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(515), "Description for Task 2", null, "Task 2", 1, null, 1 },
-                    { 3, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(517), "Description for Task 3", null, "Task 3", 1, null, 1 },
-                    { 4, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(518), "Description for Task 4", null, "Task 4", 2, null, 1 },
-                    { 5, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(520), "Description for Task 5", null, "Task 5", 2, null, 1 },
-                    { 6, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(522), "Description for Task 6", null, "Task 6", 2, null, 1 },
-                    { 7, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(524), "Description for Task 7", null, "Task 7", 3, null, 1 },
-                    { 8, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(526), "Description for Task 8", null, "Task 8", 3, null, 1 },
-                    { 9, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(527), "Description for Task 9", null, "Task 9", 3, null, 1 }
+                    { 1, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4602), "Description for Task 1", null, "Task 1", 1, null, 1 },
+                    { 2, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4603), "Description for Task 2", null, "Task 2", 1, null, 1 },
+                    { 3, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4605), "Description for Task 3", null, "Task 3", 1, null, 1 },
+                    { 4, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4606), "Description for Task 4", null, "Task 4", 2, null, 1 },
+                    { 5, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4607), "Description for Task 5", null, "Task 5", 2, null, 1 },
+                    { 6, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4608), "Description for Task 6", null, "Task 6", 2, null, 1 },
+                    { 7, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4609), "Description for Task 7", null, "Task 7", 3, null, 1 },
+                    { 8, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4611), "Description for Task 8", null, "Task 8", 3, null, 1 },
+                    { 9, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4612), "Description for Task 9", null, "Task 9", 3, null, 1 }
                 });
 
             migrationBuilder.InsertData(
@@ -476,11 +475,11 @@ namespace CompanyPMO_.NET.Migrations
                 columns: new[] { "issue_id", "created", "description", "fixed", "issue_creator_id", "name", "started_working", "task_id" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(564), "Description for Issue 1", new DateTime(2024, 2, 20, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(566), 1, "Issue 1", new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(565), 1 },
-                    { 2, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(568), "Description for Issue 2", new DateTime(2024, 2, 20, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(569), 1, "Issue 2", new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(569), 2 },
-                    { 3, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(571), "Description for Issue 3", new DateTime(2024, 2, 20, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(572), 1, "Issue 3", new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(572), 4 },
-                    { 4, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(574), "Description for Issue 4", new DateTime(2024, 2, 20, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(575), 1, "Issue 4", new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(575), 6 },
-                    { 5, new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(577), "Description for Issue 5", new DateTime(2024, 2, 20, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(578), 1, "Issue 5", new DateTime(2024, 2, 13, 17, 23, 36, 485, DateTimeKind.Utc).AddTicks(578), 9 }
+                    { 1, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4638), "Description for Issue 1", new DateTime(2024, 2, 20, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4639), 1, "Issue 1", new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4638), 1 },
+                    { 2, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4641), "Description for Issue 2", new DateTime(2024, 2, 20, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4642), 1, "Issue 2", new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4641), 2 },
+                    { 3, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4643), "Description for Issue 3", new DateTime(2024, 2, 20, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4644), 1, "Issue 3", new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4643), 4 },
+                    { 4, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4645), "Description for Issue 4", new DateTime(2024, 2, 20, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4646), 1, "Issue 4", new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4646), 6 },
+                    { 5, new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4647), "Description for Issue 5", new DateTime(2024, 2, 20, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4648), 1, "Issue 5", new DateTime(2024, 2, 13, 20, 42, 56, 923, DateTimeKind.Utc).AddTicks(4648), 9 }
                 });
 
             migrationBuilder.InsertData(

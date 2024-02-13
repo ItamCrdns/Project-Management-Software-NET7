@@ -141,9 +141,9 @@ namespace CompanyPMO_.NET.Controllers
         }
 
         [HttpGet("grouped")]
-        public async Task<IActionResult> GetTasksGroupedByProject([FromQuery] FilterParams filterParams, [FromQuery] int projectsPage, [FromQuery] int projectsPageSize)
+        public async Task<IActionResult> GetTasksGroupedByProject([FromQuery] FilterParams filterParams, [FromQuery] int tasksPage = 1, [FromQuery] int tasksPageSize = 5)
         {
-            var tasks = await _taskService.GetTasksGroupedByProject(filterParams, projectsPage, projectsPageSize);
+            var tasks = await _taskService.GetTasksGroupedByProject(filterParams, tasksPage, tasksPageSize);
 
             return Ok(tasks);
         }
