@@ -479,124 +479,61 @@ namespace CompanyPMO_.NET.Data
                 });
 
             modelBuilder.Entity<EmployeeProject>().HasData(
-                // Assign Employee 1 to Project 1
-                new EmployeeProject
-                {
-                    RelationId = 1,
-                    EmployeeId = 1,
-                    ProjectId = 1
-                },
                 // Assign Employee 2 to Project 1
                 new EmployeeProject
                 {
-                    RelationId = 2,
+                    RelationId = 1,
                     EmployeeId = 2,
                     ProjectId = 1
-                },
-                // Assign Employee 1 to Project 2
-                new EmployeeProject
-                {
-                    RelationId = 3,
-                    EmployeeId = 1,
-                    ProjectId = 2
                 },
                 // Assign Employee 2 to Project 2
                 new EmployeeProject
                 {
-                    RelationId = 4,
+                    RelationId = 2,
                     EmployeeId = 2,
                     ProjectId = 2
-                },
-                // Assign Employee 1 to Project 3
-                new EmployeeProject
-                {
-                    RelationId = 5,
-                    EmployeeId = 1,
-                    ProjectId = 3
                 },
                 // Assign Employee 2 to Project 3
                 new EmployeeProject
                 {
-                    RelationId = 6,
+                    RelationId = 3,
                     EmployeeId = 2,
                     ProjectId = 3
                 });
             modelBuilder.Entity<EmployeeTask>().HasData(
-                // Assign Task 1 to Employee 1
-                new EmployeeTask
-                {
-                    RelationId = 1,
-                    EmployeeId = 1,
-                    TaskId = 1
-                },
-                // Assign Task 2 to Employee 1
-                new EmployeeTask
-                {
-                    RelationId = 2,
-                    EmployeeId = 1,
-                    TaskId = 2
-                },
-                // Assign Task 3 to Employee 1
-                new EmployeeTask
-                {
-                    RelationId = 3,
-                    EmployeeId = 1,
-                    TaskId = 3
-                },
                 // Assign Task 4 to Employee 2
                 new EmployeeTask
                 {
-                    RelationId = 4,
+                    RelationId = 1,
                     EmployeeId = 2,
                     TaskId = 4
                 },
                 // Assign Task 5 to Employee 2
                 new EmployeeTask
                 {
-                    RelationId = 5,
+                    RelationId = 2,
                     EmployeeId = 2,
                     TaskId = 5
                 },
                 // Assign Task 6 to Employee 2
                 new EmployeeTask
                 {
-                    RelationId = 6,
+                    RelationId = 3,
                     EmployeeId = 2,
                     TaskId = 6
                 });
             modelBuilder.Entity<EmployeeIssue>().HasData(
-                // Assign Issue 1 to Employee 1
-                new EmployeeIssue
-                {
-                    RelationId = 1,
-                    EmployeeId = 1,
-                    IssueId = 1
-                },
-                // Assign Issue 2 to Employee 1
-                new EmployeeIssue
-                {
-                    RelationId = 2,
-                    EmployeeId = 1,
-                    IssueId = 2
-                },
-                // Assign Issue 3 to Employee 1
-                new EmployeeIssue
-                {
-                    RelationId = 3,
-                    EmployeeId = 1,
-                    IssueId = 3
-                },
                 // Assign Issue 4 to Employee 2
                 new EmployeeIssue
                 {
-                    RelationId = 4,
+                    RelationId = 1,
                     EmployeeId = 2,
                     IssueId = 4
                 },
                 // Assign Issue 5 to Employee 2
                 new EmployeeIssue
                 {
-                    RelationId = 5,
+                    RelationId = 2,
                     EmployeeId = 2,
                     IssueId = 5
                 });
