@@ -241,5 +241,15 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(result);
         }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{projectId}/tasks/all/showcase")]
+        [ProducesResponseType(200, Type = typeof(DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>))]
+        public async Task<IActionResult> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize)
+        {
+            var tasks = await _taskService.GetTasksShowcaseByProjectId(projectId, page, pageSize);
+
+            return Ok(tasks);
+        }
     }
 }

@@ -230,24 +230,35 @@ namespace CompanyPMO_.NET.Repository
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<EmployeeShowcaseDto>> GetEmployeesShowcasePaginated(int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>> GetEmployeesShowcasePaginated(int page, int pageSize)
         {
             int entitiesToSkip = (page - 1) * pageSize;
 
-            List<Employee> employees = await _context.Employees
+            int totalEmployeesCount = await _context.Employees
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
+
+            List<EmployeeShowcaseDto> employees = await _context.Employees
                 .OrderByDescending(p => p.Username)
+                .Select(employee => new EmployeeShowcaseDto
+                {
+                    EmployeeId = employee.EmployeeId,
+                    Username = employee.Username,
+                    ProfilePicture = employee.ProfilePicture
+                })
                 .Skip(entitiesToSkip)
                 .Take(pageSize)
                 .ToListAsync();
 
-            IEnumerable<EmployeeShowcaseDto> employeeDtos = employees.Select(employee => new EmployeeShowcaseDto
+            var result = new DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>
             {
-                EmployeeId = employee.EmployeeId,
-                Username = employee.Username,
-                ProfilePicture = employee.ProfilePicture
-            }).ToList();
+                Data = employees,
+                Count = totalEmployeesCount,
+                Pages = totalPages
+            };
 
-            return employeeDtos;
+            return result;
         }
 
         public async Task<Dictionary<string, object>> GetProjectEmployees(int projectId, int page, int pageSize)
@@ -673,6 +684,38 @@ namespace CompanyPMO_.NET.Repository
                 .ToListAsync();
 
             return employees;
+        }
+
+        public async Task<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>> SearchEmployeesShowcasePaginated(string search, int page, int pageSize)
+        {
+            int toSkip = (page - 1) * pageSize;
+
+            // Total count of foung employees
+            int totalEmployeesCount = await _context.Employees
+                .Where(e => e.Username.Contains(search))
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
+
+            List<EmployeeShowcaseDto> employees = await _context.Employees
+                .OrderByDescending(e => e.Username)
+                .Where(e => e.Username.Contains(search))
+                .Select(employee => new EmployeeShowcaseDto
+                {
+                    EmployeeId = employee.EmployeeId,
+                    Username = employee.Username,
+                    ProfilePicture = employee.ProfilePicture
+                })
+                .Skip(toSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>
+            {
+                Data = employees,
+                Count = totalEmployeesCount,
+                Pages = totalPages
+            };
         }
     }
 }

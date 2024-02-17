@@ -11,7 +11,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<bool> FinishedWorkingOnTask(int userId, int taskId);
         Task<Models.Task> GetTaskById(int taskId);
         Task<List<Employee>> GetEmployeesWorkingOnTask(int taskId); // Get employees working in a certain task
-        Task<Dictionary<string, object>> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize);
+        Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize);
         Task<List<Models.Task>> GetTasks(int page, int pageSize);
         Task<DataCountAndPagesizeDto<IEnumerable<TaskDto>>> GetAllTasks(FilterParams filterParams);
         ICollection<Image> SelectImages(ICollection<Image> images);

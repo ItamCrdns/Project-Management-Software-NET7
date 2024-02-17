@@ -867,5 +867,32 @@ namespace Tests.Repository
                 data.Tasks.Should().BeOfType<List<TaskShowcaseDto>>();
             }
         }
+
+        [Fact]
+        public async void TaskRepository_GetTasksShowcaseByProjectId_ReturnsTasksList()
+        {
+            var dbContext = await GetDatabaseContext();
+
+            var taskRepository = new TaskRepository(dbContext, _image, _utility);
+
+            var result = await taskRepository.GetTasksShowcaseByProjectId(1, 1, 10);
+
+            result.Data.Should().BeOfType<List<TaskShowcaseDto>>();
+            result.Data.Should().NotBeEmpty();
+            result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
+            result.Count.Should().BeGreaterThanOrEqualTo(1);
+            result.Pages.Should().BeGreaterThanOrEqualTo(1);
+            foreach (var data in result.Data)
+            {
+                data.TaskCreator.Should().NotBeNull();
+                data.TaskCreator.Should().BeOfType<EmployeeShowcaseDto>();
+                data.TaskCreator.Username.Should().NotBeNullOrEmpty();
+                data.Project.Should().NotBeNull();
+                data.Project.Should().BeOfType<ProjectShowcaseDto>();
+                data.Project.Name.Should().NotBeNullOrEmpty();
+                data.Name.Should().NotBeNullOrEmpty();
+                data.Created.Should().NotBe(default);
+            }
+        }
     }
 }

@@ -181,15 +181,31 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(employees);
         }
 
-        [Authorize(Policy = "SupervisorOnly")]
+        [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("all")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        [ProducesResponseType(200, Type = typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>))]
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetEmployeesShowcasePaginated(int page, int pageSize)
         {
-            IEnumerable<EmployeeShowcaseDto>? employees = await _employeeService.GetEmployeesShowcasePaginated(page, pageSize);
+            var employees = await _employeeService.GetEmployeesShowcasePaginated(page, pageSize);
 
-            if (employees == null)
+            if (employees.Count == 0)
+            {
+                return NotFound();
+            }
+
+            return Ok(employees);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("all/search/{employee}")]
+        [ProducesResponseType(200, Type = typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>))]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> SearchEmployeesShowcasePaginated(string employee, int page, int pageSize)
+        {
+            var employees = await _employeeService.SearchEmployeesShowcasePaginated(employee, page, pageSize);
+
+            if (employees.Count == 0)
             {
                 return NotFound();
             }

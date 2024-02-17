@@ -54,7 +54,7 @@ namespace Tests.EmployeeControllerTests
                 _userIdentityService
                 )
             {
-                ControllerContext = new ControllerContext { HttpContext = fakeHttpContext } 
+                ControllerContext = new ControllerContext { HttpContext = fakeHttpContext }
             };
         }
 
@@ -176,7 +176,7 @@ namespace Tests.EmployeeControllerTests
             result.Should().BeOfType(typeof(OkObjectResult));
         }
 
-        [Fact] 
+        [Fact]
         public async void EmployeeController_GetEmployeeById_ReturnNotFound()
         {
             // Arrange
@@ -419,28 +419,29 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            var fakeEmployeesList = A.Fake<List<EmployeeShowcaseDto>>();
-            fakeEmployeesList =
-            [
-                new()
-                {
+            var fakeEmployees = new List<EmployeeShowcaseDto>
+            {
+                new() {
                     EmployeeId = 1,
                     Username = "Test",
                     ProfilePicture = "User picture"
                 },
-                new()
-                {
+                new() {
                     EmployeeId = 2,
                     Username = "Test2",
                     ProfilePicture = "User picture2"
                 },
-                new()
-                {
+                new() {
                     EmployeeId = 3,
                     Username = "Test3",
                     ProfilePicture = "User picture3"
                 },
-            ];
+            };
+
+            var fakeEmployeesList = A.Fake<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>>();
+            fakeEmployeesList.Data = fakeEmployees;
+            fakeEmployeesList.Count = fakeEmployees.Count;
+            fakeEmployeesList.Pages = 1;
 
             A.CallTo(() => _employeeService.GetEmployeesShowcasePaginated(page, pageSize))
                 .Returns(fakeEmployeesList);
@@ -460,10 +461,10 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            List<EmployeeShowcaseDto> nullEmployeesList = null;
+            var fakeEmployeesList = A.Fake<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>>();
 
             A.CallTo(() => _employeeService.GetEmployeesShowcasePaginated(page, pageSize))
-                .Returns(nullEmployeesList);
+                .Returns(fakeEmployeesList);
 
             // Act
             var result = await _employeeController.GetEmployeesShowcasePaginated(page, pageSize);
@@ -648,7 +649,7 @@ namespace Tests.EmployeeControllerTests
                 .Returns(fakeTasksList);
 
             // Act
-            var result = await _employeeController.GetTasksByEmployeeUsername(username, page,pageSize);
+            var result = await _employeeController.GetTasksByEmployeeUsername(username, page, pageSize);
 
             // Assert
             result.Should().BeAssignableTo<IActionResult>();

@@ -252,9 +252,51 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public Task<Dictionary<string, object>> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize)
         {
-            throw new NotImplementedException();
+            var tasks = await _context.Tasks
+                .Where(t => t.ProjectId.Equals(projectId))
+                .OrderByDescending(t => t.Created)
+                .Select(t => new TaskShowcaseDto
+                {
+                    TaskId = t.TaskId,
+                    Name = t.Name,
+                    Created = t.Created,
+                    Project = new ProjectShowcaseDto
+                    {
+                        ProjectId = t.Project.ProjectId,
+                        Name = t.Project.Name,
+                        Priority = t.Project.Priority
+                    },
+                    TaskCreator = new EmployeeShowcaseDto
+                    {
+                        EmployeeId = t.TaskCreator.EmployeeId,
+                        Username = t.TaskCreator.Username,
+                        ProfilePicture = t.TaskCreator.ProfilePicture
+                    },
+                    Employees = t.Employees.Select(employee => new EmployeeShowcaseDto
+                    {
+                        EmployeeId = employee.EmployeeId,
+                        Username = employee.Username,
+                        ProfilePicture = employee.ProfilePicture,
+                    }).ToList()
+                })
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            int totalTasksCount = await _context.Tasks.CountAsync(t => t.ProjectId.Equals(projectId));
+
+            int totalPages = (int)Math.Ceiling((double)totalTasksCount / pageSize);
+
+            var result = new DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>
+            {
+                Data = tasks,
+                Count = totalTasksCount,
+                Pages = totalPages
+            };
+
+            return result;
         }
 
         public async Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetAllTasksShowcase(int page, int pageSize)

@@ -18,7 +18,8 @@ namespace CompanyPMO_.NET.Interfaces
         Task<DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>> SearchEmployeesWorkingInTheSameCompany(string search, string username, int page, int pageSize);
         Task<Dictionary<string, object>> GetProjectEmployees(int projectId, int page, int pageSize);
         Task<Dictionary<string, object>> SearchProjectEmployees(string search, int projectId, int page, int pageSize);
-        Task<IEnumerable<EmployeeShowcaseDto>> GetEmployeesShowcasePaginated(int page, int pageSize);
+        Task<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>> GetEmployeesShowcasePaginated(int page, int pageSize);
+        Task<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>> SearchEmployeesShowcasePaginated(string search, int page, int pageSize);
         Task<Dictionary<string, object>> GetEmployeesByCompanyPaginated(int companyId, int page, int pageSize);
         Task<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>> SearchEmployeesByCompanyPaginated(string search, int companyId, int page, int pageSize);
         IEnumerable<EmployeeShowcaseDto> EmployeeShowcaseQuery(IEnumerable<Employee> employees);
