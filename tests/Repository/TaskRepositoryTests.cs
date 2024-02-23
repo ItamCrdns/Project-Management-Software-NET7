@@ -852,7 +852,7 @@ namespace Tests.Repository
                 PageSize = 10,
             };
 
-            var result = await taskRepository.GetTasksGroupedByProject(filterParams, 1, 5);
+            var result = await taskRepository.GetTasksGroupedByProject(filterParams, 1, 5, 1);
 
             result.Data.Should().BeOfType<List<ProjectTaskGroup>>();
             result.Data.Should().NotBeEmpty();
@@ -888,7 +888,7 @@ namespace Tests.Repository
                 data.TaskCreator.Should().BeOfType<EmployeeShowcaseDto>();
                 data.TaskCreator.Username.Should().NotBeNullOrEmpty();
                 data.Project.Should().NotBeNull();
-                data.Project.Should().BeOfType<ProjectShowcaseDto>();
+                data.Project.Should().BeOfType<ProjectSomeInfoDto>();
                 data.Project.Name.Should().NotBeNullOrEmpty();
                 data.Name.Should().NotBeNullOrEmpty();
                 data.Created.Should().NotBe(default);

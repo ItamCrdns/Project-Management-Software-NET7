@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Dto;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -318,6 +319,24 @@ namespace CompanyPMO_.NET.Controllers
             EmployeeDto employee = await _employeeService.GetEmployeeByUsername(username);
 
             return Ok(employee);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpPatch("me/update")]
+        [ProducesResponseType(200, Type = typeof(OperationResult<EmployeeShowcaseDto>))]
+        [ProducesErrorResponseType(typeof(OperationResult<EmployeeShowcaseDto>))]
+        public async Task<IActionResult> UpdateMyEmployee([FromForm] UpdateEmployeeDto employee, [FromForm] IFormFile? profilePicture, [FromForm] string currentPassword)
+        {
+            int employeeId = await _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
+
+            var result = await _employeeService.UpdateEmployee(employeeId, employee, profilePicture, currentPassword);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
 
         [Authorize(Policy = "EmployeesAllowed")]

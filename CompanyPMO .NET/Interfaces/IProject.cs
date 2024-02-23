@@ -1,11 +1,12 @@
-﻿using CompanyPMO_.NET.Dto;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Models;
 
 namespace CompanyPMO_.NET.Interfaces
 {
     public interface IProject
     {
-        Task<int> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees);
+        Task<OperationResult<int>> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees);
         Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images);
         Task<ProjectDto> GetProjectById(int projectId);
         Task<ProjectSomeInfoDto> GetProjectNameCreatorLifecyclePriorityAndTeam(int projectId);
@@ -23,6 +24,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>> GetProjectsByEmployeeUsername(string username, FilterParams filterParams);
         Task<DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>>> GetProjectsShowcaseByEmployeeUsername(string username, int page, int pageSize);
         Task<DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>>> GetAllProjectsShowcase(int page, int pageSize);
+        Task<ProjectShowcaseDto> GetProjectShowcase(int projectId);
         Task<bool> IsParticipant(int projectId, int employeeId); // Used for checking if the employee is a participant in the project
         Task<bool> IsOwner(int projectId, int employeeId); // Used for checking if the employee is the owner of the project
 

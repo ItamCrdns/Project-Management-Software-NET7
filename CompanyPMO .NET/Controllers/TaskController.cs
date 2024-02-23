@@ -121,7 +121,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("{taskId}/employees/add")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
         public async Task<IActionResult> AddEmployeesToTask(int taskId, [FromForm] List<int> employees)
         {
             var (response, employeesAdded) = await _taskService.AddEmployeesToTask(taskId, employees);
@@ -143,7 +143,7 @@ namespace CompanyPMO_.NET.Controllers
         [HttpGet("grouped")]
         public async Task<IActionResult> GetTasksGroupedByProject([FromQuery] FilterParams filterParams, [FromQuery] int tasksPage = 1, [FromQuery] int tasksPageSize = 5)
         {
-            var tasks = await _taskService.GetTasksGroupedByProject(filterParams, tasksPage, tasksPageSize);
+            var tasks = await _taskService.GetTasksGroupedByProject(filterParams, tasksPage, tasksPageSize, await GetUserId());
 
             return Ok(tasks);
         }

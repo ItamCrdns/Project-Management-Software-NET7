@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Data;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
@@ -31,16 +32,16 @@ namespace CompanyPMO_.NET.Repository
                 return (new AuthenticationResult { Blocked = true }, $"Your account has been blocked for {minutes} minutes.", null);
             }
 
-            if(!string.IsNullOrEmpty(password))
+            if (!string.IsNullOrEmpty(password))
             {
-                if(employee is null)
+                if (employee is null)
                 {
                     return (new AuthenticationResult { DoesntExist = true }, "Apparently, this user does not exist.", null);
                 }
 
-                if(BCrypt.Net.BCrypt.Verify(password, employee.Password))
+                if (BCrypt.Net.BCrypt.Verify(password, employee.Password))
                 {
-                    if(employee.LoginAttempts > 0)
+                    if (employee.LoginAttempts > 0)
                     {
                         employee.LoginAttempts = 0;
                         _ = await _context.SaveChangesAsync();
@@ -157,7 +158,7 @@ namespace CompanyPMO_.NET.Repository
             {
                 return null;
             }
-                
+
             // Projects user is working on or created
             int projectsParticipantCount = await _context.EmployeeProjects
                 .Where(p => p.EmployeeId.Equals(employee.EmployeeId))
@@ -291,7 +292,7 @@ namespace CompanyPMO_.NET.Repository
                 { "count", totalEmployeesCount },
                 { "currentPage", page },
                 { "pages", totalPages }
-            };  
+            };
 
             return result;
         }
@@ -344,12 +345,12 @@ namespace CompanyPMO_.NET.Repository
             var employee = await _context.Employees
                 .FirstOrDefaultAsync(u => u.Username.Equals(username));
 
-            if(employee is null)
+            if (employee is null)
             {
                 return null;
             }
 
-            if(employee.LoginAttempts >= 5)
+            if (employee.LoginAttempts >= 5)
             {
                 employee.LockedEnabled = true;
                 employee.LoginAttempts = 0;
@@ -367,7 +368,7 @@ namespace CompanyPMO_.NET.Repository
                 _ = await _context.SaveChangesAsync();
             }
 
-            if(employee.LockedEnabled)
+            if (employee.LockedEnabled)
             {
                 int dateComparasion = DateTimeOffset.Compare(DateTimeOffset.UtcNow, employee.LockedUntil.Value);
 
@@ -391,7 +392,7 @@ namespace CompanyPMO_.NET.Repository
             bool usernameExists = await _context.Employees
                 .AnyAsync(u => u.Username.Equals(username));
 
-            if(usernameExists)
+            if (usernameExists)
             {
                 return ("Username already registered", false);
             }
@@ -401,7 +402,7 @@ namespace CompanyPMO_.NET.Repository
 
             var (imageUrl, _) = await _imageService.UploadToCloudinary(image, 300, 300);
 
-            if(employee.Email is null || employee.PhoneNumber is null || employee.FirstName is null || employee.Gender is null || employee.LastName is null || employee.Role is null)
+            if (employee.Email is null || employee.PhoneNumber is null || employee.FirstName is null || employee.Gender is null || employee.LastName is null || employee.Role is null)
             {
                 return ("Email, first name, last name, gender, phone number and role cannot be null", false);
             }
@@ -411,7 +412,7 @@ namespace CompanyPMO_.NET.Repository
                 Username = employee.Username,
                 Role = employee.Role,
                 Email = employee.Email,
-                PhoneNumber = employee.PhoneNumber, 
+                PhoneNumber = employee.PhoneNumber,
                 Password = hashedPassword,
                 FirstName = employee.FirstName,
                 LastName = employee.LastName,
@@ -436,11 +437,6 @@ namespace CompanyPMO_.NET.Repository
             {
                 return ("Something went wrong", false);
             }
-        }
-
-        public Task<(bool updated, Employee)> UpdateEmployee(int employeeId, EmployeeDto employeeDto, IFormFile image)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<Dictionary<string, object>> GetEmployeesByCompanyPaginated(int companyId, int page, int pageSize)
@@ -673,7 +669,7 @@ namespace CompanyPMO_.NET.Repository
 
             int[] employeeIdsArray = employeeIds.Split('-').Select(int.Parse).ToArray();
 
-            IEnumerable<EmployeeShowcaseDto> employees = await  _context.Employees
+            IEnumerable<EmployeeShowcaseDto> employees = await _context.Employees
                 .Where(e => employeeIdsArray.Contains(e.EmployeeId))
                 .Select(employee => new EmployeeShowcaseDto
                 {
@@ -716,6 +712,79 @@ namespace CompanyPMO_.NET.Repository
                 Count = totalEmployeesCount,
                 Pages = totalPages
             };
+        }
+
+        public async Task<OperationResult<EmployeeShowcaseDto>> UpdateEmployee(int employeeId, UpdateEmployeeDto employee, IFormFile? profilePicture, string currentPassword)
+        {
+            Employee employeeToUpdate = await _context.Employees.FindAsync(employeeId);
+
+            if (employeeToUpdate is null)
+            {
+                return new OperationResult<EmployeeShowcaseDto> { Success = false, Message = "Employee not found", Data = new EmployeeShowcaseDto() };
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(currentPassword, employeeToUpdate.Password))
+            {
+                return new OperationResult<EmployeeShowcaseDto> { Success = false, Message = "Wrong password", Data = new EmployeeShowcaseDto() };
+            }
+
+            if (employee.Email is not null && !string.IsNullOrWhiteSpace(employee.Email))
+            {
+                employeeToUpdate.Email = employee.Email;
+            }
+
+            if (employee.PhoneNumber is not null && !string.IsNullOrWhiteSpace(employee.PhoneNumber))
+            {
+                employeeToUpdate.PhoneNumber = employee.PhoneNumber;
+            }
+
+            if (employee.Password is not null && !string.IsNullOrWhiteSpace(employee.Password))
+            {
+                string salt = BCrypt.Net.BCrypt.GenerateSalt();
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(employee.Password, salt);
+                employeeToUpdate.Password = hashedPassword;
+            }
+
+            if (employee.FirstName is not null && !string.IsNullOrWhiteSpace(employee.FirstName))
+            {
+                employeeToUpdate.FirstName = employee.FirstName;
+            }
+
+            if (employee.LastName is not null && !string.IsNullOrWhiteSpace(employee.LastName))
+            {
+                employeeToUpdate.LastName = employee.LastName;
+            }
+
+            if (employee.Gender is not null && !string.IsNullOrWhiteSpace(employee.Gender))
+            {
+                employeeToUpdate.Gender = employee.Gender;
+            }
+
+            if (profilePicture is not null && profilePicture.Length > 0)
+            {
+                var (imageUrl, _) = await _imageService.UploadToCloudinary(profilePicture, 300, 300);
+                employeeToUpdate.ProfilePicture = imageUrl;
+            }
+
+            _context.Employees.Update(employeeToUpdate);
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                EmployeeShowcaseDto returnEmployee = new()
+                {
+                    EmployeeId = employeeToUpdate.EmployeeId,
+                    Username = employeeToUpdate.Username,
+                    ProfilePicture = employeeToUpdate.ProfilePicture
+                };
+
+                return new OperationResult<EmployeeShowcaseDto> { Success = true, Message = "Employee updated", Data = returnEmployee };
+            }
+            else
+            {
+                return new OperationResult<EmployeeShowcaseDto> { Success = false, Message = "Something went wrong", Data = new EmployeeShowcaseDto() };
+            }
         }
     }
 }

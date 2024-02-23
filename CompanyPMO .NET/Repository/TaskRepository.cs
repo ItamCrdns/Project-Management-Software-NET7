@@ -262,7 +262,7 @@ namespace CompanyPMO_.NET.Repository
                     TaskId = t.TaskId,
                     Name = t.Name,
                     Created = t.Created,
-                    Project = new ProjectShowcaseDto
+                    Project = new ProjectSomeInfoDto
                     {
                         ProjectId = t.Project.ProjectId,
                         Name = t.Project.Name,
@@ -381,23 +381,27 @@ namespace CompanyPMO_.NET.Repository
             return taskDtos;
         }
 
-        public async Task<DataCountAndPagesizeDto<List<ProjectTaskGroup>>> GetTasksGroupedByProject(FilterParams filterParams, int tasksPage, int tasksPageSize)
+        public async Task<DataCountAndPagesizeDto<List<ProjectTaskGroup>>> GetTasksGroupedByProject(FilterParams filterParams, int tasksPage, int tasksPageSize, int employeeId)
         {
             List<ProjectTaskGroup> tasks = await _context.Tasks
                 .GroupBy(t => t.Project)
                 .Select(x => new ProjectTaskGroup
                 {
                     ProjectName = x.Key.Name,
+                    ProjectId = x.Key.ProjectId,
+                    IsCurrentUserOwner = x.Key.ProjectCreatorId == employeeId,
+                    IsCurrentUserInTeam = _context.EmployeeProjects.Any(t => t.ProjectId == x.Key.ProjectId && t.EmployeeId == employeeId),
                     Tasks = x.Select(t => new TaskShowcaseDto
                     {
                         TaskId = t.TaskId,
                         Name = t.Name,
                         Created = t.Created,
-                        Project = new ProjectShowcaseDto
+                        Project = new ProjectSomeInfoDto
                         {
                             ProjectId = t.Project.ProjectId,
                             Name = t.Project.Name,
-                            Priority = t.Project.Priority
+                            Priority = t.Project.Priority,
+                            Lifecycle = t.Project.Lifecycle
                         },
                         TaskCreator = new EmployeeShowcaseDto
                         {

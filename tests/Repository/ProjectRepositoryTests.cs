@@ -250,7 +250,7 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void ProjectRepository_CreateProject_ReturnsProjectId()
+        public async void ProjectRepository_CreateProject_ReturnsSuccess()
         {
             int supervisorId = 1;
             int companyId = 1;
@@ -279,8 +279,47 @@ namespace Tests.Repository
 
             var result = await projectRepository.CreateProject(newProject, supervisorId, fakeIFormFileList, companyId, employees);
 
-            result.Should().BeOfType(typeof(int));
-            result.Should().BeGreaterThan(0);
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Project created successfully");
+            result.Success.Should().BeTrue();
+            result.Data.Should().BeOfType(typeof(int));
+            result.Data.Should().NotBe(0);
+        }
+
+        [Fact]
+        public async void ProjectRepository_CreateProject_ReturnsFailure()
+        {
+            int supervisorId = 1;
+            int companyId = 1;
+            List<int> employees = [];
+
+            List<IFormFile> fakeIFormFileList =
+                [
+                    new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test")), 0, 0, "Data", "test.jpg"),
+                    new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test 2")), 0, 0, "Data 2", "test2.jpg"),
+                    new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test 3")), 0, 0, "Data 3", "test3.jpg")
+                    ];
+
+            var newProject = new Project
+            {
+                Name = "",
+                Description = "",
+                Created = DateTime.UtcNow,
+                ProjectCreatorId = supervisorId,
+                Priority = 1,
+                CompanyId = companyId
+            };
+
+            var dbContext = await GetDatabaseContext();
+            var projectRepository = new ProjectRepository(dbContext, _image, _utility);
+
+            var result = await projectRepository.CreateProject(newProject, supervisorId, fakeIFormFileList, companyId, employees);
+
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Project name and description are required");
+            result.Success.Should().BeFalse();
+            result.Data.Should().BeOfType(typeof(int));
+            result.Data.Should().Be(0);
         }
 
         [Fact]
@@ -774,6 +813,22 @@ namespace Tests.Repository
             var result = await projectRepository.GetProjectNameCreatorLifecyclePriorityAndTeam(projectId);
 
             result.Should().BeNull();
+        }
+
+        [Fact]
+        public async void ProjectRepository_GetProjectShowcase_ReturnsProject()
+        {
+            int projectId = 1;
+
+            var dbContext = await GetDatabaseContext();
+            var projectRepository = new ProjectRepository(dbContext, _image, _utility);
+
+            var result = await projectRepository.GetProjectShowcase(projectId);
+
+            result.Should().BeOfType(typeof(ProjectShowcaseDto));
+            result.ProjectId.Should().Be(projectId);
+            result.Name.Should().NotBeNullOrEmpty().And.Be("Project 0");
+
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Data;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
@@ -38,9 +39,19 @@ namespace CompanyPMO_.NET.Repository
             return await _imageService.AddImagesToExistingEntity(projectId, images, "Project", imageCountInProjectEntity);
         }
 
-        public async Task<int> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees)
+        public async Task<OperationResult<int>> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees)
         {
-            var newProject = new Project
+            if (string.IsNullOrWhiteSpace(project.Name) || string.IsNullOrWhiteSpace(project.Description))
+            {
+                return new OperationResult<int>
+                {
+                    Success = false,
+                    Message = "Project name and description are required",
+                    Data = 0
+                };
+            }
+
+            Project newProject = new()
             {
                 Name = project.Name,
                 Description = project.Description,
@@ -53,35 +64,54 @@ namespace CompanyPMO_.NET.Repository
 
             // Save changed because we will need to access the projectId later when adding images
             _context.Add(newProject);
-            _ = await _context.SaveChangesAsync();
+            int rowsAffected = await _context.SaveChangesAsync();
 
-            List<EmployeeProject> employeesToAdd = new();
+            if (rowsAffected is 0)
+            {
+                return new OperationResult<int>
+                {
+                    Success = false,
+                    Message = "Failed to create the project",
+                    Data = 0
+                };
+            }
+
+            List<string> errors = new();
 
             if (employees.Count > 0)
             {
-                foreach (var employee in employees)
+                var employeesToAdd = employees.Select(employee => new EmployeeProject
                 {
-                    var newRelation = new EmployeeProject
-                    {
-                        EmployeeId = employee,
-                        ProjectId = newProject.ProjectId
-                    };
+                    EmployeeId = employee,
+                    ProjectId = newProject.ProjectId
+                });
 
-                    employeesToAdd.Add(newRelation);
+                await _context.EmployeeProjects.AddRangeAsync(employeesToAdd);
+                int employeeRowsAffected = await _context.SaveChangesAsync();
+
+                if (employeeRowsAffected is 0)
+                {
+                    errors.Add("Failed to add employees to the project");
                 }
-
-                _context.AddRange(employeesToAdd);
-                _ = await _context.SaveChangesAsync();
             }
 
-            List<Image> imageCollection = new();
-
-            if(images is not null && images.Any(i => i.Length > 0))
+            if (images is not null && images.Any(i => i.Length > 0))
             {
-                imageCollection = await _imageService.AddImagesToNewEntity(images, newProject.ProjectId, "Project", null);
+                var newImages = await _imageService.AddImagesToNewEntity(images, newProject.ProjectId, "Project", null);
+
+                if (newImages.Count is 0)
+                {
+                    errors.Add("Failed to add images to the project");
+                }
             }
 
-            return newProject.ProjectId;
+            return new OperationResult<int>
+            {
+                Success = true,
+                Message = "Project created successfully",
+                Data = newProject.ProjectId,
+                Errors = errors
+            };
         }
 
         public async Task<bool> DoesProjectExist(int projectId) => await _context.Projects.AnyAsync(i => i.ProjectId == projectId);
@@ -530,6 +560,18 @@ namespace CompanyPMO_.NET.Repository
             };
 
             return projectDto;
+        }
+
+        public async Task<ProjectShowcaseDto> GetProjectShowcase(int projectId)
+        {
+            return await _context.Projects.Where(x => x.ProjectId == projectId)
+                .Select(p => new ProjectShowcaseDto
+                {
+                    ProjectId = p.ProjectId,
+                    Name = p.Name,
+                    Priority = p.Priority
+                })
+                .FirstOrDefaultAsync();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Dto;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -67,12 +68,18 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("new")]
-        [ProducesResponseType(200, Type = typeof(Project))]
+        [ProducesResponseType(200, Type = typeof(OperationResult<int>))]
+        [ProducesResponseType(400, Type = typeof(OperationResult<int>))]
         public async Task<IActionResult> NewProject([FromForm] Project project, [FromForm] List<IFormFile>? images, [FromForm] int companyId, [FromForm] List<int> employees)
         {
-            int projectId = await _projectService.CreateProject(project, await GetUserId(), images, companyId, employees);
+            var result = await _projectService.CreateProject(project, await GetUserId(), images, companyId, employees);
 
-            return Ok(projectId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
 
         [Authorize(Policy = "SupervisorOnly")]
@@ -126,7 +133,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}/limited")]
-        [ProducesResponseType(200, Type = typeof(ProjectSomeInfoDto))]
+        [ProducesResponseType(200, Type = typeof(EntityParticipantOrOwnerDTO<ProjectSomeInfoDto>))]
         public async Task<IActionResult> GetProjectNameCreatorAndTeam(int projectId)
         {
             var project = await _projectService.GetProjectNameCreatorLifecyclePriorityAndTeam(projectId);
@@ -189,7 +196,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("company/{companyId}")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<ProjectDto>))]
+        [ProducesResponseType(200, Type = typeof(DataCountAndPagesizeDto<IEnumerable<ProjectDto>>))]
         public async Task<IActionResult> GetProjectsByCompanyName(int companyId, [FromQuery] FilterParams filterParams)
         {
             var projects = await _projectService.GetProjectsByCompanyName(companyId, filterParams);
@@ -199,7 +206,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}/employees")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
         public async Task<IActionResult> GetEmployeesWorkingInACertainProject(int projectId, int page, int pageSize)
         {
             var employees = await _employeeService.GetProjectEmployees(projectId, page, pageSize);
@@ -209,7 +216,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}/employees/search/{employeeToSearch}")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
         public async Task<IActionResult> SearchEmployeesWorkingInACertainProject(int projectId, string employeeToSearch, int page, int pageSize)
         {
             var employees = await _employeeService.SearchProjectEmployees(employeeToSearch, projectId, page, pageSize);
@@ -250,6 +257,16 @@ namespace CompanyPMO_.NET.Controllers
             var tasks = await _taskService.GetTasksShowcaseByProjectId(projectId, page, pageSize);
 
             return Ok(tasks);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{projectId}/showcase")]
+        [ProducesResponseType(200, Type = typeof(ProjectShowcaseDto))]
+        public async Task<IActionResult> GetProjectShowcase(int projectId)
+        {
+            var project = await _projectService.GetProjectShowcase(projectId);
+
+            return Ok(project);
         }
     }
 }

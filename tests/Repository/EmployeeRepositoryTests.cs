@@ -51,7 +51,7 @@ namespace tests.Repository
                             Role = $"test{i}",
                             Email = $"test{i}",
                             PhoneNumber = $"test{i}",
-                            Password = $"test{i}",
+                            Password = BCrypt.Net.BCrypt.HashPassword($"test{i}"),
                             FirstName = $"test{i}",
                             LastName = $"test{i}",
                             Gender = $"test{i}",
@@ -682,6 +682,48 @@ namespace tests.Repository
             result.Count.Should().BeGreaterThanOrEqualTo(0);
             result.Pages.Should().BeGreaterThanOrEqualTo(0);
             result.Should().BeOfType(typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>));
+        }
+
+        [Fact]
+        public async void EmployeeRepository_UpdateEmployee_ReturnsSuccess()
+        {
+            int employeeId = 1;
+            var fakeEmployee = A.Fake<UpdateEmployeeDto>();
+            fakeEmployee.Email = "update";
+            var fakeImage = A.Fake<IFormFile>();
+            string currentPassword = "test0";
+
+            var dbContext = await GetDatabaseContext();
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+
+            var result = await employeeRepository.UpdateEmployee(employeeId, fakeEmployee, fakeImage, currentPassword);
+
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Employee updated");
+            result.Success.Should().BeTrue();
+            result.Data.Should().BeOfType(typeof(EmployeeShowcaseDto));
+            result.Data.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async void EmployeeRepository_UpdateEmployee_ReturnsFailure()
+        {
+            int employeeId = 1;
+            var fakeEmployee = A.Fake<UpdateEmployeeDto>();
+            fakeEmployee.Email = "update";
+            var fakeImage = A.Fake<IFormFile>();
+            string currentPassword = "test99999999999999";
+
+            var dbContext = await GetDatabaseContext();
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+
+            var result = await employeeRepository.UpdateEmployee(employeeId, fakeEmployee, fakeImage, currentPassword);
+
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Wrong password");
+            result.Success.Should().BeFalse();
+            result.Data.Should().BeOfType(typeof(EmployeeShowcaseDto));
+            result.Data.Should().NotBeNull();
         }
     }
 }

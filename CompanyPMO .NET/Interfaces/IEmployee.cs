@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Dto;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Models;
 
 namespace CompanyPMO_.NET.Interfaces
@@ -6,7 +7,7 @@ namespace CompanyPMO_.NET.Interfaces
     public interface IEmployee
     {
         Task<(string result, bool status)> RegisterEmployee(EmployeeRegisterDto employee, IFormFile image);
-        Task<(bool updated, Employee)> UpdateEmployee(int employeeId, EmployeeDto employeeDto, IFormFile image);
+        Task<OperationResult<EmployeeShowcaseDto>> UpdateEmployee(int employeeId, UpdateEmployeeDto employee, IFormFile? image, string currentPassword);
         Task<(AuthenticationResult result, string message, EmployeeDto employee)> AuthenticateEmployee(string username, string password);
         Task<bool?> IsAccountLocked(string username);
         Task<Employee> GetEmployeeForClaims(string username);
