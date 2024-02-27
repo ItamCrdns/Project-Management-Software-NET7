@@ -800,6 +800,7 @@ namespace Tests.Repository
             result.Should().BeOfType(typeof(ProjectSomeInfoDto));
             result.ProjectId.Should().Be(projectId);
             result.Name.Should().NotBeNullOrEmpty().And.Be("Project 0");
+            result.EmployeeCount.Should().BeGreaterThanOrEqualTo(1);
         }
 
         [Fact]

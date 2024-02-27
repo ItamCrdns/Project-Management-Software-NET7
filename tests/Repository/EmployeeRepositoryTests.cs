@@ -246,7 +246,7 @@ namespace tests.Repository
         }
 
         [Fact]
-        public async void EmployeeRepository_GetProjectEmployees_ReturnsDictionaryOrEmptyDictionary()
+        public async void EmployeeRepository_GetProjectEmployees_ReturnsEmployees()
         {
             int projectId = 1;
             int page = 1;
@@ -257,7 +257,15 @@ namespace tests.Repository
             var result = await employeeRepository.GetProjectEmployees(projectId, page, pageSize);
 
             result.Should().NotBeNull();
-            result.Should().BeOfType(typeof(Dictionary<string, object>));
+            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>));
+            result.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
+            result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
+            foreach (var employee in result.Data)
+            {
+                employee.Username.Should().Contain("test");
+            }
+            result.Count.Should().BeGreaterThanOrEqualTo(1);
+            result.Pages.Should().BeGreaterThanOrEqualTo(1);
         }
 
         [Fact]
@@ -401,19 +409,24 @@ namespace tests.Repository
         }
 
         [Fact]
-        public async void EmployeeRepository_SearchProjectEmployees_ReturnsDictionaryOrEmptyDictionary()
+        public async void EmployeeRepository_SearchProjectEmployees_ReturnsEmployees()
         {
-            string search = "test1";
-            int projectId = 1;
-            int page = 1;
-            int pageSize = 10;
+            string search = "test";
             var dbContext = await GetDatabaseContext();
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 
-            var result1 = await employeeRepository.SearchProjectEmployees(search, projectId, page, pageSize);
+            var result = await employeeRepository.SearchProjectEmployees(search, 1, 1, 10);
 
-            result1.Should().NotBeNull();
-            result1.Should().BeOfType(typeof(Dictionary<string, object>));
+            result.Should().NotBeNull();
+            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>));
+            result.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
+            foreach (var employee in result.Data)
+            {
+                employee.Username.Should().Contain(search);
+            }
+            result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
+            result.Count.Should().BeGreaterThanOrEqualTo(1);
+            result.Pages.Should().BeGreaterThanOrEqualTo(1);
         }
 
         [Fact]

@@ -27,5 +27,6 @@
         public int Priority { get; set; }
         public EmployeeShowcaseDto Creator { get; set; }
         public IEnumerable<EmployeeShowcaseDto>? Team { get; set; }
+        public int EmployeeCount { get; set; }
     }
 }

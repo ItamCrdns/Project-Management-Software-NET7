@@ -262,39 +262,35 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<Dictionary<string, object>> GetProjectEmployees(int projectId, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>> GetProjectEmployees(int projectId, int page, int pageSize)
         {
             int toSkip = (page - 1) * pageSize;
 
-            int totalEmployeesCount = await _context.EmployeeProjects
-                .Where(p => p.ProjectId.Equals(projectId))
-                .CountAsync();
-
-            int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
-
-            // Get a list of the employeeIds that are in a certain project
-            IEnumerable<int> employeeIds = await _context.EmployeeProjects
-                .Where(p => p.ProjectId.Equals(projectId))
-                .Select(i => i.EmployeeId) // * I only need the employee Id
+            var employees = await _context.Employees
+                .Where(x => _context.EmployeeProjects.Where(p => p.ProjectId.Equals(projectId)).Select(e => e.EmployeeId).Contains(x.EmployeeId))
+                .OrderByDescending(x => x.Username)
+                .Select(employee => new EmployeeShowcaseDto
+                {
+                    EmployeeId = employee.EmployeeId,
+                    Username = employee.Username,
+                    ProfilePicture = employee.ProfilePicture
+                })
                 .Skip(toSkip)
                 .Take(pageSize)
                 .ToListAsync();
 
-            IEnumerable<Employee> employees = await _context.Employees
-                .Where(i => employeeIds.Contains(i.EmployeeId))
-                .ToListAsync();
+            int count = await _context.EmployeeProjects
+                .Where(p => p.ProjectId.Equals(projectId))
+                .CountAsync();
 
-            var employeeDtos = EmployeeShowcaseQuery(employees);
+            int totalPages = (int)Math.Ceiling((double)count / pageSize);
 
-            var result = new Dictionary<string, object>
+            return new DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>
             {
-                { "data", employeeDtos },
-                { "count", totalEmployeesCount },
-                { "currentPage", page },
-                { "pages", totalPages }
+                Data = employees,
+                Count = count,
+                Pages = totalPages
             };
-
-            return result;
         }
 
         public async Task<DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>> GetEmployeesWorkingInTheSameCompany(string username, int page, int pageSize)
@@ -474,40 +470,33 @@ namespace CompanyPMO_.NET.Repository
             return result;
         }
 
-        public async Task<Dictionary<string, object>> SearchProjectEmployees(string search, int projectId, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>> SearchProjectEmployees(string search, int projectId, int page, int pageSize)
         {
             int toSkip = (page - 1) * pageSize;
 
-            // Get a list of ALL the employee ids in the project
-            IEnumerable<int> employeeIds = await _context.EmployeeProjects
-                .Where(p => p.ProjectId.Equals(projectId))
-                .Select(i => i.EmployeeId)
-                .ToListAsync();
-
-            int totalEmployeesCount = await _context.Employees
-                .Where(i => employeeIds.Contains(i.EmployeeId) && i.Username.Contains(search))
-                .CountAsync();
-
-            int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
-
-            // Get a list of the employeeIds that are in a certain project and match the search
-            IEnumerable<Employee> employees = await _context.Employees
-                .Where(i => employeeIds.Contains(i.EmployeeId) && i.Username.Contains(search))
+            var employees = await _context.Employees
+                .Where(x => _context.EmployeeProjects.Where(p => p.ProjectId.Equals(projectId)).Select(e => e.EmployeeId).Contains(x.EmployeeId) && x.Username.Contains(search))
+                .OrderByDescending(x => x.Username)
+                .Select(employee => new EmployeeShowcaseDto
+                {
+                    EmployeeId = employee.EmployeeId,
+                    Username = employee.Username,
+                    ProfilePicture = employee.ProfilePicture
+                })
                 .Skip(toSkip)
                 .Take(pageSize)
                 .ToListAsync();
 
-            var employeeDtos = EmployeeShowcaseQuery(employees);
+            int count = await _context.EmployeeProjects.Where(p => p.ProjectId.Equals(projectId)).CountAsync();
 
-            var result = new Dictionary<string, object>
+            int totalPages = (int)Math.Ceiling((double)employees.Count / pageSize);
+
+            return new DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>
             {
-                { "data", employeeDtos },
-                { "count", totalEmployeesCount },
-                { "currentPage", page },
-                { "pages", totalPages }
+                Data = employees,
+                Count = count,
+                Pages = totalPages
             };
-
-            return result;
         }
 
         public IEnumerable<EmployeeShowcaseDto> EmployeeShowcaseQuery(IEnumerable<Employee> employees)

@@ -556,7 +556,8 @@ namespace CompanyPMO_.NET.Repository
                     EmployeeId = p.EmployeeId,
                     Username = p.Username,
                     ProfilePicture = p.ProfilePicture
-                }).Take(5).ToList()
+                }).OrderByDescending(x => x.Username).Take(5).ToList(),
+                EmployeeCount = project.Employees.Count
             };
 
             return projectDto;

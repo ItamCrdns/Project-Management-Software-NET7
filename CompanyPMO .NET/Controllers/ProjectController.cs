@@ -206,8 +206,8 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}/employees")]
-        [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
-        public async Task<IActionResult> GetEmployeesWorkingInACertainProject(int projectId, int page, int pageSize)
+        [ProducesResponseType(200, Type = typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>))]
+        public async Task<IActionResult> GetProjectEmployees(int projectId, int page, int pageSize)
         {
             var employees = await _employeeService.GetProjectEmployees(projectId, page, pageSize);
 
@@ -216,8 +216,8 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}/employees/search/{employeeToSearch}")]
-        [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
-        public async Task<IActionResult> SearchEmployeesWorkingInACertainProject(int projectId, string employeeToSearch, int page, int pageSize)
+        [ProducesResponseType(200, Type = typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>))]
+        public async Task<IActionResult> SearchProjectEmployees(int projectId, string employeeToSearch, int page, int pageSize)
         {
             var employees = await _employeeService.SearchProjectEmployees(employeeToSearch, projectId, page, pageSize);
 
