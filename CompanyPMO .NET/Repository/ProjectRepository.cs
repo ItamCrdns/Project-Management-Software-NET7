@@ -78,13 +78,18 @@ namespace CompanyPMO_.NET.Repository
 
             List<string> errors = new();
 
-            if (employees.Count > 0)
+            if (employees is not null && employees.Count > 0)
             {
-                var employeesToAdd = employees.Select(employee => new EmployeeProject
+                var employeesToAdd = employees.Where(employee => employee != employeeSupervisorId).Select(employee => new EmployeeProject
                 {
                     EmployeeId = employee,
                     ProjectId = newProject.ProjectId
                 });
+
+                if (employees.Any(x => x == employeeSupervisorId))
+                {
+                    errors.Add("You can't add yourself");
+                }
 
                 await _context.EmployeeProjects.AddRangeAsync(employeesToAdd);
                 int employeeRowsAffected = await _context.SaveChangesAsync();
