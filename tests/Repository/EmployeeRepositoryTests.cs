@@ -235,7 +235,7 @@ namespace tests.Repository
             var dbContext = await GetDatabaseContext();
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 
-            var result = await employeeRepository.GetEmployeesShowcasePaginated(page, pageSize);
+            var result = await employeeRepository.GetEmployeesShowcasePaginated(1,page, pageSize);
 
             result.Should().NotBeNull();
             result.Should().BeOfType(typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>));
@@ -243,6 +243,7 @@ namespace tests.Repository
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Count.Should().BeGreaterThanOrEqualTo(1);
             result.Pages.Should().BeGreaterThanOrEqualTo(1);
+            result.Data.Should().NotContain(x => x.EmployeeId == 1);
         }
 
         [Fact]
@@ -667,7 +668,7 @@ namespace tests.Repository
             var dbContext = await GetDatabaseContext();
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 
-            var result = await employeeRepository.SearchEmployeesShowcasePaginated(search, page, pageSize);
+            var result = await employeeRepository.SearchEmployeesShowcasePaginated(1, search, page, pageSize);
 
             result.Should().NotBeNull();
             result.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
@@ -675,6 +676,7 @@ namespace tests.Repository
             result.Count.Should().BeGreaterThanOrEqualTo(1);
             result.Pages.Should().BeGreaterThanOrEqualTo(1);
             result.Should().BeOfType(typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>));
+            result.Data.Should().NotContain(x => x.EmployeeId == 1);
         }
 
         [Fact]
@@ -687,7 +689,7 @@ namespace tests.Repository
             var dbContext = await GetDatabaseContext();
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 
-            var result = await employeeRepository.SearchEmployeesShowcasePaginated(search, page, pageSize);
+            var result = await employeeRepository.SearchEmployeesShowcasePaginated(1, search, page, pageSize);
 
             result.Should().NotBeNull();
             result.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));

@@ -245,7 +245,7 @@ namespace CompanyPMO_.NET.Controllers
                 { "isProjectParticipant", isParticipantOfProject },
                 { "isProjectOwner", isOwner }
             };
-
+ 
             return Ok(result);
         }
 

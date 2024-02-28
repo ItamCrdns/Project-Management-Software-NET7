@@ -188,7 +188,9 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetEmployeesShowcasePaginated(int page, int pageSize)
         {
-            var employees = await _employeeService.GetEmployeesShowcasePaginated(page, pageSize);
+            int employeeId = await _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+
+            var employees = await _employeeService.GetEmployeesShowcasePaginated(employeeId, page, pageSize);
 
             if (employees.Count == 0)
             {
@@ -204,7 +206,9 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> SearchEmployeesShowcasePaginated(string employee, int page, int pageSize)
         {
-            var employees = await _employeeService.SearchEmployeesShowcasePaginated(employee, page, pageSize);
+            int employeeId = await _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+
+            var employees = await _employeeService.SearchEmployeesShowcasePaginated(employeeId, employee, page, pageSize);
 
             if (employees.Count == 0)
             {

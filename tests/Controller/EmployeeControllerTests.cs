@@ -443,7 +443,10 @@ namespace Tests.EmployeeControllerTests
             fakeEmployeesList.Count = fakeEmployees.Count;
             fakeEmployeesList.Pages = 1;
 
-            A.CallTo(() => _employeeService.GetEmployeesShowcasePaginated(page, pageSize))
+            A.CallTo(() => _userIdentityService.GetUserIdFromClaims(A<ClaimsPrincipal>.Ignored))
+                .Returns(1);
+
+            A.CallTo(() => _employeeService.GetEmployeesShowcasePaginated(1, page, pageSize))
                 .Returns(fakeEmployeesList);
 
             // Act
@@ -463,7 +466,7 @@ namespace Tests.EmployeeControllerTests
 
             var fakeEmployeesList = A.Fake<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>>();
 
-            A.CallTo(() => _employeeService.GetEmployeesShowcasePaginated(page, pageSize))
+            A.CallTo(() => _employeeService.GetEmployeesShowcasePaginated(1, page, pageSize))
                 .Returns(fakeEmployeesList);
 
             // Act

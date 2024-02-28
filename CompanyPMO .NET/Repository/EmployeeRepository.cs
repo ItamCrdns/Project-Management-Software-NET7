@@ -231,16 +231,18 @@ namespace CompanyPMO_.NET.Repository
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>> GetEmployeesShowcasePaginated(int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>> GetEmployeesShowcasePaginated(int userId, int page, int pageSize)
         {
             int entitiesToSkip = (page - 1) * pageSize;
 
             int totalEmployeesCount = await _context.Employees
+                .Where(x => x.EmployeeId != userId)
                 .CountAsync();
 
             int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
 
             List<EmployeeShowcaseDto> employees = await _context.Employees
+                .Where(x => x.EmployeeId != userId) // Exclude the employee that is making the request
                 .OrderByDescending(p => p.Username)
                 .Select(employee => new EmployeeShowcaseDto
                 {
@@ -671,20 +673,20 @@ namespace CompanyPMO_.NET.Repository
             return employees;
         }
 
-        public async Task<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>> SearchEmployeesShowcasePaginated(string search, int page, int pageSize)
+        public async Task<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>> SearchEmployeesShowcasePaginated(int userId, string search, int page, int pageSize)
         {
             int toSkip = (page - 1) * pageSize;
 
             // Total count of foung employees
             int totalEmployeesCount = await _context.Employees
-                .Where(e => e.Username.Contains(search))
+                .Where(e => e.Username.Contains(search) && e.EmployeeId != userId)
                 .CountAsync();
 
             int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
 
             List<EmployeeShowcaseDto> employees = await _context.Employees
                 .OrderByDescending(e => e.Username)
-                .Where(e => e.Username.Contains(search))
+                .Where(e => e.Username.Contains(search) && e.EmployeeId != userId)
                 .Select(employee => new EmployeeShowcaseDto
                 {
                     EmployeeId = employee.EmployeeId,
