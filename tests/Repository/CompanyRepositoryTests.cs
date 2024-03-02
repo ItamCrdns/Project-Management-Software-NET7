@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Data;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
@@ -322,7 +323,7 @@ namespace Tests.Repository
 
             // Assert
             companies.Should().NotBeNull();
-            companies.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<CompanyShowcaseDto>>));
+            companies.Should().BeOfType(typeof(DataCountPages<CompanyShowcaseDto>));
             companies.Data.Should().NotBeNullOrEmpty();
             companies.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             companies.Count.Should().BeGreaterThan(0);

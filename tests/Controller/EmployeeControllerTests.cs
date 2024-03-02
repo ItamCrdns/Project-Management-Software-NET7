@@ -7,6 +7,7 @@ using FakeItEasy;
 using Microsoft.AspNetCore.Http;
 using CompanyPMO_.NET.Models;
 using System.Security.Claims;
+using CompanyPMO_.NET.Common;
 
 namespace Tests.EmployeeControllerTests
 {
@@ -288,7 +289,7 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            var dataCountAndPagesizeDto = A.Fake<DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>>();
+            var dataCountAndPagesizeDto = A.Fake<DataCountPages<EmployeeShowcaseDto>>();
             dataCountAndPagesizeDto.Data = new List<EmployeeShowcaseDto>
             {
                 new()
@@ -332,7 +333,7 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>> nullDataCountAndPagesizeDto = null;
+            DataCountPages<EmployeeShowcaseDto> nullDataCountAndPagesizeDto = null;
 
             A.CallTo(() => _employeeService.GetEmployeesWorkingInTheSameCompany(username, page, pageSize))
                 .Returns(nullDataCountAndPagesizeDto);
@@ -354,7 +355,7 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            var dataCountAndPagesizeDto = A.Fake<DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>>();
+            var dataCountAndPagesizeDto = A.Fake<DataCountPages<EmployeeShowcaseDto>>();
             dataCountAndPagesizeDto.Data = new List<EmployeeShowcaseDto>
             {
                 new()
@@ -399,7 +400,7 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>> nullDataCountAndPagesizeDto = null;
+            DataCountPages<EmployeeShowcaseDto> nullDataCountAndPagesizeDto = null;
 
             A.CallTo(() => _employeeService.SearchEmployeesWorkingInTheSameCompany(search, username, page, pageSize))
                 .Returns(nullDataCountAndPagesizeDto);
@@ -438,7 +439,7 @@ namespace Tests.EmployeeControllerTests
                 },
             };
 
-            var fakeEmployeesList = A.Fake<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>>();
+            var fakeEmployeesList = A.Fake<DataCountPages<EmployeeShowcaseDto>>();
             fakeEmployeesList.Data = fakeEmployees;
             fakeEmployeesList.Count = fakeEmployees.Count;
             fakeEmployeesList.Pages = 1;
@@ -464,7 +465,7 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            var fakeEmployeesList = A.Fake<DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>>();
+            var fakeEmployeesList = A.Fake<DataCountPages<EmployeeShowcaseDto>>();
 
             A.CallTo(() => _employeeService.GetEmployeesShowcasePaginated(1, page, pageSize))
                 .Returns(fakeEmployeesList);
@@ -483,7 +484,7 @@ namespace Tests.EmployeeControllerTests
             // Arrange
             string username = "Test";
             var filterParams = A.Fake<FilterParams>();
-            var fakeProjectsList = A.Fake<DataCountAndPagesizeDto<IEnumerable<ProjectDto>>>();
+            var fakeProjectsList = A.Fake<DataCountPages<ProjectDto>>();
 
             fakeProjectsList.Data = new List<ProjectDto>()
             {
@@ -512,7 +513,7 @@ namespace Tests.EmployeeControllerTests
             // Arrange
             string username = "Test";
             var filterParams = A.Fake<FilterParams>();
-            DataCountAndPagesizeDto<IEnumerable<ProjectDto>> nullProjectsList = null;
+            DataCountPages<ProjectDto> nullProjectsList = null;
 
             A.CallTo(() => _projectService.GetProjectsByEmployeeUsername(username, filterParams))
                 .Returns(nullProjectsList);
@@ -533,7 +534,7 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            var fakeProjectsList = A.Fake<DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>>>();
+            var fakeProjectsList = A.Fake<DataCountPages<ProjectShowcaseDto>>();
 
             fakeProjectsList.Data = new List<ProjectShowcaseDto>()
             {
@@ -564,7 +565,7 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>> nullProjectsList = null;
+            DataCountPages<ProjectShowcaseDto> nullProjectsList = null;
 
             A.CallTo(() => _projectService.GetProjectsShowcaseByEmployeeUsername(username, page, pageSize))
                 .Returns(nullProjectsList);
@@ -585,7 +586,7 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            var fakeTasksList = A.Fake<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>>();
+            var fakeTasksList = A.Fake<DataCountPages<TaskShowcaseDto>>();
 
             fakeTasksList.Data = new List<TaskShowcaseDto>()
             {
@@ -616,7 +617,7 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>> nullTasksList = null;
+            DataCountPages<TaskShowcaseDto> nullTasksList = null;
 
             A.CallTo(() => _taskService.GetTasksShowcaseByEmployeeUsername(username, page, pageSize))
                 .Returns(nullTasksList);
@@ -636,7 +637,7 @@ namespace Tests.EmployeeControllerTests
             var username = "Test";
             int page = 1;
             int pageSize = 10;
-            var fakeTasksList = A.Fake<DataCountAndPagesizeDto<ICollection<TaskDto>>>();
+            var fakeTasksList = A.Fake<DataCountPages<TaskDto>>();
 
             fakeTasksList.Data = new List<TaskDto>()
             {
@@ -667,7 +668,7 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            DataCountAndPagesizeDto<ICollection<TaskDto>> nullTasksList = null;
+            DataCountPages<TaskDto> nullTasksList = null;
 
             A.CallTo(() => _taskService.GetTasksByEmployeeUsername(username, page, pageSize))
                 .Returns(nullTasksList);
@@ -688,7 +689,7 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            var fakeIssuesList = A.Fake<DataCountAndPagesizeDto<ICollection<IssueShowcaseDto>>>();
+            var fakeIssuesList = A.Fake<DataCountPages<IssueShowcaseDto>>();
             fakeIssuesList.Data = new List<IssueShowcaseDto>()
             {
                 new() { IssueId = 1, Name = "Test" },
@@ -718,7 +719,7 @@ namespace Tests.EmployeeControllerTests
             int page = 1;
             int pageSize = 10;
 
-            DataCountAndPagesizeDto<ICollection<IssueShowcaseDto>> nullIssuesList = null;
+            DataCountPages<IssueShowcaseDto> nullIssuesList = null;
 
             A.CallTo(() => _issueService.GetIssuesShowcaseByEmployeeUsername(username, page, pageSize))
                 .Returns(nullIssuesList);
@@ -773,55 +774,26 @@ namespace Tests.EmployeeControllerTests
         }
 
         [Fact]
-        public async void EmployeeController_GetEmployeesThatHaveCreatedProjectsInACertainClient_ReturnOk()
+        public async void EmployeeController_GetAndSearchEmployeesByProjectsCreatedInClient_ReturnOk()
         {
             // Arrange
             int clientId = 1;
             int page = 1;
             int pageSize = 10;
 
-            var fakeEmployeesList = A.Fake<DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>>();
+            var fakeReturn = A.Fake<Dictionary<string, object>>();
 
-            fakeEmployeesList.Data = new List<EmployeeShowcaseDto>()
-            {
-                new() { EmployeeId = 1, Username = "Test" },
-                new() { EmployeeId = 2, Username = "Test2" },
-                new() { EmployeeId = 3, Username = "Test3" },
-            };
+            string employeeIds = "1-2-3-4-5";
 
-            fakeEmployeesList.Count = 3;
-            fakeEmployeesList.Pages = 10;
-
-            A.CallTo(() => _employeeService.GetEmployeesThatHaveCreatedProjectsInACertainClient(clientId, page, pageSize))
-                .Returns(fakeEmployeesList);
+            A.CallTo(() => _employeeService.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize))
+                .Returns(fakeReturn);
 
             // Act
-            var result = await _employeeController.GetEmployeesThatHaveCreatedProjectsInACertainClient(clientId, page, pageSize);
+            var result = await _employeeController.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize);
 
             // Assert
             result.Should().BeAssignableTo<IActionResult>();
             result.Should().BeOfType(typeof(OkObjectResult));
-        }
-
-        [Fact]
-        public async void EmployeeController_GetEmployeesThatHaveCreatedProjectsInACertainClient_ReturnNotFound()
-        {
-            // Arrange
-            int clientId = 1;
-            int page = 1;
-            int pageSize = 10;
-
-            DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>> nullEmployeesList = null;
-
-            A.CallTo(() => _employeeService.GetEmployeesThatHaveCreatedProjectsInACertainClient(clientId, page, pageSize))
-                .Returns(nullEmployeesList);
-
-            // Act
-            var result = await _employeeController.GetEmployeesThatHaveCreatedProjectsInACertainClient(clientId, page, pageSize);
-
-            // Assert
-            result.Should().BeAssignableTo<IActionResult>();
-            result.Should().BeOfType(typeof(NotFoundResult));
         }
 
         [Fact]

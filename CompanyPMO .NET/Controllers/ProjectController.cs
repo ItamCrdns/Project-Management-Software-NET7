@@ -196,7 +196,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("company/{companyId}")]
-        [ProducesResponseType(200, Type = typeof(DataCountAndPagesizeDto<IEnumerable<ProjectDto>>))]
+        [ProducesResponseType(200, Type = typeof(DataCountPages<ProjectDto>))]
         public async Task<IActionResult> GetProjectsByCompanyName(int companyId, [FromQuery] FilterParams filterParams)
         {
             var projects = await _projectService.GetProjectsByCompanyName(companyId, filterParams);
@@ -206,7 +206,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}/employees")]
-        [ProducesResponseType(200, Type = typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>))]
+        [ProducesResponseType(200, Type = typeof(DataCountPages<EmployeeShowcaseDto>))]
         public async Task<IActionResult> GetProjectEmployees(int projectId, int page, int pageSize)
         {
             var employees = await _employeeService.GetProjectEmployees(projectId, page, pageSize);
@@ -216,7 +216,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}/employees/search/{employeeToSearch}")]
-        [ProducesResponseType(200, Type = typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>))]
+        [ProducesResponseType(200, Type = typeof(DataCountPages<EmployeeShowcaseDto>))]
         public async Task<IActionResult> SearchProjectEmployees(int projectId, string employeeToSearch, int page, int pageSize)
         {
             var employees = await _employeeService.SearchProjectEmployees(employeeToSearch, projectId, page, pageSize);
@@ -251,7 +251,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}/tasks/all/showcase")]
-        [ProducesResponseType(200, Type = typeof(DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>))]
+        [ProducesResponseType(200, Type = typeof(DataCountPages<TaskShowcaseDto>))]
         public async Task<IActionResult> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize)
         {
             var tasks = await _taskService.GetTasksShowcaseByProjectId(projectId, page, pageSize);

@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Data;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
@@ -98,7 +99,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<bool> DoesCompanyExist(int companyId) => await _context.Companies.AnyAsync(c => c.CompanyId.Equals(companyId));
 
-        public async Task<DataCountAndPagesizeDto<IEnumerable<CompanyShowcaseDto>>> GetAllCompanies(int page, int pageSize)
+        public async Task<DataCountPages<CompanyShowcaseDto>> GetAllCompanies(int page, int pageSize)
         {
             int toSkip = (page - 1) * pageSize;
 
@@ -116,14 +117,12 @@ namespace CompanyPMO_.NET.Repository
 
             int totalPages = (int)Math.Ceiling((double)totalCompaniesCount / pageSize);
 
-            var result = new DataCountAndPagesizeDto<IEnumerable<CompanyShowcaseDto>>
+            return new DataCountPages<CompanyShowcaseDto>
             {
                 Data = companies,
                 Count = totalCompaniesCount,
                 Pages = totalPages
             };
-
-            return result;
         }
 
         public async Task<IEnumerable<CompanyShowcaseDto>> GetCompaniesThatHaveProjects()

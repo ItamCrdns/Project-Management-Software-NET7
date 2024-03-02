@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Data;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
@@ -117,7 +118,7 @@ namespace CompanyPMO_.NET.Repository
             return tasks;
         }
 
-        public async Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize)
+        public async Task<DataCountPages<TaskShowcaseDto>> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize)
         {
             var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesEmployeeCreatedOrParticipates<EmployeeTask, Models.Task>(username, "TaskCreatorId", "TaskId", page, pageSize);
 
@@ -130,17 +131,15 @@ namespace CompanyPMO_.NET.Repository
                 })
                 .ToListAsync();
 
-            var result = new DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>
+            return new DataCountPages<TaskShowcaseDto>
             {
                 Data = tasks,
                 Count = totalTasksCount,
                 Pages = totalPages
             };
-
-            return result;
         }
 
-        public async Task<DataCountAndPagesizeDto<IEnumerable<TaskDto>>> GetTasksByProjectId(int projectId, FilterParams filterParams)
+        public async Task<DataCountPages<TaskDto>> GetTasksByProjectId(int projectId, FilterParams filterParams)
         {
             // ATM We are just ordering the entities so this count and pages are actually good i think
             var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEntityId<Models.Task>(projectId, "ProjectId", "TaskId", filterParams.Page, filterParams.PageSize);
@@ -174,14 +173,12 @@ namespace CompanyPMO_.NET.Repository
 
             var taskDtos = TaskDtoSelectQuery(tasks);
 
-            var result = new DataCountAndPagesizeDto<IEnumerable<TaskDto>>
+            return new DataCountPages<TaskDto>
             {
                 Data = taskDtos,
                 Count = totalTasksCount,
                 Pages = totalPages
             };
-
-            return result;
         }
 
         public async Task<bool> IsEmployeeAlreadyInTask(int employeeId, int taskId) => await _context.EmployeeTasks.AnyAsync(x => x.EmployeeId.Equals(employeeId) && x.TaskId.Equals(taskId));
@@ -225,7 +222,7 @@ namespace CompanyPMO_.NET.Repository
             return false; // Task to update was null
         }
 
-        public async Task<DataCountAndPagesizeDto<ICollection<TaskDto>>> GetTasksByEmployeeUsername(string username, int page, int pageSize)
+        public async Task<DataCountPages<TaskDto>> GetTasksByEmployeeUsername(string username, int page, int pageSize)
         {
             var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEmployeeUsername<EmployeeTask>(username, "TaskId", page, pageSize);
 
@@ -242,17 +239,15 @@ namespace CompanyPMO_.NET.Repository
                 })
                 .ToListAsync();
 
-            var result = new DataCountAndPagesizeDto<ICollection<TaskDto>>
+            return new DataCountPages<TaskDto>
             {
                 Data = tasks,
                 Count = totalTasksCount,
                 Pages = totalPages
             };
-
-            return result;
         }
 
-        public async Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize)
+        public async Task<DataCountPages<TaskShowcaseDto>> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize)
         {
             var tasks = await _context.Tasks
                 .Where(t => t.ProjectId.Equals(projectId))
@@ -289,17 +284,15 @@ namespace CompanyPMO_.NET.Repository
 
             int totalPages = (int)Math.Ceiling((double)totalTasksCount / pageSize);
 
-            var result = new DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>
+            return new DataCountPages<TaskShowcaseDto>
             {
                 Data = tasks,
                 Count = totalTasksCount,
                 Pages = totalPages
             };
-
-            return result;
         }
 
-        public async Task<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>> GetAllTasksShowcase(int page, int pageSize)
+        public async Task<DataCountPages<TaskShowcaseDto>> GetAllTasksShowcase(int page, int pageSize)
         {
             // Admin only endpoint. Get all projects without any additional information (showcase only)
 
@@ -320,17 +313,15 @@ namespace CompanyPMO_.NET.Repository
 
             int totalPages = (int)Math.Ceiling((double)totalTasksCount / pageSize);
 
-            var result = new DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>
+            return new DataCountPages<TaskShowcaseDto>
             {
                 Data = tasks,
                 Count = totalTasksCount,
                 Pages = totalPages
             };
-
-            return result;
         }
 
-        public async Task<DataCountAndPagesizeDto<IEnumerable<TaskDto>>> GetAllTasks(FilterParams filterParams)
+        public async Task<DataCountPages<TaskDto>> GetAllTasks(FilterParams filterParams)
         {
             List<string> navProperties = new() { "Employees", "TaskCreator", "Project" };
 
@@ -338,14 +329,12 @@ namespace CompanyPMO_.NET.Repository
 
             var taskDtos = TaskDtoSelectQuery(tasks);
 
-            var result = new DataCountAndPagesizeDto<IEnumerable<TaskDto>>
+            return new DataCountPages<TaskDto>
             {
                 Data = taskDtos,
                 Count = totalTasksCount,
                 Pages = totalPages
             };
-
-            return result;
         }
 
         public IEnumerable<TaskDto> TaskDtoSelectQuery(ICollection<Models.Task> tasks)
@@ -381,7 +370,7 @@ namespace CompanyPMO_.NET.Repository
             return taskDtos;
         }
 
-        public async Task<DataCountAndPagesizeDto<List<ProjectTaskGroup>>> GetTasksGroupedByProject(FilterParams filterParams, int tasksPage, int tasksPageSize, int employeeId)
+        public async Task<DataCountPages<ProjectTaskGroup>> GetTasksGroupedByProject(FilterParams filterParams, int tasksPage, int tasksPageSize, int employeeId)
         {
             List<ProjectTaskGroup> tasks = await _context.Tasks
                 .GroupBy(t => t.Project)
@@ -429,7 +418,7 @@ namespace CompanyPMO_.NET.Repository
 
             int totalPages = (int)Math.Ceiling((double)totalProjectsWithTasks / filterParams.PageSize);
 
-            return new DataCountAndPagesizeDto<List<ProjectTaskGroup>>
+            return new DataCountPages<ProjectTaskGroup>
             {
                 Data = tasks,
                 Count = totalProjectsWithTasks,

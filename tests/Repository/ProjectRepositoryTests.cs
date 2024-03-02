@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Data;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
@@ -363,7 +364,7 @@ namespace Tests.Repository
 
             var result = await projectRepository.GetAllProjects(filterParams);
 
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<ProjectDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<ProjectDto>));
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Data.Should().BeOfType(typeof(List<ProjectDto>));
             result.Count.Should().BeGreaterThanOrEqualTo(1);
@@ -392,7 +393,7 @@ namespace Tests.Repository
 
             var result = await projectRepository.GetProjectsByCompanyName(companyId, filterParams);
 
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<ProjectDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<ProjectDto>));
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Data.Should().BeOfType(typeof(List<ProjectDto>));
             result.Count.Should().BeGreaterThanOrEqualTo(1);
@@ -421,7 +422,7 @@ namespace Tests.Repository
 
             var result = await projectRepository.GetProjectsByCompanyName(companyId, filterParams);
 
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<ProjectDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<ProjectDto>));
             result.Data.Should().HaveCount(0);
             result.Data.Should().BeOfType(typeof(List<ProjectDto>));
             result.Count.Should().Be(0);
@@ -625,7 +626,7 @@ namespace Tests.Repository
 
             var result = await projectRepository.GetProjectsByEmployeeUsername(username, filterParams);
 
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<ProjectDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<ProjectDto>));
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Data.Should().BeOfType(typeof(List<ProjectDto>));
             result.Count.Should().BeGreaterThanOrEqualTo(1);
@@ -658,7 +659,7 @@ namespace Tests.Repository
 
             var result = await projectRepository.GetProjectsByEmployeeUsername(username, filterParams);
 
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<ProjectDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<ProjectDto>));
             result.Data.Should().HaveCount(0);
             result.Data.Should().BeOfType(typeof(List<ProjectDto>));
             result.Count.Should().Be(0);
@@ -682,7 +683,7 @@ namespace Tests.Repository
 
             var result = await projectRepository.GetProjectsShowcaseByEmployeeUsername(username, page, pageSize);
 
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<ProjectShowcaseDto>));
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Data.Should().BeOfType(typeof(List<ProjectShowcaseDto>));
             result.Count.Should().BeGreaterThanOrEqualTo(1);
@@ -706,7 +707,7 @@ namespace Tests.Repository
 
             var result = await projectRepository.GetProjectsShowcaseByEmployeeUsername(username, page, pageSize);
 
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<ProjectShowcaseDto>));
             result.Data.Should().HaveCount(0);
             result.Data.Should().BeOfType(typeof(List<ProjectShowcaseDto>));
             result.Count.Should().Be(0);
@@ -724,7 +725,7 @@ namespace Tests.Repository
 
             var result = await projectRepository.GetAllProjectsShowcase(page, pageSize);
 
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<ProjectShowcaseDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<ProjectShowcaseDto>));
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Data.Should().BeOfType(typeof(List<ProjectShowcaseDto>));
             result.Count.Should().BeGreaterThanOrEqualTo(1);

@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Dto;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Models;
 
 namespace CompanyPMO_.NET.Interfaces
@@ -12,6 +13,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<bool> DoesCompanyExist(int companyId);
         Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingCompany(int companyId, List<IFormFile>? images);
         Task<IEnumerable<CompanyShowcaseDto>> GetCompaniesThatHaveProjects();
-        Task<DataCountAndPagesizeDto<IEnumerable<CompanyShowcaseDto>>> GetAllCompanies(int page, int pageSize);
+        Task<DataCountPages<CompanyShowcaseDto>> GetAllCompanies(int page, int pageSize);
     }
 }

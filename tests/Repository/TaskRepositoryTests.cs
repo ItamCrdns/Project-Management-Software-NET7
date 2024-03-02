@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Data;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
@@ -469,7 +470,7 @@ namespace Tests.Repository
 
             var result = await taskRepository.GetTasksShowcaseByEmployeeUsername(username, page, pageSize);
 
-            result.Should().BeOfType<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>>();
+            result.Should().BeOfType<DataCountPages<TaskShowcaseDto>>();
             result.Data.Should().NotBeEmpty();
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
@@ -502,7 +503,7 @@ namespace Tests.Repository
 
             var result = await taskRepository.GetTasksShowcaseByEmployeeUsername(username, page, pageSize);
 
-            result.Should().BeOfType<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>>();
+            result.Should().BeOfType<DataCountPages<TaskShowcaseDto>>();
             result.Data.Should().BeEmpty();
             result.Data.Should().BeOfType<List<TaskShowcaseDto>>();
         }
@@ -541,7 +542,7 @@ namespace Tests.Repository
 
             var result = await taskRepository.GetTasksByProjectId(projectId, fakeFilterParams);
 
-            result.Should().BeOfType<DataCountAndPagesizeDto<IEnumerable<TaskDto>>>();
+            result.Should().BeOfType<DataCountPages<TaskDto>>();
             result.Data.Should().NotBeEmpty();
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Count.Should().BeGreaterThanOrEqualTo(1);
@@ -583,7 +584,7 @@ namespace Tests.Repository
 
             var result = await taskRepository.GetTasksByProjectId(projectId, fakeFilterParams);
 
-            result.Should().BeOfType<DataCountAndPagesizeDto<IEnumerable<TaskDto>>>();
+            result.Should().BeOfType<DataCountPages<TaskDto>>();
             result.Data.Should().BeEmpty();
             result.Count.Should().Be(0);
             result.Pages.Should().Be(0);
@@ -723,7 +724,7 @@ namespace Tests.Repository
 
             var result = await taskRepository.GetTasksByEmployeeUsername(username, page, pageSize);
 
-            result.Should().BeOfType<DataCountAndPagesizeDto<ICollection<TaskDto>>>();
+            result.Should().BeOfType<DataCountPages<TaskDto>>();
             result.Data.Should().NotBeEmpty();
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Pages.Should().BeGreaterThanOrEqualTo(1);
@@ -743,7 +744,7 @@ namespace Tests.Repository
 
             var result = await taskRepository.GetAllTasksShowcase(page, pageSize);
 
-            result.Should().BeOfType<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>>();
+            result.Should().BeOfType<DataCountPages<TaskShowcaseDto>>();
             result.Data.Should().NotBeEmpty();
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Pages.Should().BeGreaterThanOrEqualTo(1);
@@ -766,7 +767,7 @@ namespace Tests.Repository
 
             var result = await taskRepository.GetAllTasksShowcase(page, pageSize);
 
-            result.Should().BeOfType<DataCountAndPagesizeDto<ICollection<TaskShowcaseDto>>>();
+            result.Should().BeOfType<DataCountPages<TaskShowcaseDto>>();
             result.Data.Should().BeEmpty();
             result.Pages.Should().Be(0);
             result.Count.Should().Be(0);
@@ -790,7 +791,7 @@ namespace Tests.Repository
 
             var result = await taskRepository.GetAllTasks(fakeFilterParams);
 
-            result.Should().BeOfType<DataCountAndPagesizeDto<IEnumerable<TaskDto>>>();
+            result.Should().BeOfType<DataCountPages<TaskDto>>();
             result.Data.Should().NotBeEmpty();
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Pages.Should().BeGreaterThanOrEqualTo(1);
@@ -818,7 +819,7 @@ namespace Tests.Repository
 
             var result = await taskRepository.GetAllTasks(fakeFilterParams);
 
-            result.Should().BeOfType<DataCountAndPagesizeDto<IEnumerable<TaskDto>>>();
+            result.Should().BeOfType<DataCountPages<TaskDto>>();
             result.Data.Should().BeEmpty();
             result.Pages.Should().Be(0);
             result.Count.Should().Be(0);

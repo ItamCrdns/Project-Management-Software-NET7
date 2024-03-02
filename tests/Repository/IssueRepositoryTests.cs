@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Data;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
@@ -136,7 +137,7 @@ namespace Tests.Repository
 
             var result = await issueRepository.GetAllIssues(filterParams);
 
-            result.Should().BeOfType<DataCountAndPagesizeDto<IEnumerable<IssueDto>>>();
+            result.Should().BeOfType<DataCountPages<IssueDto>>();
             result.Data.Should().BeOfType<List<IssueDto>>();
             result.Count.Should().BeGreaterThanOrEqualTo(1);
             result.Pages.Should().BeGreaterThanOrEqualTo(1);
@@ -154,7 +155,7 @@ namespace Tests.Repository
 
             var result = await issueRepository.GetAllIssuesShowcase(page, pageSize);
 
-            result.Should().BeOfType<DataCountAndPagesizeDto<IEnumerable<IssueShowcaseDto>>>();
+            result.Should().BeOfType<DataCountPages<IssueShowcaseDto>>();
             result.Data.Should().BeOfType<List<IssueShowcaseDto>>();
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Count.Should().BeGreaterThanOrEqualTo(1);
@@ -181,7 +182,7 @@ namespace Tests.Repository
 
             var result = await issueRepository.GetIssuesShowcaseByEmployeeUsername(username, page, pageSize);
 
-            result.Should().BeOfType<DataCountAndPagesizeDto<ICollection<IssueShowcaseDto>>>();
+            result.Should().BeOfType<DataCountPages<IssueShowcaseDto>>();
             result.Data.Should().BeOfType<List<IssueShowcaseDto>>();
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Count.Should().BeGreaterThanOrEqualTo(1);
@@ -208,7 +209,7 @@ namespace Tests.Repository
 
             var result = await issueRepository.GetIssuesShowcaseByEmployeeUsername(username, page, pageSize);
 
-            result.Should().BeOfType<DataCountAndPagesizeDto<ICollection<IssueShowcaseDto>>>();
+            result.Should().BeOfType<DataCountPages<IssueShowcaseDto>>();
             result.Data.Should().BeOfType<List<IssueShowcaseDto>>();
             result.Data.Should().HaveCount(0);
             result.Count.Should().BeGreaterThanOrEqualTo(0);

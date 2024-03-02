@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Data;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
@@ -238,7 +239,7 @@ namespace tests.Repository
             var result = await employeeRepository.GetEmployeesShowcasePaginated(1,page, pageSize);
 
             result.Should().NotBeNull();
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<EmployeeShowcaseDto>));
             result.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Count.Should().BeGreaterThanOrEqualTo(1);
@@ -258,7 +259,7 @@ namespace tests.Repository
             var result = await employeeRepository.GetProjectEmployees(projectId, page, pageSize);
 
             result.Should().NotBeNull();
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<EmployeeShowcaseDto>));
             result.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             foreach (var employee in result.Data)
@@ -286,7 +287,7 @@ namespace tests.Repository
             var result = await employeeRepository.GetEmployeesWorkingInTheSameCompany(username, page, pageSize);
 
             result.Should().NotBeNull();
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<EmployeeShowcaseDto>));
             result.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Count.Should().BeGreaterThanOrEqualTo(1);
@@ -419,7 +420,7 @@ namespace tests.Repository
             var result = await employeeRepository.SearchProjectEmployees(search, 1, 1, 10);
 
             result.Should().NotBeNull();
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<EmployeeShowcaseDto>));
             result.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
             foreach (var employee in result.Data)
             {
@@ -461,7 +462,7 @@ namespace tests.Repository
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Count.Should().BeGreaterThanOrEqualTo(1);
             result.Pages.Should().BeGreaterThanOrEqualTo(1);
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<EmployeeShowcaseDto>));
         }
 
         [Fact]
@@ -481,7 +482,7 @@ namespace tests.Repository
             result.Data.Should().HaveCount(0);
             result.Count.Should().BeGreaterThanOrEqualTo(0);
             result.Pages.Should().BeGreaterThanOrEqualTo(0);
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<EmployeeShowcaseDto>));
         }
 
         [Fact]
@@ -507,7 +508,7 @@ namespace tests.Repository
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Count.Should().BeGreaterThanOrEqualTo(1);
             result.Pages.Should().BeGreaterThanOrEqualTo(1);
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<EmployeeShowcaseDto>));
         }
 
         [Fact]
@@ -533,7 +534,7 @@ namespace tests.Repository
             result.Data.Should().HaveCount(0);
             result.Count.Should().BeGreaterThanOrEqualTo(0);
             result.Pages.Should().BeGreaterThanOrEqualTo(0);
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<EmployeeShowcaseDto>));
         }
 
         [Fact]
@@ -589,7 +590,7 @@ namespace tests.Repository
         }
 
         [Fact]
-        public async void EmployeeRepository_GetEmployeesThatHaveCreatedProjectsInACertainClient_ReturnsListOfEmployees()
+        public async void EmployeeRepository_GetAndSearchEmployeesByProjectsCreatedInClient_ReturnsListOfEmployees()
         {
             int clientId = 1;
             int page = 1;
@@ -598,18 +599,29 @@ namespace tests.Repository
             var dbContext = await GetDatabaseContext();
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 
-            var result = await employeeRepository.GetEmployeesThatHaveCreatedProjectsInACertainClient(clientId, page, pageSize);
+            string employeeIds = "1-2-3-4-5-6-7";
+
+            var result = await employeeRepository.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize);
 
             result.Should().NotBeNull();
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>));
-            result.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
-            result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
-            result.Count.Should().BeGreaterThanOrEqualTo(1);
-            result.Pages.Should().BeGreaterThanOrEqualTo(1);
+            result.Should().BeOfType(typeof(Dictionary<string, object>));
+
+            var selectedEmployees = result["selectedEmployees"] as IEnumerable<EmployeeShowcaseDto>;
+            var allEmployees = result["allEmployees"] as DataCountPages<EmployeeShowcaseDto>;
+
+            selectedEmployees.Should().NotBeNull();
+            selectedEmployees.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
+            selectedEmployees.Should().HaveCountGreaterThanOrEqualTo(1);
+            selectedEmployees.Should().OnlyHaveUniqueItems(x => x.EmployeeId);
+
+            allEmployees.Should().NotBeNull();
+            allEmployees?.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
+            allEmployees?.Data.Should().HaveCountGreaterThanOrEqualTo(1);
+            allEmployees?.Data.Should().OnlyHaveUniqueItems(x => x.EmployeeId);
         }
 
         [Fact]
-        public async void EmployeeRepository_GetEmployeesThatHaveCreatedProjectsInACertainClient_ReturnsEmptyListOfEmployees()
+        public async void EmployeeRepository_GetAndSearchEmployeesByProjectsCreatedInClient_ReturnsEmptyListOfEmployees()
         {
             int clientId = 100;
             int page = 1;
@@ -618,14 +630,24 @@ namespace tests.Repository
             var dbContext = await GetDatabaseContext();
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 
-            var result = await employeeRepository.GetEmployeesThatHaveCreatedProjectsInACertainClient(clientId, page, pageSize);
+            string employeeIds = "100-200-300-400-500-600-700";
+
+            var result = await employeeRepository.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds,clientId, page, pageSize);
 
             result.Should().NotBeNull();
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<IEnumerable<EmployeeShowcaseDto>>));
-            result.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
-            result.Data.Should().HaveCount(0);
-            result.Count.Should().BeGreaterThanOrEqualTo(0);
-            result.Pages.Should().BeGreaterThanOrEqualTo(0);
+            result.Should().BeOfType(typeof(Dictionary<string, object>));
+
+            var selectedEmployees = result["selectedEmployees"] as IEnumerable<EmployeeShowcaseDto>;
+            var allEmployees = result["allEmployees"] as DataCountPages<EmployeeShowcaseDto>;
+
+            selectedEmployees.Should().NotBeNull();
+            selectedEmployees.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
+            selectedEmployees.Should().HaveCount(0);
+
+            allEmployees.Should().NotBeNull();
+            allEmployees?.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
+            allEmployees?.Data.Should().HaveCount(0);
+
         }
 
         [Fact]
@@ -675,7 +697,7 @@ namespace tests.Repository
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Count.Should().BeGreaterThanOrEqualTo(1);
             result.Pages.Should().BeGreaterThanOrEqualTo(1);
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<EmployeeShowcaseDto>));
             result.Data.Should().NotContain(x => x.EmployeeId == 1);
         }
 
@@ -696,7 +718,7 @@ namespace tests.Repository
             result.Data.Should().HaveCount(0);
             result.Count.Should().BeGreaterThanOrEqualTo(0);
             result.Pages.Should().BeGreaterThanOrEqualTo(0);
-            result.Should().BeOfType(typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>));
+            result.Should().BeOfType(typeof(DataCountPages<EmployeeShowcaseDto>));
         }
 
         [Fact]

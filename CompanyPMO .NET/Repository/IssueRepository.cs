@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Data;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
@@ -16,7 +17,7 @@ namespace CompanyPMO_.NET.Repository
             _utilityService = utilityService;
         }
 
-        public async Task<DataCountAndPagesizeDto<IEnumerable<IssueDto>>> GetAllIssues(FilterParams filterParams)
+        public async Task<DataCountPages<IssueDto>> GetAllIssues(FilterParams filterParams)
         {
             List<string> navProperties = new() { "IssueCreator", "Employees", "Task" };
 
@@ -24,17 +25,15 @@ namespace CompanyPMO_.NET.Repository
 
             var issueDtos = IssueSelectQuery(issues);
 
-            var result = new DataCountAndPagesizeDto<IEnumerable<IssueDto>>
+            return new DataCountPages<IssueDto>
             {
                 Data = issueDtos,
                 Count = totalIssuesCount,
                 Pages = totalPages
             };
-
-            return result;
         }
 
-        public async Task<DataCountAndPagesizeDto<IEnumerable<IssueShowcaseDto>>> GetAllIssuesShowcase(int page, int pageSize)
+        public async Task<DataCountPages<IssueShowcaseDto>> GetAllIssuesShowcase(int page, int pageSize)
         {
             int toSkip = (page - 1) * pageSize;
             IEnumerable<IssueShowcaseDto> issues = await _context.Issues
@@ -52,17 +51,15 @@ namespace CompanyPMO_.NET.Repository
 
             int totalPages = (int)Math.Ceiling((double)totalIssuesCount / pageSize);
 
-            var result = new DataCountAndPagesizeDto<IEnumerable<IssueShowcaseDto>>
+            return new DataCountPages<IssueShowcaseDto>
             {
                 Data = issues,
                 Count = totalIssuesCount,
                 Pages = totalPages
-            };
-
-            return result;
+            };;
         }
 
-        public async Task<DataCountAndPagesizeDto<ICollection<IssueShowcaseDto>>> GetIssuesShowcaseByEmployeeUsername(string username, int page, int pageSize)
+        public async Task<DataCountPages<IssueShowcaseDto>> GetIssuesShowcaseByEmployeeUsername(string username, int page, int pageSize)
         {
             var (issuesIds, totalIssuesCount, totalPages) = await _utilityService.GetEntitiesEmployeeCreatedOrParticipates<EmployeeIssue, Issue>(username, "IssueCreatorId", "IssueId", page, pageSize);
 
@@ -75,14 +72,12 @@ namespace CompanyPMO_.NET.Repository
                 })
                 .ToListAsync();
 
-            var result = new DataCountAndPagesizeDto<ICollection<IssueShowcaseDto>>
+            return new DataCountPages<IssueShowcaseDto>
             {
                 Data = issues,
                 Count = totalIssuesCount,
                 Pages = totalPages
             };
-
-            return result;
         }
 
         public ICollection<IssueDto> IssueSelectQuery(ICollection<Issue> issues)

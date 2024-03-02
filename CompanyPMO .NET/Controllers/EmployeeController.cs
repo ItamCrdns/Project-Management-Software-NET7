@@ -184,7 +184,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("all")]
-        [ProducesResponseType(200, Type = typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>))]
+        [ProducesResponseType(200, Type = typeof(DataCountPages<EmployeeShowcaseDto>))]
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetEmployeesShowcasePaginated(int page, int pageSize)
         {
@@ -202,7 +202,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("all/search/{employee}")]
-        [ProducesResponseType(200, Type = typeof(DataCountAndPagesizeDto<List<EmployeeShowcaseDto>>))]
+        [ProducesResponseType(200, Type = typeof(DataCountPages<EmployeeShowcaseDto>))]
         [ProducesResponseType(404)]
         public async Task<IActionResult> SearchEmployeesShowcasePaginated(string employee, int page, int pageSize)
         {
@@ -346,15 +346,9 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{clientId}/projects/created")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> GetEmployeesThatHaveCreatedProjectsInACertainClient(int clientId, int page, int pageSize)
+        public async Task<IActionResult> GetAndSearchEmployeesByProjectsCreatedInClient(string? employeeIds, int clientId, int page, int pageSize)
         {
-            var employees = await _employeeService.GetEmployeesThatHaveCreatedProjectsInACertainClient(clientId, page, pageSize);
-
-            if(employees == null)
-            {
-                return NotFound();
-            }
+            var employees = await _employeeService.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize);
 
             return Ok(employees);
         }
