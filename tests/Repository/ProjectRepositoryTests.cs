@@ -486,9 +486,8 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void ProjectRepository_GetProjectsGroupedByCompany_ReturnsDictionary()
+        public async void ProjectRepository_GetProjectsGroupedByCompany_ReturnsGroupedProjects()
         {
-            // Returns string, List<ProjectDto> dictionary
             int page = 1;
             int pageSize = 10;
 
@@ -496,16 +495,21 @@ namespace Tests.Repository
 
             var projectRepository = new ProjectRepository(dbContext, _image, _utility);
 
-            var result = await projectRepository.GetProjectsGroupedByCompany(page, pageSize);
+            var fakeFilterParams = A.Fake<FilterParams>();
 
-            result.Should().BeOfType(typeof(Dictionary<string, List<ProjectDto>>));
-            result.Should().HaveCountGreaterThanOrEqualTo(1);
-            result.Should().NotBeNull();
-            result.Should().NotBeEmpty();
-            result.Should().ContainKey("Company 1");
-            result.Should().ContainKey("Company 2");
-            result["Company 1"].Should().HaveCountGreaterThanOrEqualTo(1);
-            result["Company 2"].Should().HaveCountGreaterThanOrEqualTo(1);
+            var result = await projectRepository.GetProjectsGroupedByCompany(fakeFilterParams, page, pageSize,1 );
+
+            result.Data.Should().BeOfType<List<CompanyProjectGroup>>();
+            result.Data.Should().NotBeEmpty();
+            result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
+            foreach (var data in result.Data)
+            {
+                data.Projects.Should().NotBeEmpty();
+                data.Projects.Should().HaveCountGreaterThanOrEqualTo(1);
+                data.Count.Should().BeGreaterThanOrEqualTo(1);
+                data.Pages.Should().BeGreaterThanOrEqualTo(1);
+                data.Projects.Should().BeOfType<List<ProjectDto>>();
+            }
         }
 
         [Fact]

@@ -1,4 +1,6 @@
-﻿namespace CompanyPMO_.NET.Dto
+﻿using CompanyPMO_.NET.Dto;
+
+namespace CompanyPMO_.NET.Common
 {
     public class ProjectTaskGroup
     {

@@ -16,7 +16,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<bool> DoesProjectExist(int projectId);
         Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images);
         Task<DataCountPages<ProjectDto>> GetAllProjects(FilterParams filterParams);
-        Task<Dictionary<string, List<ProjectDto>>> GetProjectsGroupedByCompany(int page, int pageSize);
+        Task<DataCountPages<CompanyProjectGroup>> GetProjectsGroupedByCompany(FilterParams filterParams, int projectsPage, int projectsPageSize, int employeeId);
         ICollection<Image> SelectImages(ICollection<Image> images);
         ICollection<ProjectDto> ProjectSelectQuery(ICollection<Project> projects);
         Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToProject(int projectId, List<int> employees);

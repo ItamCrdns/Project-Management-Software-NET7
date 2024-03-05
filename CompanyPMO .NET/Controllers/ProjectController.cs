@@ -58,10 +58,10 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "SupervisorOnly")]
         [HttpGet("all/groupedbycompany")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Project>))]
-        public async Task<IActionResult> GetProjectsGroupedByCompany(int page, int pageSize)
+        [ProducesResponseType(200, Type = typeof(DataCountPages<CompanyProjectGroup>))]
+        public async Task<IActionResult> GetProjectsGroupedByCompany([FromQuery] FilterParams filterParams, [FromQuery] int projectsPage = 1, [FromQuery] int projectsPageSize = 5)
         {
-            var projects = await _projectService.GetProjectsGroupedByCompany(page, pageSize);
+            var projects = await _projectService.GetProjectsGroupedByCompany(filterParams, projectsPage, projectsPageSize, await GetUserId());
 
             return Ok(projects);
         }

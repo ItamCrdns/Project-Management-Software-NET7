@@ -276,60 +276,61 @@ namespace CompanyPMO_.NET.Repository
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<Dictionary<string, List<ProjectDto>>> GetProjectsGroupedByCompany(int page, int pageSize)
+        public async Task<DataCountPages<CompanyProjectGroup>> GetProjectsGroupedByCompany(FilterParams filterParams, int projectsPage, int projectsPageSize, int employeeId)
         {
-            // * Switch to in memory grouping because apparently EF Core has problems if grouping without aggregation?
-            int entitiesToSkip = (page - 1) * pageSize;
-
-            // * This will load all of the projects to memory
-            var nonGroupedProjects = await _context.Projects
-                .Include(c => c.Company)
-                .Include(e => e.Employees)
-                .Include(p => p.ProjectCreator)
+            List<CompanyProjectGroup> projects = await _context.Projects
+                .GroupBy(x => x.Company)
+                .Select(x => new CompanyProjectGroup
+                {
+                    CompanyName = x.Key.Name,
+                    CompanyId = x.Key.CompanyId,
+                    IsCurrentUserInTeam = x.SelectMany(e => e.Employees).Any(e => e.EmployeeId.Equals(employeeId)), // Idk about this
+                    Projects = x.Select(project => new ProjectDto
+                    {
+                        ProjectId = project.ProjectId,
+                        Name = project.Name,
+                        Description = project.Description,
+                        Created = project.Created,
+                        Finalized = project.Finalized,
+                        Priority = project.Priority,
+                        Company = new CompanyShowcaseDto
+                        {
+                            CompanyId = project.Company.CompanyId,
+                            Name = project.Company.Name,
+                            Logo = project.Company.Logo
+                        },
+                        Team = project.Employees.Select(p => new EmployeeShowcaseDto
+                        {
+                            Username = p.Username,
+                            ProfilePicture = p.ProfilePicture
+                        }).ToList(),
+                        Creator = new EmployeeShowcaseDto
+                        {
+                            Username = project.ProjectCreator.Username,
+                            ProfilePicture = project.ProjectCreator.ProfilePicture
+                        }
+                    }).OrderBy(x => x.Created).Skip((projectsPage - 1) * projectsPageSize).Take(projectsPageSize),
+                    Count = x.Count(),
+                    Pages = (int)Math.Ceiling((double)x.Count() / projectsPageSize),
+                    LatestProjectCreation = new DateTime() // This doesnt even exist yet. But it will be added later
+                })
+                .Skip((filterParams.Page - 1) * filterParams.PageSize)
+                .Take(filterParams.PageSize)
+                .OrderByDescending(t => t.LatestProjectCreation) // This doesnt even exist yet. But it will be added later
                 .ToListAsync();
 
-            var groupedProjects = nonGroupedProjects
-                .GroupBy(p => p.Company.Name)
-                .ToList();
-            
-            // Create a dictionary to store the grouped projects by their Company Name
-            var result = new Dictionary<string, List<ProjectDto>>();
+            int totalCompaniesWithProjects = await _context.Companies.CountAsync(
+                c => _context.Projects.Any(p => p.CompanyId == c.CompanyId)
+                );
 
-            foreach (var group in groupedProjects)
+            int totalPages = (int)Math.Ceiling((double)totalCompaniesWithProjects / filterParams.PageSize);
+
+            return new DataCountPages<CompanyProjectGroup>
             {
-                var companyName = group.Key;
-                var projects = group.ToList();
-
-                var projectDtos = projects.Select(project => new ProjectDto
-                {
-                    ProjectId = project.ProjectId,
-                    Name = project.Name,
-                    Description = project.Description,
-                    Created = project.Created,
-                    Finalized = project.Finalized,
-                    Priority = project.Priority,
-                    Company = new CompanyShowcaseDto
-                    {
-                        CompanyId = project.Company.CompanyId,
-                        Name = project.Company.Name,
-                        Logo = project.Company.Logo
-                    },
-                    Team = project.Employees.Select(p => new EmployeeShowcaseDto
-                    {
-                        Username = p.Username,
-                        ProfilePicture = p.ProfilePicture
-                    }).ToList(),
-                    Creator = new EmployeeShowcaseDto
-                    {
-                        Username = project.ProjectCreator.Username,
-                        ProfilePicture = project.ProjectCreator.ProfilePicture
-                    }
-                }).Skip(entitiesToSkip).Take(pageSize).ToList(); // Skip and take to get only a certain amount of projects by company
-
-                result.Add(companyName, projectDtos);
-            }
-
-            return result;
+                Data = projects,
+                Count = totalCompaniesWithProjects,
+                Pages = totalPages
+            };
         }
 
         public async Task<bool> IsEmployeeAlreadyInProject(int employeeId, int projectId)
