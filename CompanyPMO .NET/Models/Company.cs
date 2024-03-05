@@ -21,6 +21,8 @@ namespace CompanyPMO_.NET.Models
         public int? AddedById { get; set; }
         [Column("logo")]
         public string? Logo { get; set; }
+        [Column("latest_project_creation")]
+        public DateTime LatestProjectCreation { get; set; }
 
         // Navigation properties
 

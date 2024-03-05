@@ -51,6 +51,8 @@ namespace CompanyPMO_.NET.Repository
                 };
             }
 
+            var company = await _context.Companies.FindAsync(companyId);
+
             Project newProject = new()
             {
                 Name = project.Name,
@@ -64,6 +66,10 @@ namespace CompanyPMO_.NET.Repository
 
             // Save changed because we will need to access the projectId later when adding images
             _context.Add(newProject);
+
+            company.LatestProjectCreation = DateTime.UtcNow;
+            _context.Update(company);
+
             int rowsAffected = await _context.SaveChangesAsync();
 
             if (rowsAffected is 0)
@@ -284,7 +290,7 @@ namespace CompanyPMO_.NET.Repository
                 {
                     CompanyName = x.Key.Name,
                     CompanyId = x.Key.CompanyId,
-                    IsCurrentUserInTeam = x.SelectMany(e => e.Employees).Any(e => e.EmployeeId.Equals(employeeId)), // Idk about this
+                    IsCurrentUserInTeam = x.SelectMany(e => e.Employees).Any(e => e.EmployeeId == employeeId), // This will return true if the current user is in the team of any of the projects
                     Projects = x.Select(project => new ProjectDto
                     {
                         ProjectId = project.ProjectId,
@@ -312,7 +318,7 @@ namespace CompanyPMO_.NET.Repository
                     }).OrderBy(x => x.Created).Skip((projectsPage - 1) * projectsPageSize).Take(projectsPageSize),
                     Count = x.Count(),
                     Pages = (int)Math.Ceiling((double)x.Count() / projectsPageSize),
-                    LatestProjectCreation = new DateTime() // This doesnt even exist yet. But it will be added later
+                    LatestProjectCreation = x.Key.LatestProjectCreation
                 })
                 .Skip((filterParams.Page - 1) * filterParams.PageSize)
                 .Take(filterParams.PageSize)
