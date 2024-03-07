@@ -5,6 +5,7 @@
         public AuthenticationResult Result { get; set; }
         public string Message { get; set; }
         public EmployeeDto Employee { get; set; }
+        public string? Token { get; set; }
     }
 
     public class AuthenticationResult

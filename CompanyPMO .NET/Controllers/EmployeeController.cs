@@ -33,8 +33,8 @@ namespace CompanyPMO_.NET.Controllers
         [HttpPost("login")]
         [ProducesResponseType(204)]
         [ProducesResponseType(401)]
-        [ProducesResponseType(200, Type = typeof(EmployeeDto))]
-        public async Task<IActionResult> Login([FromForm] EmployeeLoginDto employee)
+        [ProducesResponseType(200, Type = typeof(LoginResponseDto))]
+        public async Task<IActionResult> Login(EmployeeLoginDto employee)
         {
             var employeeAuthentication = await _employeeService.AuthenticateEmployee(employee.Username, employee.Password);
 
@@ -44,20 +44,21 @@ namespace CompanyPMO_.NET.Controllers
 
                 var token = _jwtService.JwtTokenGenerator(loggedEmployee);
 
-                HttpContext.Response.Cookies.Append("JwtToken", token, new CookieOptions
-                {
-                    Expires = DateTime.Now.AddDays(7),
-                    HttpOnly = true,
-                    SameSite = SameSiteMode.Strict,
-                    Secure = true, // No HTTPS
-                    IsEssential = true
-                });
+                //HttpContext.Response.Cookies.Append("JwtToken", token, new CookieOptions
+                //{
+                //    Expires = DateTime.Now.AddDays(7),
+                //    HttpOnly = true,
+                //    SameSite = SameSiteMode.Strict,
+                //    Secure = true, // No HTTPS
+                //    IsEssential = true
+                //});
 
                 var loginResponse = new LoginResponseDto
                 {
                     Result = employeeAuthentication.result,
                     Message = employeeAuthentication.message,
-                    Employee = employeeAuthentication.employee
+                    Employee = employeeAuthentication.employee,
+                    Token = token
                 };
 
                 return Ok(loginResponse);
