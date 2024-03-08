@@ -362,3 +362,8 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /CompanyPMO .NET/appsettings.json
+
+# Ignore env
+/CompanyPMO .NET/.env
+/tests/.env
+/tests/Services/.env
