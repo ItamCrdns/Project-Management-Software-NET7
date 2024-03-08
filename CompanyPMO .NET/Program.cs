@@ -2,6 +2,7 @@ using CloudinaryDotNet;
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Repository;
+using CompanyPMO_.NET.Services;
 using dotenv.net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,8 @@ builder.Services.AddScoped<IUtility, UtilityRepository>();
 builder.Services.AddScoped<IIssue, IssueRepository>();
 builder.Services.AddScoped<IJwt, JwtService>();
 builder.Services.AddScoped<ILatestStuff, LatestStuffRepository>();
+
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 // Add services to the container.
 

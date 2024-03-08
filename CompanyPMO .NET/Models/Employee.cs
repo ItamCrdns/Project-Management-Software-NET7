@@ -42,6 +42,10 @@ namespace CompanyPMO_.NET.Models
         public DateTime? LockedUntil { get; set; }
         [Column("supervisor_id")]
         public int? SupervisorId { get; set; }
+        [Column("reset_password_token")]
+        public int? ResetPasswordToken { get; set; }
+        [Column("reset_password_token_expiry")]
+        public DateTime? ResetPasswordTokenExpiry { get; set; }
 
         // Navigation properties
 

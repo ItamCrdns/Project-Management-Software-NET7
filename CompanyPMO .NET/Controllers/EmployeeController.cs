@@ -370,5 +370,23 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(employees);
         }
+
+        [AllowAnonymous]
+        [HttpPost("request-password-reset")]
+        public async Task<IActionResult> RequestPasswordReset(string email)
+        {
+            var result = await _employeeService.RequestPasswordReset(email);
+
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPasswordWithToken(string email, int token, string newPassword)
+        {
+            var result = await _employeeService.ResetPasswordWithToken(email, token, newPassword);
+
+            return Ok(result);
+        }
     }
 }
