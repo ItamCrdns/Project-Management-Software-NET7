@@ -13,14 +13,12 @@ namespace CompanyPMO_.NET.Repository
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
         private readonly IUtility _utilityService;
-        private readonly IEmailSender _emailSender;
 
-        public EmployeeRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IEmailSender emailSender)
+        public EmployeeRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService)
         {
             _context = context;
             _imageService = imageService;
             _utilityService = utilityService;
-            _emailSender = emailSender;
         }
         public async Task<(AuthenticationResult result, string message, EmployeeDto employee)> AuthenticateEmployee(string username, string password)
         {
@@ -789,95 +787,6 @@ namespace CompanyPMO_.NET.Repository
             else
             {
                 return new OperationResult<EmployeeShowcaseDto> { Success = false, Message = "Something went wrong", Data = new EmployeeShowcaseDto() };
-            }
-        }
-
-        public int GenerateResetPasswordToken()
-        {
-            Random token = new();
-
-            return token.Next(100000, 999999);
-        }
-
-        public async Task<OperationResult<bool>> RequestPasswordReset(string email)
-        {
-            // Generate and set a token and its expiration date (15 minutes after its created)
-            var employee = await _context.Employees.Where(x => x.Email == email).FirstOrDefaultAsync();
-
-            if (employee is null)
-            {
-                return new OperationResult<bool> { Success = false, Message = "The email address provided is not registered. Please contact your administrator.", Data = false };
-            }
-             
-            int resetPasswordToken = GenerateResetPasswordToken();
-
-            employee.ResetPasswordToken = resetPasswordToken;
-            employee.ResetPasswordTokenExpiry = DateTime.UtcNow.AddMinutes(15);
-
-            _context.Employees.Update(employee);
-
-            int rowsAffected = await _context.SaveChangesAsync();
-
-            if (rowsAffected > 0)
-            {
-                // Send email with the token
-                await _emailSender.SendEmailAsync(email, "Reset your password", $"Your reset password token is: {resetPasswordToken}");
-
-                return new OperationResult<bool> { Success = true, Message = "Your request to reset your password has been received. Please review your email and enter the 6-digit code that was sent to you.", Data = true };
-            }
-            else
-            {
-                return new OperationResult<bool> { Success = false, Message = "Something went wrong", Data = false };
-            }
-        }
-
-        public async Task<OperationResult<bool>> ResetPasswordWithToken(string email, int token, string newPassword)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                return new OperationResult<bool> { Success = false, Message = "The email address cannot be empty.", Data = false };
-            }
-
-            var employee = await _context.Employees.Where(x => x.Email == email).FirstOrDefaultAsync();
-
-            if (employee is null)
-            {
-                return new OperationResult<bool> { Success = false, Message = "The email address provided is not registered. Please contact your administrator.", Data = false };
-            }
-
-            if (string.IsNullOrWhiteSpace(newPassword))
-            {
-                return new OperationResult<bool> { Success = false, Message = "The new password cannot be empty.", Data = false };
-            }
-
-            if (employee.ResetPasswordToken != token || token <= 0)
-            {
-                return new OperationResult<bool> { Success = false, Message = "The token provided is invalid or has expired. Please request a new token.", Data = false };
-            }
-
-            if (employee.ResetPasswordTokenExpiry < DateTime.UtcNow)
-            {
-                return new OperationResult<bool> { Success = false, Message = "The token provided has expired. Please request a new one.", Data = false };
-            }
-
-            string salt = BCrypt.Net.BCrypt.GenerateSalt();
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword, salt);
-
-            employee.Password = hashedPassword;
-            employee.ResetPasswordToken = null;
-            employee.ResetPasswordTokenExpiry = null;
-
-            _context.Employees.Update(employee);
-
-            int rowsAffected = await _context.SaveChangesAsync();
-
-            if (rowsAffected > 0)
-            {
-                return new OperationResult<bool> { Success = true, Message = "Your password has been reset successfully.", Data = true };
-            }
-            else
-            {
-                return new OperationResult<bool> { Success = false, Message = "Something went wrong", Data = false };
             }
         }
     }

@@ -22,6 +22,7 @@ builder.Services.AddScoped<IUtility, UtilityRepository>();
 builder.Services.AddScoped<IIssue, IssueRepository>();
 builder.Services.AddScoped<IJwt, JwtService>();
 builder.Services.AddScoped<ILatestStuff, LatestStuffRepository>();
+builder.Services.AddScoped<IResetPasswordRequest, ResetPasswordRequestRepository>();
 
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 

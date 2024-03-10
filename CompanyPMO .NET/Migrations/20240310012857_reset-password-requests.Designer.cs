@@ -3,6 +3,7 @@ using System;
 using CompanyPMO_.NET.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CompanyPMO_.NET.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240310012857_reset-password-requests")]
+    partial class resetpasswordrequests
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -318,14 +321,14 @@ namespace CompanyPMO_.NET.Migrations
                         {
                             EmployeeId = 1,
                             CompanyId = 1,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 739, DateTimeKind.Utc).AddTicks(1462),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 112, DateTimeKind.Utc).AddTicks(7188),
                             Email = "employee1@example.com",
                             FirstName = "First",
                             Gender = "Male",
                             LastName = "Employee",
                             LockedEnabled = false,
                             LoginAttempts = 0,
-                            Password = "$2a$11$H.5SN.Ug74EmDSAfNPw91OOKMWcPdCdmrO5VRrX.9n79XHBs7HGje",
+                            Password = "$2a$11$Nu.DryNSLwbQsTPUKeYAYuuutEMUp16kNdd8roY1IgYzoh6V/6lbO",
                             PhoneNumber = "1234567890",
                             Role = "supervisor",
                             TierId = 1,
@@ -335,14 +338,14 @@ namespace CompanyPMO_.NET.Migrations
                         {
                             EmployeeId = 2,
                             CompanyId = 2,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 863, DateTimeKind.Utc).AddTicks(9993),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5372),
                             Email = "employee2@example.com",
                             FirstName = "Second",
                             Gender = "Female",
                             LastName = "Employee",
                             LockedEnabled = false,
                             LoginAttempts = 0,
-                            Password = "$2a$11$qZJtD3FORx0re8DCVCxGrugHdp9elOMPBq7CGSw165G8uZKjOLGti",
+                            Password = "$2a$11$tGb8YWdzjaOhhJ7c422h5OnppcVWr9T9P7JZk6vPmHZkEq0NSrPG2",
                             PhoneNumber = "0987654321",
                             Role = "employee",
                             SupervisorId = 1,
@@ -577,56 +580,56 @@ namespace CompanyPMO_.NET.Migrations
                         new
                         {
                             IssueId = 1,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(353),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5848),
                             Description = "Description for Issue 1",
-                            Fixed = new DateTime(2024, 3, 17, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(355),
+                            Fixed = new DateTime(2024, 3, 17, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5850),
                             IssueCreatorId = 1,
                             Name = "Issue 1",
-                            StartedWorking = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(354),
+                            StartedWorking = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5849),
                             TaskId = 1
                         },
                         new
                         {
                             IssueId = 2,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(357),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5852),
                             Description = "Description for Issue 2",
-                            Fixed = new DateTime(2024, 3, 17, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(357),
+                            Fixed = new DateTime(2024, 3, 17, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5854),
                             IssueCreatorId = 1,
                             Name = "Issue 2",
-                            StartedWorking = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(357),
+                            StartedWorking = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5853),
                             TaskId = 2
                         },
                         new
                         {
                             IssueId = 3,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(359),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5856),
                             Description = "Description for Issue 3",
-                            Fixed = new DateTime(2024, 3, 17, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(360),
+                            Fixed = new DateTime(2024, 3, 17, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5857),
                             IssueCreatorId = 1,
                             Name = "Issue 3",
-                            StartedWorking = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(359),
+                            StartedWorking = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5856),
                             TaskId = 4
                         },
                         new
                         {
                             IssueId = 4,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(361),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5859),
                             Description = "Description for Issue 4",
-                            Fixed = new DateTime(2024, 3, 17, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(362),
+                            Fixed = new DateTime(2024, 3, 17, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5860),
                             IssueCreatorId = 1,
                             Name = "Issue 4",
-                            StartedWorking = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(362),
+                            StartedWorking = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5859),
                             TaskId = 6
                         },
                         new
                         {
                             IssueId = 5,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(364),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5862),
                             Description = "Description for Issue 5",
-                            Fixed = new DateTime(2024, 3, 17, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(364),
+                            Fixed = new DateTime(2024, 3, 17, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5863),
                             IssueCreatorId = 1,
                             Name = "Issue 5",
-                            StartedWorking = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(364),
+                            StartedWorking = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5862),
                             TaskId = 9
                         });
                 });
@@ -731,10 +734,10 @@ namespace CompanyPMO_.NET.Migrations
                         {
                             ProjectId = 1,
                             CompanyId = 1,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(283),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5737),
                             Description = "Description for Project 1",
-                            ExpectedDeliveryDate = new DateTime(2024, 4, 9, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(284),
-                            LatestTaskCreation = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(293),
+                            ExpectedDeliveryDate = new DateTime(2024, 4, 9, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5742),
+                            LatestTaskCreation = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5753),
                             Lifecycle = "Planning",
                             Name = "Project 1",
                             Priority = 1,
@@ -744,10 +747,10 @@ namespace CompanyPMO_.NET.Migrations
                         {
                             ProjectId = 2,
                             CompanyId = 2,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(294),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5756),
                             Description = "Description for Project 2",
-                            ExpectedDeliveryDate = new DateTime(2024, 5, 9, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(295),
-                            LatestTaskCreation = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(296),
+                            ExpectedDeliveryDate = new DateTime(2024, 5, 9, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5756),
+                            LatestTaskCreation = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5759),
                             Lifecycle = "Development",
                             Name = "Project 2",
                             Priority = 2,
@@ -757,10 +760,10 @@ namespace CompanyPMO_.NET.Migrations
                         {
                             ProjectId = 3,
                             CompanyId = 3,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(297),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5760),
                             Description = "Description for Project 3",
-                            ExpectedDeliveryDate = new DateTime(2024, 6, 8, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(298),
-                            LatestTaskCreation = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(299),
+                            ExpectedDeliveryDate = new DateTime(2024, 6, 8, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5761),
+                            LatestTaskCreation = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5762),
                             Lifecycle = "Testing",
                             Name = "Project 3",
                             Priority = 3,
@@ -781,10 +784,6 @@ namespace CompanyPMO_.NET.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("employee_id");
 
-                    b.Property<Guid>("RequestGuid")
-                        .HasColumnType("uuid")
-                        .HasColumnName("request_guid");
-
                     b.Property<int?>("Token")
                         .HasColumnType("integer")
                         .HasColumnName("token");
@@ -797,7 +796,7 @@ namespace CompanyPMO_.NET.Migrations
 
                     b.HasIndex("EmployeeId");
 
-                    b.ToTable("resetpasswordrequests");
+                    b.ToTable("ResetPasswordRequests");
                 });
 
             modelBuilder.Entity("CompanyPMO_.NET.Models.Task", b =>
@@ -851,7 +850,7 @@ namespace CompanyPMO_.NET.Migrations
                         new
                         {
                             TaskId = 1,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(319),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5796),
                             Description = "Description for Task 1",
                             Name = "Task 1",
                             ProjectId = 1,
@@ -860,7 +859,7 @@ namespace CompanyPMO_.NET.Migrations
                         new
                         {
                             TaskId = 2,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(321),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5798),
                             Description = "Description for Task 2",
                             Name = "Task 2",
                             ProjectId = 1,
@@ -869,7 +868,7 @@ namespace CompanyPMO_.NET.Migrations
                         new
                         {
                             TaskId = 3,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(322),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5800),
                             Description = "Description for Task 3",
                             Name = "Task 3",
                             ProjectId = 1,
@@ -878,7 +877,7 @@ namespace CompanyPMO_.NET.Migrations
                         new
                         {
                             TaskId = 4,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(323),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5802),
                             Description = "Description for Task 4",
                             Name = "Task 4",
                             ProjectId = 2,
@@ -887,7 +886,7 @@ namespace CompanyPMO_.NET.Migrations
                         new
                         {
                             TaskId = 5,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(324),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5803),
                             Description = "Description for Task 5",
                             Name = "Task 5",
                             ProjectId = 2,
@@ -896,7 +895,7 @@ namespace CompanyPMO_.NET.Migrations
                         new
                         {
                             TaskId = 6,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(325),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5805),
                             Description = "Description for Task 6",
                             Name = "Task 6",
                             ProjectId = 2,
@@ -905,7 +904,7 @@ namespace CompanyPMO_.NET.Migrations
                         new
                         {
                             TaskId = 7,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(326),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5809),
                             Description = "Description for Task 7",
                             Name = "Task 7",
                             ProjectId = 3,
@@ -914,7 +913,7 @@ namespace CompanyPMO_.NET.Migrations
                         new
                         {
                             TaskId = 8,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(327),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5811),
                             Description = "Description for Task 8",
                             Name = "Task 8",
                             ProjectId = 3,
@@ -923,7 +922,7 @@ namespace CompanyPMO_.NET.Migrations
                         new
                         {
                             TaskId = 9,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 864, DateTimeKind.Utc).AddTicks(329),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 57, 239, DateTimeKind.Utc).AddTicks(5814),
                             Description = "Description for Task 9",
                             Name = "Task 9",
                             ProjectId = 3,
@@ -961,14 +960,14 @@ namespace CompanyPMO_.NET.Migrations
                         new
                         {
                             TierId = 1,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 614, DateTimeKind.Utc).AddTicks(3625),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 56, 988, DateTimeKind.Utc).AddTicks(1537),
                             Duty = "Duty for Supervisor",
                             Name = "Supervisor"
                         },
                         new
                         {
                             TierId = 2,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 614, DateTimeKind.Utc).AddTicks(3627),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 56, 988, DateTimeKind.Utc).AddTicks(1538),
                             Duty = "Duty for Employee",
                             Name = "Employee"
                         });
@@ -1021,30 +1020,30 @@ namespace CompanyPMO_.NET.Migrations
                         new
                         {
                             UserId = 1,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 614, DateTimeKind.Utc).AddTicks(3221),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 56, 988, DateTimeKind.Utc).AddTicks(964),
                             FirstName = "First",
                             Gender = "Male",
-                            LastLogin = new DateTime(2024, 3, 10, 4, 8, 51, 614, DateTimeKind.Utc).AddTicks(3224),
+                            LastLogin = new DateTime(2024, 3, 10, 1, 28, 56, 988, DateTimeKind.Utc).AddTicks(965),
                             LastName = "User",
                             Username = "User1"
                         },
                         new
                         {
                             UserId = 2,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 614, DateTimeKind.Utc).AddTicks(3228),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 56, 988, DateTimeKind.Utc).AddTicks(969),
                             FirstName = "Second",
                             Gender = "Female",
-                            LastLogin = new DateTime(2024, 3, 10, 4, 8, 51, 614, DateTimeKind.Utc).AddTicks(3228),
+                            LastLogin = new DateTime(2024, 3, 10, 1, 28, 56, 988, DateTimeKind.Utc).AddTicks(970),
                             LastName = "User",
                             Username = "User2"
                         },
                         new
                         {
                             UserId = 3,
-                            Created = new DateTime(2024, 3, 10, 4, 8, 51, 614, DateTimeKind.Utc).AddTicks(3230),
+                            Created = new DateTime(2024, 3, 10, 1, 28, 56, 988, DateTimeKind.Utc).AddTicks(971),
                             FirstName = "Third",
                             Gender = "Male",
-                            LastLogin = new DateTime(2024, 3, 10, 4, 8, 51, 614, DateTimeKind.Utc).AddTicks(3230),
+                            LastLogin = new DateTime(2024, 3, 10, 1, 28, 56, 988, DateTimeKind.Utc).AddTicks(972),
                             LastName = "User",
                             Username = "User3"
                         });

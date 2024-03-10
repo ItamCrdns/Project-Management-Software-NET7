@@ -24,6 +24,7 @@ namespace CompanyPMO_.NET.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Image> Images { get; set; }
         public DbSet<Changelog> Changelog { get; set; }
+        public DbSet<ResetPasswordRequest> ResetPasswordRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -42,8 +43,14 @@ namespace CompanyPMO_.NET.Data
             modelBuilder.Entity<User>().HasKey(u => u.UserId);
             modelBuilder.Entity<Image>().HasKey(i => i.ImageId);
             modelBuilder.Entity<Changelog>().HasKey(c => c.LogId);
+            modelBuilder.Entity<ResetPasswordRequest>().HasKey(r => r.RequestId);
 
             // Relationships
+
+            modelBuilder.Entity<ResetPasswordRequest>()
+                .HasOne(e => e.Employee)
+                .WithMany()
+                .HasForeignKey(e => e.EmployeeId);
 
             modelBuilder.Entity<Employee>()
                 .HasOne(t => t.Tier)

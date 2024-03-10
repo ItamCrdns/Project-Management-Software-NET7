@@ -848,40 +848,5 @@ namespace Tests.EmployeeControllerTests
             // Assert
             result.Should().BeOfType(typeof(NotFoundResult));
         }
-
-        [Fact]
-        public async void EmployeeController_RequestPasswordReset_ReturnOk()
-        {
-            // Arrange
-            string email = "emailtest@test.com";
-            var fakeResult = new OperationResult<bool> { Success = true };
-
-            A.CallTo(() => _employeeService.RequestPasswordReset(email)).Returns(fakeResult);
-
-            // Act
-            var result = await _employeeController.RequestPasswordReset(email);
-
-            // Assert
-            result.Should().BeOfType(typeof(OkObjectResult));
-        }
-
-        [Fact]
-        public async void EmployeeController_ResetPasswordWithToken_ReturnOk()
-        {
-            // Arrange
-            string email = "emailtest@test.com";
-            int token = 1234;
-            string newPassword = "newPassword";
-
-            var fakeResult = new OperationResult<bool> { Success = true };
-
-            A.CallTo(() => _employeeService.ResetPasswordWithToken(email, token, newPassword)).Returns(fakeResult);
-
-            // Act
-            var result = await _employeeController.ResetPasswordWithToken(email, token, newPassword);
-
-            // Assert
-            result.Should().BeOfType(typeof(OkObjectResult));
-        }
     }
 }
