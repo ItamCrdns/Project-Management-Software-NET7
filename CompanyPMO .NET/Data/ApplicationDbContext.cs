@@ -425,7 +425,7 @@ namespace CompanyPMO_.NET.Data
                     Description = "Description for Issue 1",
                     Created = DateTime.UtcNow,
                     StartedWorking = DateTime.UtcNow,
-                    Fixed = DateTime.UtcNow.AddDays(7),
+                    Finished = DateTime.UtcNow.AddDays(7),
                     IssueCreatorId = 1, // Assuming Employee1 is the issue creator
                     TaskId = 1 // This issue belongs to Task 1
                 },
@@ -437,7 +437,7 @@ namespace CompanyPMO_.NET.Data
                     Description = "Description for Issue 2",
                     Created = DateTime.UtcNow,
                     StartedWorking = DateTime.UtcNow,
-                    Fixed = DateTime.UtcNow.AddDays(7),
+                    Finished = DateTime.UtcNow.AddDays(7),
                     IssueCreatorId = 1, // Assuming Employee1 is the issue creator
                     TaskId = 2 // This issue belongs to Task 2
                 },
@@ -449,7 +449,7 @@ namespace CompanyPMO_.NET.Data
                     Description = "Description for Issue 3",
                     Created = DateTime.UtcNow,
                     StartedWorking = DateTime.UtcNow,
-                    Fixed = DateTime.UtcNow.AddDays(7),
+                    Finished = DateTime.UtcNow.AddDays(7),
                     IssueCreatorId = 1, // Assuming Employee1 is the issue creator
                     TaskId = 4 // This issue belongs to Task 4
                 },
@@ -461,7 +461,7 @@ namespace CompanyPMO_.NET.Data
                     Description = "Description for Issue 4",
                     Created = DateTime.UtcNow,
                     StartedWorking = DateTime.UtcNow,
-                    Fixed = DateTime.UtcNow.AddDays(7),
+                    Finished = DateTime.UtcNow.AddDays(7),
                     IssueCreatorId = 1, // Assuming Employee1 is the issue creator
                     TaskId = 6 // This issue belongs to Task 6
                 },
@@ -473,7 +473,7 @@ namespace CompanyPMO_.NET.Data
                     Description = "Description for Issue 5",
                     Created = DateTime.UtcNow,
                     StartedWorking = DateTime.UtcNow,
-                    Fixed = DateTime.UtcNow.AddDays(7),
+                    Finished = DateTime.UtcNow.AddDays(7),
                     IssueCreatorId = 1, // Assuming Employee1 is the issue creator
                     TaskId = 9 // This issue belongs to Task 9
                 });

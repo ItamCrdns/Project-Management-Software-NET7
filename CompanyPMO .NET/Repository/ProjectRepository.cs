@@ -39,7 +39,7 @@ namespace CompanyPMO_.NET.Repository
             return await _imageService.AddImagesToExistingEntity(projectId, images, "Project", imageCountInProjectEntity);
         }
 
-        public async Task<OperationResult<int>> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees)
+        public async Task<OperationResult<int>> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees, bool shouldStartNow)
         {
             if (string.IsNullOrWhiteSpace(project.Name) || string.IsNullOrWhiteSpace(project.Description))
             {
@@ -61,7 +61,8 @@ namespace CompanyPMO_.NET.Repository
                 ProjectCreatorId = employeeSupervisorId,
                 Priority = project.Priority,
                 CompanyId = companyId,
-                ExpectedDeliveryDate = project.ExpectedDeliveryDate
+                ExpectedDeliveryDate = project.ExpectedDeliveryDate,
+                StartedWorking = shouldStartNow ? DateTime.UtcNow : null,
             };
 
             // Save changed because we will need to access the projectId later when adding images
@@ -245,7 +246,7 @@ namespace CompanyPMO_.NET.Repository
                 //    Created = i.Created
                 //}).ToList(),
                 Created = project.Created,
-                Finalized = project.Finalized,
+                Finished = project.Finished,
                 ExpectedDeliveryDate = project.ExpectedDeliveryDate,
                 Lifecycle = project.Lifecycle,
                 Priority = project.Priority,
@@ -297,7 +298,7 @@ namespace CompanyPMO_.NET.Repository
                         Name = project.Name,
                         Description = project.Description,
                         Created = project.Created,
-                        Finalized = project.Finalized,
+                        Finished = project.Finished,
                         Priority = project.Priority,
                         Company = new CompanyShowcaseDto
                         {
@@ -353,7 +354,7 @@ namespace CompanyPMO_.NET.Repository
                 Name = project.Name,
                 Description = project.Description,
                 Created = project.Created,
-                Finalized = project.Finalized,
+                Finished = project.Finished,
                 Priority = project.Priority,
                 Company = new CompanyShowcaseDto
                 {
@@ -399,11 +400,11 @@ namespace CompanyPMO_.NET.Repository
         {
             var project = await _context.Projects.FindAsync(projectId);
 
-            bool isProjectNullOrNotFinalized = project?.Finalized is null || project?.ExpectedDeliveryDate > DateTime.UtcNow;
+            bool isProjectNullOrNotFinalized = project?.Finished is null || project?.ExpectedDeliveryDate > DateTime.UtcNow;
 
             if(project is not null && isProjectNullOrNotFinalized)
             {
-                project.Finalized = DateTime.UtcNow;
+                project.Finished = DateTime.UtcNow;
                 _context.Update(project);
                 return await _context.SaveChangesAsync() > 0;
             }

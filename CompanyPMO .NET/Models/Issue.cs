@@ -15,8 +15,10 @@ namespace CompanyPMO_.NET.Models
         public DateTime Created { get; set; }
         [Column("started_working")]
         public DateTime? StartedWorking { get; set; }
-        [Column("fixed")]
-        public DateTime? Fixed { get; set; }
+        [Column("finished")]
+        public DateTime? Finished { get; set; }
+        [Column("expected_delivery_date")]
+        public DateTime? ExpectedDeliveryDate { get; set; }
         [Column("issue_creator_id")]
         public int IssueCreatorId { get; set; }
         [Column("task_id")]

@@ -70,7 +70,7 @@ namespace Tests.Repository
                             Name = $"Project {i}",
                             Description = $"Description {i}",
                             Created = DateTime.Now,
-                            Finalized = DateTime.Now.AddHours(1),
+                            Finished = DateTime.Now.AddHours(1),
                             ProjectCreatorId = 1,
                             CompanyId = (i % 2) + 1,
                             Priority = i,

@@ -182,6 +182,8 @@ namespace Tests.Repository
             result.Should().NotBeNull();
             result.Success.Should().BeTrue();
             result.Message.Should().Be("Your password has been reset successfully.");
+            result.Data.Should().NotBeNullOrEmpty();
+            result.Data.Should().Be("test0");
         }
 
         [Fact]
@@ -260,7 +262,7 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void ResetPasswordRequestRepository_IsTokenValid_ReturnsTrue()
+        public async void ResetPasswordRequestRepository_IsTokenValid_ReturnsTrueValid()
         {
             var dbContext = await GetDatabaseContext();
             var repository = new ResetPasswordRequestRepository(dbContext, _emailSender);
@@ -274,7 +276,7 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void ResetPasswordRequestRepository_IsTokenValid_ReturnsFalse()
+        public async void ResetPasswordRequestRepository_IsTokenValid_ReturnsFalseExpired()
         {
             var dbContext = await GetDatabaseContext();
             var repository = new ResetPasswordRequestRepository(dbContext, _emailSender);
@@ -285,6 +287,20 @@ namespace Tests.Repository
 
             result.Success.Should().BeFalse();
             result.Message.Should().Be("Expired");
+        }
+
+        [Fact]
+        public async void ResetPasswordRequestRepository_IsTokenValid_ReturnsFalseInvalid()
+        {
+            var dbContext = await GetDatabaseContext();
+            var repository = new ResetPasswordRequestRepository(dbContext, _emailSender);
+
+            var token = 999999;
+            var requestGuid = dbContext.ResetPasswordRequests.Skip(1).First().RequestGuid;
+            var result = await repository.IsTokenValid(token, requestGuid);
+
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("The token provided is invalid or has expired.");
         }
     }
 }

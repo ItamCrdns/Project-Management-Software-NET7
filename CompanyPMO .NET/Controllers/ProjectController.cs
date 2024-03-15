@@ -70,9 +70,9 @@ namespace CompanyPMO_.NET.Controllers
         [HttpPost("new")]
         [ProducesResponseType(200, Type = typeof(OperationResult<int>))]
         [ProducesResponseType(400, Type = typeof(OperationResult<int>))]
-        public async Task<IActionResult> NewProject([FromForm] Project project, [FromForm] List<IFormFile>? images, [FromForm] int companyId, [FromForm] List<int> employees)
+        public async Task<IActionResult> NewProject([FromForm] Project project, [FromForm] List<IFormFile>? images, [FromForm] int companyId, [FromForm] List<int> employees, [FromForm] bool shouldStartNow)
         {
-            var result = await _projectService.CreateProject(project, await GetUserId(), images, companyId, employees);
+            var result = await _projectService.CreateProject(project, await GetUserId(), images, companyId, employees, shouldStartNow);
 
             if (!result.Success)
             {

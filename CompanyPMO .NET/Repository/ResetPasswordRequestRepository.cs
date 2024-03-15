@@ -95,18 +95,18 @@ namespace CompanyPMO_.NET.Repository
             }
         }
 
-        public async Task<OperationResult<bool>> ResetPasswordWithToken(string email, int token, string newPassword)
+        public async Task<OperationResult<string>> ResetPasswordWithToken(string email, int token, string newPassword)
         {
             if (string.IsNullOrWhiteSpace(email))
             {
-                return new OperationResult<bool> { Success = false, Message = "The email address cannot be empty.", Data = false };
+                return new OperationResult<string> { Success = false, Message = "The email address cannot be empty." };
             }
 
             var employee = await _context.Employees.Where(x => x.Email == email).FirstOrDefaultAsync();
 
             if (employee is null)
             {
-                return new OperationResult<bool> { Success = false, Message = "The email address provided is not registered. Please contact your administrator.", Data = false };
+                return new OperationResult<string> { Success = false, Message = "The email address provided is not registered. Please contact your administrator." };
             }
 
             var tokenRequest = await _context.ResetPasswordRequests
@@ -115,17 +115,17 @@ namespace CompanyPMO_.NET.Repository
 
             if (string.IsNullOrWhiteSpace(newPassword))
             {
-                return new OperationResult<bool> { Success = false, Message = "The new password cannot be empty.", Data = false };
+                return new OperationResult<string> { Success = false, Message = "The new password cannot be empty." };
             }
 
             if (tokenRequest == null || tokenRequest.Token != token || token <= 0)
             {
-                return new OperationResult<bool> { Success = false, Message = "The token provided is invalid or has expired. Please request a new token.", Data = false };
+                return new OperationResult<string> { Success = false, Message = "The token provided is invalid or has expired. Please request a new token." };
             }
 
             if (tokenRequest.TokenExpiry < DateTime.UtcNow)
             {
-                return new OperationResult<bool> { Success = false, Message = "The token provided has expired. Please request a new one.", Data = false };
+                return new OperationResult<string> { Success = false, Message = "The token provided has expired. Please request a new one." };
             }
 
             string salt = BCrypt.Net.BCrypt.GenerateSalt();
@@ -140,11 +140,11 @@ namespace CompanyPMO_.NET.Repository
 
             if (rowsAffected > 0)
             {
-                return new OperationResult<bool> { Success = true, Message = "Your password has been reset successfully.", Data = true };
+                return new OperationResult<string> { Success = true, Message = "Your password has been reset successfully.", Data = employee.Username  };
             }
             else
             {
-                return new OperationResult<bool> { Success = false, Message = "Something went wrong", Data = false };
+                return new OperationResult<string> { Success = false, Message = "Something went wrong" };
             }
         }
 

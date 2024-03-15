@@ -58,9 +58,15 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("new/nameonly")]
         [ProducesResponseType(200)]
-        public async Task<IActionResult> CreateNewClientWithNameOnly([FromForm] string newCompanyName)
+        public async Task<IActionResult> CreateNewClientWithNameOnly([FromBody] CompanyDto newCompany)
         {
-            int companyId = await _companyService.CreateNewCompany(await GetUserId(), newCompanyName);
+            if (newCompany.Name is null)
+            {
+                ModelState.AddModelError("Name", "The name of the company is required.");
+                return StatusCode(400, ModelState);
+            }
+
+            int companyId = await _companyService.CreateNewCompany(await GetUserId(), newCompany.Name);
 
             if(companyId.Equals(0))
             {
@@ -72,15 +78,15 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{companyId}")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Company>))]
-        [ProducesResponseType(400)]
+        [ProducesResponseType(200, Type = typeof(Company))]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> GetCompanyById(int companyId)
         {
             var company = await _companyService.GetCompanyById(companyId);
 
             if(company is null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
             return Ok(company);

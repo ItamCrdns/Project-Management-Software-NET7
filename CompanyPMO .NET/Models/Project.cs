@@ -13,16 +13,18 @@ namespace CompanyPMO_.NET.Models
         public string Description { get; set; }
         [Column("created")]
         public DateTime Created { get; set; }
-        [Column("finalized")]
-        public DateTime? Finalized { get; set;}
+        [Column("started_working")]
+        public DateTime? StartedWorking { get; set; }
+        [Column("finished")]
+        public DateTime? Finished { get; set;}
+        [Column("expected_delivery_date")]
+        public DateTime? ExpectedDeliveryDate { get; set; }
         [Column("project_creator_id")]
         public int ProjectCreatorId { get; set; }
         [Column("company_id")]
         public int CompanyId { get; set; }
         [Column("priority")]
         public int Priority { get; set; }
-        [Column("expected_delivery_date")]
-        public DateTime? ExpectedDeliveryDate { get; set; }
         [Column("lifecycle")]
         public string? Lifecycle { get; set; }
         [Column("latest_task_creation")]

@@ -47,7 +47,7 @@ namespace Tests.Repository
                             Description = $"Description {i}",
                             Created = DateTime.Now,
                             StartedWorking = DateTime.Now.AddMinutes(15),
-                            Fixed = DateTime.Now.AddHours(1),
+                            Finished = DateTime.Now.AddHours(1),
                             IssueCreatorId = 1,
                             TaskId = (i % 3) + 1
                         });

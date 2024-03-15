@@ -103,7 +103,7 @@ namespace CompanyPMO_.NET.Repository
                     Name = project.Name,
                     Description = project.Description,
                     Created = project.Created,
-                    Finalized = project.Finalized
+                    Finished = project.Finished
                 }).ToList(),
                 Tasks = employee.Tasks.Select(task => new Models.Task
                 {
@@ -121,7 +121,7 @@ namespace CompanyPMO_.NET.Repository
                     Description = issue.Description,
                     Created = issue.Created,
                     StartedWorking = issue.StartedWorking,
-                    Fixed = issue.Fixed,
+                    Finished = issue.Finished,
                     IssueCreatorId = issue.IssueCreatorId,
                     TaskId = issue.TaskId
                 }).ToList()

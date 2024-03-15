@@ -7,7 +7,7 @@
         public string? Description { get; set; }
         public PatchEntityImagesDto? Images { get; set; }
         public DateTime Created { get; set; }
-        public DateTime? Finalized { get; set; }
+        public DateTime? Finished { get; set; }
         public DateTime? ExpectedDeliveryDate { get; set; }
         public string? Lifecycle { get; set; }
         public int Priority { get; set; }

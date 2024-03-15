@@ -52,7 +52,7 @@ namespace Tests.Repository
                             Name = $"Project {i}",
                             Description = $"Project {i} Description",
                             Created = DateTime.UtcNow,
-                            Finalized = DateTime.UtcNow,
+                            Finished = DateTime.UtcNow,
                             ProjectCreatorId = (i % 2) + 1,
                             CompanyId = (i % 2) + 1, // Only company Ids one and two
                             Priority = i,
@@ -278,7 +278,7 @@ namespace Tests.Repository
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility);
 
-            var result = await projectRepository.CreateProject(newProject, supervisorId, fakeIFormFileList, companyId, employees);
+            var result = await projectRepository.CreateProject(newProject, supervisorId, fakeIFormFileList, companyId, employees, false);
 
             result.Should().NotBeNull();
             result.Message.Should().Be("Project created successfully");
@@ -314,7 +314,7 @@ namespace Tests.Repository
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility);
 
-            var result = await projectRepository.CreateProject(newProject, supervisorId, fakeIFormFileList, companyId, employees);
+            var result = await projectRepository.CreateProject(newProject, supervisorId, fakeIFormFileList, companyId, employees, false);
 
             result.Should().NotBeNull();
             result.Message.Should().Be("Project name and description are required");
