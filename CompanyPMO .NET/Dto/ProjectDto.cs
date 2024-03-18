@@ -9,6 +9,7 @@
         public DateTime Created { get; set; }
         public DateTime? Finished { get; set; }
         public DateTime? ExpectedDeliveryDate { get; set; }
+        public DateTime? StartedWorking { get; set; }
         public string? Lifecycle { get; set; }
         public int Priority { get; set; }
         public EmployeeShowcaseDto Creator { get; set; }
@@ -23,6 +24,7 @@
     {
         public int ProjectId { get; set; }
         public string? Name { get; set; }
+        public DateTime? StartedWorking { get; set; }
         public string? Lifecycle { get; set; }
         public int Priority { get; set; }
         public EmployeeShowcaseDto Creator { get; set; }

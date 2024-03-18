@@ -131,7 +131,7 @@ namespace CompanyPMO_.NET.Data
 
             modelBuilder.Entity<Models.Task>()
                 .HasOne(p => p.Project)
-                .WithMany()
+                .WithMany(t => t.Tasks)
                 .HasForeignKey(p => p.ProjectId);
 
             modelBuilder.Entity<Issue>()

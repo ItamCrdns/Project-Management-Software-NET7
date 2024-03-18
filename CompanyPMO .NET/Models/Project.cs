@@ -36,5 +36,6 @@ namespace CompanyPMO_.NET.Models
         public List<Employee>? Employees { get; set; }
         public Company? Company { get; set; }
         public Employee? ProjectCreator { get; set; }
+        public ICollection<Task>? Tasks { get; set; }
     }
 }

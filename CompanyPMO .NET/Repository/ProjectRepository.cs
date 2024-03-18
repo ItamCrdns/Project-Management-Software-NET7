@@ -206,73 +206,40 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<ProjectDto> GetProjectById(int projectId)
+        public async Task<ProjectDto?> GetProjectById(int projectId)
         {
-            var project = await _context.Projects
+            return await _context.Projects
                 .Where(p => p.ProjectId.Equals(projectId))
-                .Include(t => t.Images)
-                .Include(p => p.ProjectCreator)
-                .Include(c => c.Company)
-                .Include(e => e.Employees)
-                .FirstOrDefaultAsync();
-
-            if(project is null)
-            {
-                return null;
-            }
-
-            //var images = project.Images = SelectImages(project.Images);
-            // Will handle images later
-
-            int totalEmployeesCount = await _context.Projects
-                .Where(p => p.ProjectId.Equals(projectId))
-                .SelectMany(e => e.Employees)
-                .CountAsync();
-
-            int tasksCount = await _context.Tasks
-                .Where(t => t.ProjectId.Equals(projectId))
-                .CountAsync();
-
-            ProjectDto projectDto = new()
-            {
-                ProjectId = project.ProjectId,
-                Name = project.Name,
-                Description = project.Description,
-                //ImagesCollection = images.Select(i => new ImageDto
-                //{
-                //    ImageId = i.ImageId,
-                //    ImageUrl = i.ImageUrl,
-                //    PublicId = i.PublicId,
-                //    Created = i.Created
-                //}).ToList(),
-                Created = project.Created,
-                Finished = project.Finished,
-                ExpectedDeliveryDate = project.ExpectedDeliveryDate,
-                Lifecycle = project.Lifecycle,
-                Priority = project.Priority,
-                Creator = new EmployeeShowcaseDto
+                .Select(p => new ProjectDto
                 {
-                    EmployeeId = project.ProjectCreator.EmployeeId,
-                    Username = project.ProjectCreator.Username,
-                    ProfilePicture = project.ProjectCreator.ProfilePicture
-                },
-                Company = new CompanyShowcaseDto
-                {
-                    CompanyId = project.Company.CompanyId,
-                    Name = project.Company.Name,
-                    Logo = project.Company.Logo
-                },
-                EmployeeCount = totalEmployeesCount,
-                TasksCount = tasksCount,
-                Team = project.Employees.Select(p => new EmployeeShowcaseDto
-                {
-                    EmployeeId = p.EmployeeId,
-                    Username = p.Username,
-                    ProfilePicture = p.ProfilePicture
-                }).Take(5).ToList(),
-            };
-
-            return projectDto;
+                    ProjectId = p.ProjectId,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Created = p.Created,
+                    Finished = p.Finished,
+                    StartedWorking = p.StartedWorking,
+                    Priority = p.Priority,
+                    Creator = new EmployeeShowcaseDto
+                    {
+                        EmployeeId = p.ProjectCreator.EmployeeId,
+                        Username = p.ProjectCreator.Username,
+                        ProfilePicture = p.ProjectCreator.ProfilePicture
+                    },
+                    Company = new CompanyShowcaseDto
+                    {
+                        CompanyId = p.Company.CompanyId,
+                        Name = p.Company.Name,
+                        Logo = p.Company.Logo
+                    },
+                    EmployeeCount = p.Employees.Count,
+                    TasksCount = p.Tasks.Count,
+                    Team = p.Employees.Select(p => new EmployeeShowcaseDto
+                    {
+                        EmployeeId = p.EmployeeId,
+                        Username = p.Username,
+                        ProfilePicture = p.ProfilePicture
+                    }).Take(5).ToList(),
+                }).FirstOrDefaultAsync();
         }
 
         public async Task<Project> GetProjectEntityById(int projectId)
@@ -532,38 +499,30 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<ProjectSomeInfoDto> GetProjectNameCreatorLifecyclePriorityAndTeam(int projectId)
         {
-            Project project = await _context.Projects
-                .Include(p => p.ProjectCreator)
-                .Include(e => e.Employees)
-                .FirstOrDefaultAsync(x => x.ProjectId.Equals(projectId));
-
-            if (project is null)
-            {
-                return null;
-            }
-
-            ProjectSomeInfoDto projectDto = new()
-            {
-                ProjectId = project.ProjectId,
-                Name = project.Name,
-                Lifecycle = project.Lifecycle,
-                Priority = project.Priority,
-                Creator = new EmployeeShowcaseDto
+            return await _context.Projects
+                .Where(p => p.ProjectId.Equals(projectId))
+                .Select(p => new ProjectSomeInfoDto
                 {
-                    EmployeeId = project.ProjectCreator.EmployeeId,
-                    Username = project.ProjectCreator.Username,
-                    ProfilePicture = project.ProjectCreator.ProfilePicture
-                },
-                Team = project.Employees.Select(p => new EmployeeShowcaseDto
-                {
-                    EmployeeId = p.EmployeeId,
-                    Username = p.Username,
-                    ProfilePicture = p.ProfilePicture
-                }).OrderByDescending(x => x.Username).Take(5).ToList(),
-                EmployeeCount = project.Employees.Count
-            };
-
-            return projectDto;
+                    ProjectId = p.ProjectId,
+                    Name = p.Name,
+                    StartedWorking = p.StartedWorking,
+                    Lifecycle = p.Lifecycle,
+                    Priority = p.Priority,
+                    Creator = new EmployeeShowcaseDto
+                    {
+                        EmployeeId = p.ProjectCreator.EmployeeId,
+                        Username = p.ProjectCreator.Username,
+                        ProfilePicture = p.ProjectCreator.ProfilePicture
+                    },
+                    Team = p.Employees.Select(p => new EmployeeShowcaseDto
+                    {
+                        EmployeeId = p.EmployeeId,
+                        Username = p.Username,
+                        ProfilePicture = p.ProfilePicture
+                    }).OrderByDescending(x => x.Username).Take(5).ToList(),
+                    EmployeeCount = p.Employees.Count
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<ProjectShowcaseDto> GetProjectShowcase(int projectId)
