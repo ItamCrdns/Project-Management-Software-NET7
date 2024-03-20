@@ -26,48 +26,80 @@ namespace CompanyPMO_.NET.Repository
             return await _utilityService.AddEmployeesToEntity<EmployeeTask, Models.Task>(employeeIds, "TaskId", taskId, IsEmployeeAlreadyInTask);
         }
 
-        public async Task<(Models.Task, List<Image>)> CreateTask(TaskDto task, int employeeId, int projectId, List<IFormFile>? images)
+        public async Task<OperationResult<int>> CreateTask(TaskDto task, int employeeId, int projectId, List<IFormFile>? images, List<int>? employeeIds, bool shouldStartNow)
         {
-            bool taskNameIsntNull = !string.IsNullOrWhiteSpace(task.Name);
-            bool taskDescriptionIsntNull = !string.IsNullOrWhiteSpace(task.Description);
+            if (string.IsNullOrWhiteSpace(task.Name) || string.IsNullOrWhiteSpace(task.Description))
+            {
+                return new OperationResult<int>
+                {
+                    Success = false,
+                    Message = "Task name and description are required",
+                    Data = 0
+                };
+            }
 
             var project = await _context.Projects.FindAsync(projectId);
 
-            if (taskNameIsntNull && taskDescriptionIsntNull && project is not null)
+            var newTask = new Models.Task
             {
-                var newTask = new Models.Task
+                Name = task.Name,
+                Description = task.Description,
+                Created = DateTime.UtcNow,
+                TaskCreatorId = employeeId,
+                ProjectId = projectId,
+                ExpectedDeliveryDate = task.ExpectedDeliveryDate,
+                StartedWorking = shouldStartNow ? DateTime.UtcNow : null
+            };
+
+            _context.Add(newTask);
+
+            project.LatestTaskCreation = DateTime.UtcNow;
+            _context.Update(project);
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected is 0)
+            {
+                return new OperationResult<int>
                 {
-                    Name = task.Name,
-                    Description = task.Description,
-                    Created = DateTime.UtcNow,
-                    TaskCreatorId = employeeId,
-                    ProjectId = projectId
+                    Success = false,
+                    Message = "Failed to create the Task",
+                    Data = 0
                 };
-
-                _context.Add(newTask);
-
-                project.LatestTaskCreation = DateTime.UtcNow;
-                _context.Update(project);
-
-                int rowsAffected = await _context.SaveChangesAsync();
-
-                if (rowsAffected is 0)
-                {
-                    return (null, null);
-                }
-
-                List<Image> imageCollection = new();
-
-                if (images is not null && images.Count > 0)
-                {
-                    imageCollection = await _imageService.AddImagesToNewEntity(images, newTask.TaskId, "Task", null);
-                }
-
-                return (newTask, imageCollection);
-            } else
-            {
-                return (null, null);
             }
+
+            List<Image> imageCollection = new();
+
+            if (images is not null && images.Count > 0)
+            {
+                imageCollection = await _imageService.AddImagesToNewEntity(images, newTask.TaskId, "Task", null);
+            }
+
+            List<string> errors = new();
+
+            if (employeeIds is not null && employeeIds.Count > 0)
+            {
+                if (employeeIds.Any(x => x == employeeId))
+                {
+                    errors.Add("You can't add yourself");
+                }
+
+                var (status, _) = await AddEmployeesToTask(newTask.TaskId, employeeIds);
+
+                // If its not the success response, then its an error
+                if (status != "All employees were added successfully" && !string.IsNullOrWhiteSpace(status))
+                {
+                    errors.Add(status);
+                }
+            }
+
+            return new OperationResult<int>
+            {
+                Success = true,
+                Message = "Task created successfully",
+                Data = newTask.TaskId,
+                Errors = errors
+            };
         }
 
         public async Task<bool> DoesTaskExist(int taskId)
@@ -81,7 +113,7 @@ namespace CompanyPMO_.NET.Repository
 
             bool isUserIdAnEmployeeWorkingOnTheTask = employeesWorkingOnTask.Any(e => e.EmployeeId.Equals(userId));
 
-            if(isUserIdAnEmployeeWorkingOnTheTask)
+            if (isUserIdAnEmployeeWorkingOnTheTask)
             {
                 var taskToUpdate = await _context.Tasks.FindAsync(taskId);
 
@@ -110,7 +142,7 @@ namespace CompanyPMO_.NET.Repository
                 .Take(pageSize)
                 .ToListAsync();
 
-            foreach(var task in tasks)
+            foreach (var task in tasks)
             {
                 task.Images = SelectImages(task.Images);
             }
@@ -160,7 +192,8 @@ namespace CompanyPMO_.NET.Repository
                     .Include(e => e.Employees)
                     .Include(p => p.Project)
                     .ToListAsync();
-            } else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
+            }
+            else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
             {
                 tasks = await _context.Tasks
                     .Where(whereExpression)
@@ -199,7 +232,7 @@ namespace CompanyPMO_.NET.Repository
                 }).ToList();
 
             return projectImages;
-        }   
+        }
 
         public async Task<bool> StartingWorkingOnTask(int userId, int taskId)
         {

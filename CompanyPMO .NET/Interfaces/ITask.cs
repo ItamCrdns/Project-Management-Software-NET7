@@ -6,7 +6,7 @@ namespace CompanyPMO_.NET.Interfaces
 {
     public interface ITask
     {
-        Task<(Models.Task, List<Image>)> CreateTask(TaskDto task, int employeeId, int projectId, List<IFormFile>? images);
+        Task<OperationResult<int>> CreateTask(TaskDto task, int employeeId, int projectId, List<IFormFile>? images, List<int>? employeeIds, bool shouldStartNow);
         // When hitting those two endpoints, update their dates
         Task<bool> StartingWorkingOnTask(int userId, int taskId);
         Task<bool> FinishedWorkingOnTask(int userId, int taskId);

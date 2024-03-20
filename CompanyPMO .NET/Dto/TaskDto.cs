@@ -9,6 +9,7 @@ namespace CompanyPMO_.NET.Dto
         public string Description { get; set; }
         public DateTime Created { get; set; }
         public DateTime? StartedWorking { get; set; }
+        public DateTime? ExpectedDeliveryDate { get; set; }
         public DateTime? Finished { get; set; }
         public EmployeeShowcaseDto? TaskCreator { get; set; }
         public List<EmployeeShowcaseDto>? Employees { get; set; }

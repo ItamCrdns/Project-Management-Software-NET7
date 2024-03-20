@@ -7,6 +7,7 @@ using CompanyPMO_.NET.Repository;
 using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Text;
@@ -166,7 +167,7 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void TaskRepository_CreateTask_ReturnsCreated()
+        public async void TaskRepository_CreateTask_ReturnsSuccess()
         {
             int employeeId = 1;
             int projectId = 1;
@@ -186,18 +187,20 @@ namespace Tests.Repository
             fakeTask.Name = "Test";
             fakeTask.Description = "Test Description";
             fakeTask.Created = DateTime.Now;
-            //fakeTask.TaskCreatorId = 1;
-            //fakeTask.ProjectId = 1;
 
-            var result = await taskRepository.CreateTask(fakeTask, employeeId, projectId, fakeIFormFileList);
+            List<int> employeeIds = [2, 3];
 
-            result.Item1.Should().BeOfType<CompanyPMO_.NET.Models.Task>();
-            result.Item1.Name.Should().Be("Test");
-            result.Item1.Description.Should().Be("Test Description");
+            var result = await taskRepository.CreateTask(fakeTask, employeeId, projectId, fakeIFormFileList, employeeIds, true);
+
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Task created successfully");
+            result.Success.Should().BeTrue();
+            result.Data.Should().BeOfType(typeof(int));
+            result.Data.Should().NotBe(0);
         }
 
         [Fact]
-        public async void TaskRepository_CreateTask_ReturnsNull()
+        public async void TaskRepository_CreateTask_ReturnsFailure()
         {
             int employeeId = 1;
             int projectId = 1;
@@ -209,25 +212,26 @@ namespace Tests.Repository
             var taskRepository = new TaskRepository(dbContext, _image, _utility);
 
             var fakeTask = A.Fake<TaskDto>();
+            fakeTask.Name = "";
+            fakeTask.Description = "";
+            List<int> employeeIds = [2, 3];
 
-            var result = await taskRepository.CreateTask(fakeTask, employeeId, projectId, fakeIFormFileList);
+            var result = await taskRepository.CreateTask(fakeTask, employeeId, projectId, fakeIFormFileList, employeeIds, true);
 
-            result.Item1.Should().BeNull();
-            result.Item2.Should().BeNull();
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Task name and description are required");
+            result.Success.Should().BeFalse();
+            result.Data.Should().BeOfType(typeof(int));
+            result.Data.Should().Be(0);
         }
 
         [Fact]
-        public async void TaskRepository_CreateTask_ReturnsCreatedWithImages()
+        public async void TaskRepository_CreateTask_ReturnsSuccessYouCantAddYourselfError()
         {
             int employeeId = 1;
             int projectId = 1;
 
-            List<IFormFile> fakeIFormFileList =
-                [
-                    new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test")), 0, 0, "Data", "test.jpg"),
-                    new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test 2")), 0, 0, "Data 2", "test2.jpg"),
-                    new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test 3")), 0, 0, "Data 3", "test3.jpg")
-                    ];
+            List<IFormFile> fakeIFormFileList = [];
 
             var dbContext = await GetDatabaseContext();
 
@@ -237,57 +241,18 @@ namespace Tests.Repository
             fakeTask.Name = "Test";
             fakeTask.Description = "Test Description";
             fakeTask.Created = DateTime.Now;
-            //fakeTask.TaskCreatorId = 1;
-            //fakeTask.ProjectId = 1;
+            List<int> employeeIds = [1, 2, 3];
 
-            List<Image> imageCollection = [
-                new Image
-                {
-                    ImageId = 1,
-                    EntityType = "Task",
-                    EntityId = 1,
-                    ImageUrl = "test.jpg",
-                    PublicId = "test",
-                    Created = DateTime.Now,
-                    UploaderId = 1
-                },
-                new Image
-                {
-                    ImageId = 2,
-                    EntityType = "Task",
-                    EntityId = 1,
-                    ImageUrl = "test2.jpg",
-                    PublicId = "test2",
-                    Created = DateTime.Now,
-                    UploaderId = 1
-                },
-                new Image
-                {
-                    ImageId = 3,
-                    EntityType = "Task",
-                    EntityId = 1,
-                    ImageUrl = "test3.jpg",
-                    PublicId = "test3",
-                    Created = DateTime.Now,
-                    UploaderId = 1
-                }];
+            var result = await taskRepository.CreateTask(fakeTask, employeeId, projectId, fakeIFormFileList, employeeIds, true);
 
-            A.CallTo(() => _image.AddImagesToNewEntity(
-                A<List<IFormFile>>._,
-                A<int>._,
-                A<string>._,
-                A<int?>._))
-                .Returns(imageCollection);
-
-            var result = await taskRepository.CreateTask(fakeTask, employeeId, projectId, fakeIFormFileList);
-
-            result.Item1.Should().BeOfType<CompanyPMO_.NET.Models.Task>();
-            result.Item1.Name.Should().Be("Test");
-            result.Item1.Description.Should().Be("Test Description");
-            result.Item2.Should().BeEquivalentTo(imageCollection);
-            result.Item2.Should().BeOfType(typeof(List<Image>));
-            result.Item2.Should().NotBeEmpty();
-            result.Item2.Should().HaveCountGreaterThanOrEqualTo(1);
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Task created successfully");
+            result.Success.Should().BeTrue();
+            result.Data.Should().BeOfType(typeof(int));
+            result.Data.Should().NotBe(0);
+            result.Errors.Should().NotBeNullOrEmpty();
+            result.Errors.Should().HaveCount(1);
+            result.Errors.Should().Contain("You can't add yourself");
         }
 
         [Fact]

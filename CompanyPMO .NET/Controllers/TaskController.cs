@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Dto;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -33,22 +34,18 @@ namespace CompanyPMO_.NET.Controllers
         }
 
         [HttpPost("new")]
-        [ProducesResponseType(200, Type = typeof(Models.Task))]
-        public async Task<IActionResult> NewTask([FromForm] TaskDto task, [FromForm] int projectId, [FromForm] List<IFormFile>? images)
+        [ProducesResponseType(200, Type = typeof(OperationResult<int>))]
+        [ProducesResponseType(400, Type = typeof(OperationResult<int>))]
+        public async Task<IActionResult> NewTask([FromForm] TaskDto task, [FromForm] int projectId, [FromForm] List<IFormFile>? images, [FromForm] List<int> employees, [FromForm] bool shouldStartNow)
         {
-            var (newTask, imageCollection) = await _taskService.CreateTask(task, await GetUserId(), projectId, images);
+            var result = await _taskService.CreateTask(task, await GetUserId(), projectId, images, employees, shouldStartNow);
 
-            var taskDto = new Models.Task
+            if (!result.Success)
             {
-                TaskId = newTask.TaskId,
-                Name = newTask.Name,
-                Description = newTask.Description,
-                Created = DateTime.UtcNow,
-                TaskCreatorId = await GetUserId(),
-                Images = imageCollection
-            };
+                return BadRequest(result);
+            }
 
-            return Ok(taskDto);
+            return Ok(result);
         }
 
         [HttpGet("{taskId}")]
