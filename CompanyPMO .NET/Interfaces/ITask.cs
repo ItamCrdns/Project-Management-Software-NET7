@@ -10,7 +10,7 @@ namespace CompanyPMO_.NET.Interfaces
         // When hitting those two endpoints, update their dates
         Task<bool> StartingWorkingOnTask(int userId, int taskId);
         Task<bool> FinishedWorkingOnTask(int userId, int taskId);
-        Task<Models.Task> GetTaskById(int taskId);
+        Task<EntityParticipantOrOwnerDTO<TaskDto>> GetTaskById(int taskId, int projectId, int userId);
         Task<List<Employee>> GetEmployeesWorkingOnTask(int taskId); // Get employees working in a certain task
         Task<DataCountPages<TaskShowcaseDto>> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize);
         Task<List<Models.Task>> GetTasks(int page, int pageSize);

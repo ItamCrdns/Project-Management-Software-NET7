@@ -206,40 +206,47 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<ProjectDto?> GetProjectById(int projectId)
+        public async Task<EntityParticipantOrOwnerDTO<ProjectDto>?> GetProjectById(int projectId, int userId)
         {
             return await _context.Projects
                 .Where(p => p.ProjectId.Equals(projectId))
-                .Select(p => new ProjectDto
+                .Select(x => new EntityParticipantOrOwnerDTO<ProjectDto>
                 {
-                    ProjectId = p.ProjectId,
-                    Name = p.Name,
-                    Description = p.Description,
-                    Created = p.Created,
-                    Finished = p.Finished,
-                    StartedWorking = p.StartedWorking,
-                    Priority = p.Priority,
-                    Creator = new EmployeeShowcaseDto
+                    Entity = new ProjectDto
                     {
-                        EmployeeId = p.ProjectCreator.EmployeeId,
-                        Username = p.ProjectCreator.Username,
-                        ProfilePicture = p.ProjectCreator.ProfilePicture
+                        ProjectId = x.ProjectId,
+                        Name = x.Name,
+                        Description = x.Description,
+                        Created = x.Created,
+                        Finished = x.Finished,
+                        StartedWorking = x.StartedWorking,
+                        ExpectedDeliveryDate = x.ExpectedDeliveryDate,
+                        Priority = x.Priority,
+                        Creator = new EmployeeShowcaseDto
+                        {
+                            EmployeeId = x.ProjectCreator.EmployeeId,
+                            Username = x.ProjectCreator.Username,
+                            ProfilePicture = x.ProjectCreator.ProfilePicture
+                        },
+                        Company = new CompanyShowcaseDto
+                        {
+                            CompanyId = x.Company.CompanyId,
+                            Name = x.Company.Name,
+                            Logo = x.Company.Logo
+                        },
+                        EmployeeCount = x.Employees.Count,
+                        TasksCount = x.Tasks.Count,
+                        Team = x.Employees.Select(p => new EmployeeShowcaseDto
+                        {
+                            EmployeeId = p.EmployeeId,
+                            Username = p.Username,
+                            ProfilePicture = p.ProfilePicture
+                        }).Take(5).ToList(),
                     },
-                    Company = new CompanyShowcaseDto
-                    {
-                        CompanyId = p.Company.CompanyId,
-                        Name = p.Company.Name,
-                        Logo = p.Company.Logo
-                    },
-                    EmployeeCount = p.Employees.Count,
-                    TasksCount = p.Tasks.Count,
-                    Team = p.Employees.Select(p => new EmployeeShowcaseDto
-                    {
-                        EmployeeId = p.EmployeeId,
-                        Username = p.Username,
-                        ProfilePicture = p.ProfilePicture
-                    }).Take(5).ToList(),
-                }).FirstOrDefaultAsync();
+                    IsOwner = x.ProjectCreatorId == userId,
+                    IsParticipant = x.Employees.Any(e => e.EmployeeId == userId)
+                    })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<Project> GetProjectEntityById(int projectId)
@@ -382,7 +389,7 @@ namespace CompanyPMO_.NET.Repository
         public async Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images)
         {
             // TODO: Test it
-            return await _utilityService.UpdateEntity(employeeId, projectId, projectDto, images, AddImagesToExistingProject, GetProjectById);
+            return await _utilityService.UpdateEntity(employeeId, projectId, projectDto, images, AddImagesToExistingProject, GetProjectEntityById);
         }
 
         public async Task<DataCountPages<ProjectDto>> GetProjectsByEmployeeUsername(string username, FilterParams filterParams)
@@ -497,7 +504,7 @@ namespace CompanyPMO_.NET.Repository
             return projectCreatorId.Equals(employeeId);
         }
 
-        public async Task<ProjectSomeInfoDto> GetProjectNameCreatorLifecyclePriorityAndTeam(int projectId)
+        public async Task<ProjectSomeInfoDto?> GetProjectNameCreatorLifecyclePriorityAndTeam(int projectId)
         {
             return await _context.Projects
                 .Where(p => p.ProjectId.Equals(projectId))
@@ -505,7 +512,10 @@ namespace CompanyPMO_.NET.Repository
                 {
                     ProjectId = p.ProjectId,
                     Name = p.Name,
+                    Created = p.Created,
                     StartedWorking = p.StartedWorking,
+                    Finished = p.Finished,
+                    ExpectedDeliveryDate = p.ExpectedDeliveryDate,
                     Lifecycle = p.Lifecycle,
                     Priority = p.Priority,
                     Creator = new EmployeeShowcaseDto

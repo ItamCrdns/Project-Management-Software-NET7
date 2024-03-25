@@ -8,7 +8,7 @@ namespace CompanyPMO_.NET.Interfaces
     {
         Task<OperationResult<int>> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees, bool shouldStartNow);
         Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images);
-        Task<ProjectDto> GetProjectById(int projectId);
+        Task<EntityParticipantOrOwnerDTO<ProjectDto>> GetProjectById(int projectId, int userId);
         Task<ProjectSomeInfoDto> GetProjectNameCreatorLifecyclePriorityAndTeam(int projectId);
         Task<Project> GetProjectEntityById(int projectId);
         Task<DataCountPages<ProjectDto>> GetProjectsByCompanyName(int companyId, FilterParams filterParams);

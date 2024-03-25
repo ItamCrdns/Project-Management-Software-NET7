@@ -129,7 +129,7 @@ namespace Tests.Repository
                     dbContext.EmployeeProjects.Add(
                         new EmployeeProject
                         {
-                            EmployeeId = i,
+                            EmployeeId = i <= 2 ? 4 : i,
                             ProjectId = i
                         });
                 }
@@ -430,29 +430,46 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void ProjectRepository_GetProjectById_ReturnsProjectDto()
+        public async void ProjectRepository_GetProjectById_ReturnsProject()
         {
             int projectId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility);
 
-            var result = await projectRepository.GetProjectById(projectId);
+            var result = await projectRepository.GetProjectById(projectId, 1);
 
-            result.Should().BeOfType(typeof(ProjectDto));
-            result.ProjectId.Should().Be(projectId);
-            result.Name.Should().NotBeNullOrEmpty().And.Be("Project 0");
+            result.Should().NotBeNull();
+            result.Should().BeOfType(typeof(EntityParticipantOrOwnerDTO<ProjectDto>));
+            result.Entity.Should().BeOfType(typeof(ProjectDto));
+            result.Entity.ProjectId.Should().Be(projectId);
+            result.Entity.Name.Should().NotBeNullOrEmpty().And.Be("Project 0");
+            result.Entity.Creator.Should().BeOfType(typeof(EmployeeShowcaseDto));
+            result.Entity.Creator.Username.Should().NotBeNullOrEmpty().And.Be("test0");
+            result.Entity.Company.Should().BeOfType(typeof(CompanyShowcaseDto));
+            result.Entity.Company.Name.Should().NotBeNullOrEmpty().And.Be("Company 1");
+            result.Entity.EmployeeCount.Should().BeGreaterThanOrEqualTo(1);
+            result.Entity.TasksCount.Should().Be(0);
+            result.Entity.Team.Should().NotBeEmpty();
+            foreach (var employee in result.Entity.Team)
+            {
+                employee.Should().NotBeNull();
+                employee.Should().BeOfType(typeof(EmployeeShowcaseDto));
+                employee.Username.Should().NotBeNullOrEmpty();
+            }
+            result.IsOwner.Should().BeTrue();
+            result.IsParticipant.Should().BeFalse();
         }
 
         [Fact]
-        public async void ProjectRepository_GetProjectById_ReturnsNoProjectDto()
+        public async void ProjectRepository_GetProjectById_ReturnsNoProject()
         {
             int projectId = 100;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility);
 
-            var result = await projectRepository.GetProjectById(projectId);
+            var result = await projectRepository.GetProjectById(projectId, 2);
 
             result.Should().BeNull();
         }
@@ -515,8 +532,8 @@ namespace Tests.Repository
         [Fact]
         public async void ProjectRepository_IsEmployeeAlreadyInProject_ReturnsTrue()
         {
-            int employeeId = 1;
-            int projectId = 1;
+            int employeeId = 7;
+            int projectId = 7;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility);
@@ -739,8 +756,8 @@ namespace Tests.Repository
         [Fact]
         public async void ProjectRepository_IsParticipant_ReturnsTrue()
         {
-            int projectId = 1;
-            int employeeId = 1;
+            int projectId = 7;
+            int employeeId = 7;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility);
@@ -761,7 +778,7 @@ namespace Tests.Repository
 
             var result = await projectRepository.IsParticipant(projectId, employeeId);
 
-            result.Should().BeFalse();
+            result.Should().BeFalse(); 
         }
 
         [Fact]

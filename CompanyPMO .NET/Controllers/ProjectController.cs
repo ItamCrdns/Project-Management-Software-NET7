@@ -109,26 +109,33 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}")]
         [ProducesResponseType(200, Type = typeof(EntityParticipantOrOwnerDTO<ProjectDto>))]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> GetProjectById(int projectId)
         {
-            var project = await _projectService.GetProjectById(projectId);
+            var project = await _projectService.GetProjectById(projectId, await GetUserId());
 
-            bool isParticipant = await _projectService.IsParticipant(projectId, await GetUserId());
-
-            bool isOwner = false;
-            if (!isParticipant)
+            if (project is null)
             {
-                isOwner = await _projectService.IsOwner(projectId, await GetUserId());
+                return NotFound();
             }
 
-            var result = new EntityParticipantOrOwnerDTO<ProjectDto>
-            {
-                Entity = project,
-                IsParticipant = isParticipant,
-                IsOwner = isOwner
-            };
+            return Ok(project);
+        }
 
-            return Ok(result);
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{projectId}/tasks/{taskId}")]
+        [ProducesResponseType(200, Type = typeof(EntityParticipantOrOwnerDTO<TaskDto>))]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetTaskById(int projectId, int taskId)
+        {
+            var task = await _taskService.GetTaskById(taskId, projectId, await GetUserId());
+
+            if (task is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(task);
         }
 
         [Authorize(Policy = "EmployeesAllowed")]

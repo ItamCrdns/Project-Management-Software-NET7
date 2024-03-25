@@ -49,10 +49,10 @@ namespace CompanyPMO_.NET.Controllers
         }
 
         [HttpGet("{taskId}")]
-        [ProducesResponseType(200, Type = typeof(Models.Task))]
-        public async Task<IActionResult> GetTaskById(int taskId)
+        [ProducesResponseType(200, Type = typeof(EntityParticipantOrOwnerDTO<TaskDto>))]
+        public async Task<IActionResult> GetTaskById(int taskId, int projectId)
         {
-            var task = await _taskService.GetTaskById(taskId);
+            var task = await _taskService.GetTaskById(taskId, projectId, await GetUserId());
 
             return Ok(task);
         }

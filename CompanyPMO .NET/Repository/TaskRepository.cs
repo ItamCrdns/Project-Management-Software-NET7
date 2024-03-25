@@ -129,7 +129,45 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<List<Employee>> GetEmployeesWorkingOnTask(int taskId) => await _context.Tasks.Where(t => t.TaskId.Equals(taskId)).Include(e => e.Employees).SelectMany(e => e.Employees).ToListAsync();
 
-        public async Task<Models.Task> GetTaskById(int taskId) => await _context.Tasks.FindAsync(taskId);
+        public async Task<EntityParticipantOrOwnerDTO<TaskDto>?> GetTaskById(int taskId, int projectId, int userId)
+            {
+           return await _context.Tasks
+                .Where(t => t.TaskId == taskId && t.ProjectId == projectId)
+                .Select(x => new EntityParticipantOrOwnerDTO<TaskDto>
+                {
+                    Entity = new TaskDto
+                    {
+                        TaskId = x.TaskId,
+                        Name = x.Name,
+                        Description = x.Description,
+                        Created = x.Created,
+                        StartedWorking = x.StartedWorking,
+                        Finished = x.Finished,
+                        TaskCreator = new EmployeeShowcaseDto
+                        {
+                            EmployeeId = x.TaskCreator.EmployeeId,
+                            Username = x.TaskCreator.Username,
+                            ProfilePicture = x.TaskCreator.ProfilePicture
+                        },
+                        Employees = x.Employees.Select(employee => new EmployeeShowcaseDto
+                        {
+                            EmployeeId = employee.EmployeeId,
+                            Username = employee.Username,
+                            ProfilePicture = employee.ProfilePicture,
+                        }).Take(5).ToList(),
+                        EmployeeCount = x.Employees.Count,
+                        Project = new ProjectShowcaseDto
+                        {
+                            ProjectId = x.Project.ProjectId,
+                            Name = x.Project.Name,
+                            Priority = x.Project.Priority
+                        }
+                    },
+                    IsOwner = x.TaskCreatorId == userId,
+                    IsParticipant = x.Employees.Any(e => e.EmployeeId == userId)
+                })
+                .FirstOrDefaultAsync(); 
+        }
 
         public async Task<List<Models.Task>> GetTasks(int page, int pageSize)
         {

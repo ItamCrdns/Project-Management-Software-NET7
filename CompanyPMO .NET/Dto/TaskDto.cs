@@ -13,6 +13,7 @@ namespace CompanyPMO_.NET.Dto
         public DateTime? Finished { get; set; }
         public EmployeeShowcaseDto? TaskCreator { get; set; }
         public List<EmployeeShowcaseDto>? Employees { get; set; }
+        public int EmployeeCount { get; set; }
         public ProjectShowcaseDto? Project { get; set; } // Not nullable. All tasks should have a project
     }
 }

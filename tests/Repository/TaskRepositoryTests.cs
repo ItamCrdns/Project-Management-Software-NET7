@@ -7,7 +7,6 @@ using CompanyPMO_.NET.Repository;
 using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Text;
@@ -116,7 +115,7 @@ namespace Tests.Repository
                     dbContext.EmployeeTasks.Add(
                         new EmployeeTask
                         {
-                            EmployeeId = (i % 2) + 1,
+                            EmployeeId = (i % 2) + 2,
                             TaskId = (i % 3) + 1
                         });
                 }
@@ -287,7 +286,7 @@ namespace Tests.Repository
         public async void TaskRepository_FinishedWorkingOnTask_ReturnsTrue()
         {
             int taskId = 1;
-            int employeeId = 1;
+            int employeeId = 3;
 
             var dbContext = await GetDatabaseContext();
 
@@ -353,10 +352,30 @@ namespace Tests.Repository
 
             var taskRepository = new TaskRepository(dbContext, _image, _utility);
 
-            var result = await taskRepository.GetTaskById(taskId);
+            var result = await taskRepository.GetTaskById(taskId, 1, 1);
 
-            result.Should().BeOfType<CompanyPMO_.NET.Models.Task>();
             result.Should().NotBeNull();
+            result.Should().BeOfType<EntityParticipantOrOwnerDTO<TaskDto>>();
+            result.Entity.Should().NotBeNull();
+            result.Entity.Should().BeOfType<TaskDto>();
+            result.Entity.TaskCreator.Should().NotBeNull();
+            result.Entity.TaskCreator.Should().BeOfType<EmployeeShowcaseDto>();
+            result.Entity.TaskCreator.Username.Should().NotBeNullOrEmpty();
+            result.Entity.Project.Should().NotBeNull();
+            result.Entity.Project.Should().BeOfType<ProjectShowcaseDto>();
+            result.Entity.Project.Name.Should().NotBeNullOrEmpty();
+            result.Entity.Name.Should().NotBeNullOrEmpty();
+            result.Entity.EmployeeCount.Should().BeGreaterThanOrEqualTo(1);
+            result.Entity.Employees.Should().NotBeEmpty();
+            result.Entity.Employees.Should().HaveCountGreaterThanOrEqualTo(1);
+            foreach (var employee in result.Entity.Employees)
+            {
+                employee.Should().NotBeNull();
+                employee.Should().BeOfType<EmployeeShowcaseDto>();
+                employee.Username.Should().NotBeNullOrEmpty();
+            }
+            result.IsOwner.Should().BeTrue();
+            result.IsParticipant.Should().BeFalse();
         }
 
         [Fact]
@@ -368,7 +387,7 @@ namespace Tests.Repository
 
             var taskRepository = new TaskRepository(dbContext, _image, _utility);
 
-            var result = await taskRepository.GetTaskById(taskId);
+            var result = await taskRepository.GetTaskById(taskId, 2, 1);
 
             result.Should().BeNull();
         }
@@ -559,7 +578,7 @@ namespace Tests.Repository
         public async void TaskRepository_IsEmployeeAlreadyInTask_ReturnsTrue()
         {
             int taskId = 1;
-            int employeeId = 1;
+            int employeeId = 3;
 
             var dbContext = await GetDatabaseContext();
 
@@ -639,7 +658,7 @@ namespace Tests.Repository
         public async void TaskRepository_StartingWorkingOnTask_ReturnsTrue()
         {
             int taskId = 1;
-            int employeeId = 1;
+            int employeeId = 3;
 
             var dbContext = await GetDatabaseContext();
 
