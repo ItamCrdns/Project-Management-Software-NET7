@@ -142,6 +142,7 @@ namespace CompanyPMO_.NET.Repository
                         Description = x.Description,
                         Created = x.Created,
                         StartedWorking = x.StartedWorking,
+                        ExpectedDeliveryDate = x.ExpectedDeliveryDate,
                         Finished = x.Finished,
                         TaskCreator = new EmployeeShowcaseDto
                         {

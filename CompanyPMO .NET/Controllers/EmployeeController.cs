@@ -344,15 +344,15 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(result);
         }
 
-        [Authorize(Policy = "EmployeesAllowed")]
-        [HttpGet("{clientId}/projects/created")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
-        public async Task<IActionResult> GetAndSearchEmployeesByProjectsCreatedInClient(string? employeeIds, int clientId, int page, int pageSize)
-        {
-            var employees = await _employeeService.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize);
+        //[Authorize(Policy = "EmployeesAllowed")]
+        //[HttpGet("{clientId}/projects/created")]
+        //[ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
+        //public async Task<IActionResult> GetAndSearchEmployeesByProjectsCreatedInClient(string? employeeIds, int clientId, int page, int pageSize)
+        //{
+        //    var employees = await _employeeService.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize);
 
-            return Ok(employees);
-        }
+        //    return Ok(employees);
+        //}
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("employees/by-employee-ids")]

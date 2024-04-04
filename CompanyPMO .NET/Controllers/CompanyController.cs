@@ -47,7 +47,7 @@ namespace CompanyPMO_.NET.Controllers
 
             var (created, returnedCompany) = await _companyService.AddCompany(await GetUserId(), newCompany, images, logoFile);
 
-            if(!created)
+            if (!created)
             {
                 return StatusCode(500, "Something went wrong");
             }
@@ -68,7 +68,7 @@ namespace CompanyPMO_.NET.Controllers
 
             int companyId = await _companyService.CreateNewCompany(await GetUserId(), newCompany.Name);
 
-            if(companyId.Equals(0))
+            if (companyId.Equals(0))
             {
                 return StatusCode(500, "Something went wrong");
             }
@@ -84,7 +84,7 @@ namespace CompanyPMO_.NET.Controllers
         {
             var company = await _companyService.GetCompanyById(companyId);
 
-            if(company is null)
+            if (company is null)
             {
                 return NotFound();
             }
@@ -101,7 +101,7 @@ namespace CompanyPMO_.NET.Controllers
         {
             bool companyExists = await _companyService.DoesCompanyExist(companyId);
 
-            if(!companyExists)
+            if (!companyExists)
             {
                 return NotFound();
             }
@@ -115,7 +115,7 @@ namespace CompanyPMO_.NET.Controllers
 
             var (updated, company) = await _companyService.UpdateCompany(await GetUserId(), companyId, companyDto, images);
 
-            if(!updated)
+            if (!updated)
             {
                 return BadRequest();
             }
@@ -159,6 +159,15 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> SearchEmployeesByCompany(int companyId, string employeeToSearch, int page, int pageSize)
         {
             var employees = await _employeeService.SearchEmployeesByCompanyPaginated(employeeToSearch, companyId, page, pageSize);
+
+            return Ok(employees);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{clientId}/employees/by-projects-created")] // Returns all employees that have created projects in {clientId}
+        public async Task<IActionResult> GetAndSearchEmployeesByProjectsCreatedInClient(string? employeeIds, int clientId, int page, int pageSize)
+        {
+            var employees = await _employeeService.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize);
 
             return Ok(employees);
         }
