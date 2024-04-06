@@ -340,10 +340,10 @@ namespace CompanyPMO_.NET.Repository
                 firstEquals = Expression.Equal(newFilterString, constant);
             }
 
-            BinaryExpression otherEquals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
+            BinaryExpression secondEquals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
 
             // Start an empty expression, to hold all of the values. Defaulting to true.
-            BinaryExpression combinedExpression = Expression.Equal(firstEquals, otherEquals);
+            BinaryExpression combinedExpression = Expression.Equal(firstEquals, secondEquals);
 
             // * If filterParams are filterValue are provided, build the second expression. (x => x.FilterBy EQUALS filterValue)
             if (filterParams.FilterBy is not null && filterParams.FilterValue is not null)
@@ -388,12 +388,12 @@ namespace CompanyPMO_.NET.Repository
                 {
                     MemberExpression newFilterString = FilterStringSplitter(parameter, filterParams.FilterBy);
                     var otherConstant = Expression.Constant(Convert.ToInt32(filterParams.FilterValue));
-                    otherEquals = Expression.Equal(newFilterString, otherConstant);
+                    secondEquals = Expression.Equal(newFilterString, otherConstant);
                 }
             }
 
             // * Join the two where expressions (Exp1 && exp2) (x => x.EntityId EQUALS constantId && x => x.FilterBy EQUALS filterValue)
-            combinedExpression = Expression.AndAlso(combinedExpression, otherEquals);
+            combinedExpression = Expression.AndAlso(combinedExpression, secondEquals);
 
             // If whereIds its not null, we are going to create a new expression to filter by the given ids. Example: Get all the tasks that belong to the projectIds 1, 2 and 3
             // This is so it can work together with the GetEntitiesByEntityId method. (x => x.TaskIds.Contains("TaskId")
@@ -409,8 +409,26 @@ namespace CompanyPMO_.NET.Repository
                 combinedExpression = Expression.AndAlso(combinedExpression, containsCall);
             }
 
-            var whereExpression = Expression.Lambda<Func<T, bool>>(combinedExpression, parameter);
+            BinaryExpression thirdEquals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
 
+            if (!string.IsNullOrWhiteSpace(filterParams.SearchBy) && !string.IsNullOrWhiteSpace(filterParams.SearchValue))
+            {
+                // We will handle if the user searches for a certain entity here. Example: Get all the tasks that have the word "Design" in the title
+                MethodInfo containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string) });
+                ConstantExpression searchConstant = Expression.Constant(filterParams.SearchValue.ToLower());
+
+                // Convert the search property to lower
+                MethodInfo toLowerMethod = typeof(string).GetMethod("ToLower", Type.EmptyTypes);
+                MemberExpression searchProperty = Expression.Property(parameter, filterParams.SearchBy);
+                Expression searchPropertyToLower = Expression.Call(searchProperty, toLowerMethod); // Convert the values to lower case, ex: x.Name.ToLower() all names will be lower case, this disables 
+
+                // This creates an expression to search case-insensitive x.Name.ToLower().Contains("text")
+                Expression searchContainsCall = Expression.Call(searchPropertyToLower, containsMethod, searchConstant);
+
+                combinedExpression = Expression.AndAlso(combinedExpression, searchContainsCall);
+            }
+
+            var whereExpression = Expression.Lambda<Func<T, bool>>(combinedExpression, parameter);
 
             MemberExpression newOrderString = FilterStringSplitter(parameter, filterParams.OrderBy ?? defaultOrderBy);
             UnaryExpression orderConvert = Expression.Convert(newOrderString, typeof(object));

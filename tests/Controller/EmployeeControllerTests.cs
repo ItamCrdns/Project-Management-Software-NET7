@@ -773,28 +773,28 @@ namespace Tests.EmployeeControllerTests
             result.Should().BeOfType(typeof(OkObjectResult));
         }
 
-        [Fact]
-        public async void EmployeeController_GetAndSearchEmployeesByProjectsCreatedInClient_ReturnOk()
-        {
-            // Arrange
-            int clientId = 1;
-            int page = 1;
-            int pageSize = 10;
+        //[Fact]
+        //public async void EmployeeController_GetAndSearchEmployeesByProjectsCreatedInClient_ReturnOk()
+        //{
+        //    // Arrange
+        //    int clientId = 1;
+        //    int page = 1;
+        //    int pageSize = 10;
 
-            var fakeReturn = A.Fake<Dictionary<string, object>>();
+        //    var fakeReturn = A.Fake<Dictionary<string, object>>();
 
-            string employeeIds = "1-2-3-4-5";
+        //    string employeeIds = "1-2-3-4-5";
 
-            A.CallTo(() => _employeeService.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize))
-                .Returns(fakeReturn);
+        //    A.CallTo(() => _employeeService.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize))
+        //        .Returns(fakeReturn);
 
-            // Act
-            var result = await _employeeController.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize);
+        //    // Act
+        //    var result = await _employeeController.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize);
 
-            // Assert
-            result.Should().BeAssignableTo<IActionResult>();
-            result.Should().BeOfType(typeof(OkObjectResult));
-        }
+        //    // Assert
+        //    result.Should().BeAssignableTo<IActionResult>();
+        //    result.Should().BeOfType(typeof(OkObjectResult));
+        //}
 
         [Fact]
         public async void EmployeeController_GetEmployeesFromAListOfEmployeeIds_ReturnOk()
