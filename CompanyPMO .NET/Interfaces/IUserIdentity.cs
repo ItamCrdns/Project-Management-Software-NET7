@@ -4,6 +4,6 @@ namespace CompanyPMO_.NET.Interfaces
 {
     public interface IUserIdentity
     {
-        Task<int> GetUserIdFromClaims(ClaimsPrincipal user);
+        int GetUserIdFromClaims(ClaimsPrincipal user);
     }
 }

@@ -15,7 +15,7 @@ namespace CompanyPMO_.NET.Controllers
         private readonly IUserIdentity _userIdentityService;
         private readonly IEmployee _employeeService;
         private readonly ITask _taskService;
-        private readonly Lazy<Task<int>> _lazyUserId;
+        private readonly Lazy<int> _lazyUserId;
 
         public ProjectController(IProject projectService, IUserIdentity userIdentityService, IEmployee employeeService, ITask taskService)
         {
@@ -23,17 +23,17 @@ namespace CompanyPMO_.NET.Controllers
             _userIdentityService = userIdentityService;
             _employeeService = employeeService;
             _taskService = taskService;
-            _lazyUserId = new Lazy<Task<int>>(InitializeUserId);
+            _lazyUserId = new Lazy<int>(InitializeUserId);
         }
 
-        private async Task<int> InitializeUserId()
+        private int InitializeUserId()
         {
-            return await _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+            return _userIdentityService.GetUserIdFromClaims(HttpContext.User);
         }
 
-        private async Task<int> GetUserId()
+        private int GetUserId()
         {
-            return await _lazyUserId.Value;
+            return _lazyUserId.Value;
         }
 
         [Authorize(Policy = "SupervisorOnly")]
@@ -61,7 +61,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(DataCountPages<CompanyProjectGroup>))]
         public async Task<IActionResult> GetProjectsGroupedByCompany([FromQuery] FilterParams filterParams, [FromQuery] int projectsPage = 1, [FromQuery] int projectsPageSize = 5)
         {
-            var projects = await _projectService.GetProjectsGroupedByCompany(filterParams, projectsPage, projectsPageSize, await GetUserId());
+            var projects = await _projectService.GetProjectsGroupedByCompany(filterParams, projectsPage, projectsPageSize, GetUserId());
 
             return Ok(projects);
         }
@@ -72,7 +72,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(400, Type = typeof(OperationResult<int>))]
         public async Task<IActionResult> NewProject([FromForm] Project project, [FromForm] List<IFormFile>? images, [FromForm] int companyId, [FromForm] List<int> employees, [FromForm] bool shouldStartNow)
         {
-            var result = await _projectService.CreateProject(project, await GetUserId(), images, companyId, employees, shouldStartNow);
+            var result = await _projectService.CreateProject(project, GetUserId(), images, companyId, employees, shouldStartNow);
 
             if (!result.Success)
             {
@@ -96,7 +96,7 @@ namespace CompanyPMO_.NET.Controllers
                 return NotFound();
             }
 
-            var (updated, project) = await _projectService.UpdateProject(await GetUserId(), projectId, projectDto, images);
+            var (updated, project) = await _projectService.UpdateProject(GetUserId(), projectId, projectDto, images);
 
             if (!updated)
             {
@@ -112,7 +112,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetProjectById(int projectId)
         {
-            var project = await _projectService.GetProjectById(projectId, await GetUserId());
+            var project = await _projectService.GetProjectById(projectId, GetUserId());
 
             if (project is null)
             {
@@ -128,7 +128,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetTaskById(int projectId, int taskId)
         {
-            var task = await _taskService.GetTaskById(taskId, projectId, await GetUserId());
+            var task = await _taskService.GetTaskById(taskId, projectId, GetUserId());
 
             if (task is null)
             {
@@ -145,12 +145,12 @@ namespace CompanyPMO_.NET.Controllers
         {
             var project = await _projectService.GetProjectNameCreatorLifecyclePriorityAndTeam(projectId);
 
-            bool isParticipantOfProject = await _projectService.IsParticipant(projectId, await GetUserId());
+            bool isParticipantOfProject = await _projectService.IsParticipant(projectId, GetUserId());
 
             bool isOwner = false;
             if (!isParticipantOfProject)
             {
-                isOwner = await _projectService.IsOwner(projectId, await GetUserId());
+                isOwner = await _projectService.IsOwner(projectId, GetUserId());
             }
 
             var result = new EntityParticipantOrOwnerDTO<ProjectSomeInfoDto>
@@ -238,12 +238,12 @@ namespace CompanyPMO_.NET.Controllers
         {
             var tasks = await _taskService.GetTasksByProjectId(projectId, filterParams);
 
-            bool isParticipantOfProject = await _projectService.IsParticipant(projectId, await GetUserId());
+            bool isParticipantOfProject = await _projectService.IsParticipant(projectId, GetUserId());
 
             bool isOwner = false;
             if (!isParticipantOfProject)
             {
-                isOwner = await _projectService.IsOwner(projectId, await GetUserId());
+                isOwner = await _projectService.IsOwner(projectId, GetUserId());
             }
 
             var result = new Dictionary<string, object>

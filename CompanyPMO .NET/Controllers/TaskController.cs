@@ -14,23 +14,25 @@ namespace CompanyPMO_.NET.Controllers
     {
         private readonly ITask _taskService;
         private readonly IUserIdentity _userIdentityService;
-        private readonly Lazy<Task<int>> _lazyUserId;
+        private readonly Lazy<int> _lazyUserId;
+        private readonly IIssue _issueService;
 
-        public TaskController(ITask taskService, IUserIdentity userIdentityService)
+        public TaskController(ITask taskService, IUserIdentity userIdentityService, IIssue issueService)
         {
             _taskService = taskService;
             _userIdentityService = userIdentityService;
-            _lazyUserId = new Lazy<Task<int>>(InitializeUserId); // Load the userId until we actually need it
+            _lazyUserId = new Lazy<int>(InitializeUserId); // Load the userId until we actually need it
+            _issueService = issueService;
         }
 
-        private async Task<int> InitializeUserId()
+        private int InitializeUserId()
         {
-            return await _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+            return _userIdentityService.GetUserIdFromClaims(HttpContext.User);
         }
 
-        private async Task<int> GetUserId()
+        private int GetUserId()
         {
-            return await _lazyUserId.Value;
+            return _lazyUserId.Value;
         }
 
         [HttpPost("new")]
@@ -38,7 +40,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(400, Type = typeof(OperationResult<int>))]
         public async Task<IActionResult> NewTask([FromForm] TaskDto task, [FromForm] int projectId, [FromForm] List<IFormFile>? images, [FromForm] List<int> employees, [FromForm] bool shouldStartNow)
         {
-            var result = await _taskService.CreateTask(task, await GetUserId(), projectId, images, employees, shouldStartNow);
+            var result = await _taskService.CreateTask(task, GetUserId(), projectId, images, employees, shouldStartNow);
 
             if (!result.Success)
             {
@@ -52,7 +54,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(EntityParticipantOrOwnerDTO<TaskDto>))]
         public async Task<IActionResult> GetTaskById(int taskId, int projectId)
         {
-            var task = await _taskService.GetTaskById(taskId, projectId, await GetUserId());
+            var task = await _taskService.GetTaskById(taskId, projectId, GetUserId());
 
             return Ok(task);
         }
@@ -62,7 +64,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(400)]
         public async Task<IActionResult> StartTask(int taskId)
         {
-            bool taskStarted = await _taskService.StartingWorkingOnTask(await GetUserId(), taskId);
+            bool taskStarted = await _taskService.StartingWorkingOnTask(GetUserId(), taskId);
 
             if(!taskStarted)
             {
@@ -77,7 +79,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(400)]
         public async Task<IActionResult> FinishTask(int taskId)
         {
-            bool taskFinished = await _taskService.FinishedWorkingOnTask(await GetUserId(), taskId);
+            bool taskFinished = await _taskService.FinishedWorkingOnTask(GetUserId(), taskId);
 
             if (!taskFinished)
             {
@@ -140,9 +142,18 @@ namespace CompanyPMO_.NET.Controllers
         [HttpGet("grouped")]
         public async Task<IActionResult> GetTasksGroupedByProject([FromQuery] FilterParams filterParams, [FromQuery] int tasksPage = 1, [FromQuery] int tasksPageSize = 5)
         {
-            var tasks = await _taskService.GetTasksGroupedByProject(filterParams, tasksPage, tasksPageSize, await GetUserId());
+            var tasks = await _taskService.GetTasksGroupedByProject(filterParams, tasksPage, tasksPageSize, GetUserId());
 
             return Ok(tasks);
+        }
+
+        [HttpGet("{taskId}/issues/all")]
+        [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
+        public async Task<IActionResult> GetIssuesByTaskId(int taskId, [FromQuery] FilterParams filterParams)
+        {
+            var issues = await _issueService.GetIssuesByTaskId(taskId, filterParams);
+
+            return Ok(issues);
         }
     }
 }

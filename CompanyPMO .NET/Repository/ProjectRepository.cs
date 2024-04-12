@@ -483,26 +483,11 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<bool> IsParticipant(int projectId, int employeeId)
-        {
-            List<int> employeeIdsInProject = await _context.Projects
-                .Where(p => p.ProjectId.Equals(projectId))
-                .SelectMany(e => e.Employees)
-                .Select(e => e.EmployeeId)
-                .ToListAsync();
+        public async Task<bool> IsParticipant(int projectId, int employeeId) => await _context.EmployeeProjects
+                .AnyAsync(ep => ep.ProjectId.Equals(projectId) && ep.EmployeeId.Equals(employeeId));
 
-            return employeeIdsInProject.Contains(employeeId);
-        }
-
-        public async Task<bool> IsOwner(int projectId, int employeeId)
-        {
-            int projectCreatorId = await _context.Projects
-                .Where(p => p.ProjectId.Equals(projectId))
-                .Select(p => p.ProjectCreatorId)
-                .FirstOrDefaultAsync();
-
-            return projectCreatorId.Equals(employeeId);
-        }
+        public async Task<bool> IsOwner(int projectId, int employeeId) => await _context.Projects
+                .AnyAsync(p => p.ProjectId.Equals(projectId) && p.ProjectCreatorId.Equals(employeeId));
 
         public async Task<ProjectSomeInfoDto?> GetProjectNameCreatorLifecyclePriorityAndTeam(int projectId)
         {

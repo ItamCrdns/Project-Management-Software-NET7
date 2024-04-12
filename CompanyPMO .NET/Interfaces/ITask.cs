@@ -25,5 +25,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<DataCountPages<TaskShowcaseDto>> GetAllTasksShowcase(int page, int pageSize);
         Task<DataCountPages<ProjectTaskGroup>> GetTasksGroupedByProject(FilterParams filterParams, int tasksPage, int tasksPageSize, int employeeId);
         IEnumerable<TaskDto> TaskDtoSelectQuery(ICollection<Models.Task> tasks);
+        Task<bool> IsParticipant(int taskId, int employeeId);
+        Task<bool> IsOwner(int taskId, int employeeId);
     }
 }

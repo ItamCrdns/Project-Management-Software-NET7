@@ -3,6 +3,7 @@ using CompanyPMO_.NET.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using CompanyPMO_.NET.Models;
+using CompanyPMO_.NET.Common;
 
 namespace CompanyPMO_.NET.Controllers
 {
@@ -11,10 +12,24 @@ namespace CompanyPMO_.NET.Controllers
     public class IssueController : ControllerBase
     {
         private readonly IIssue _issueService;
+        private readonly IUserIdentity _userIdentityService;
+        private readonly Lazy<int> _lazyUserId;
 
-        public IssueController(IIssue issueService)
+        public IssueController(IIssue issueService, IUserIdentity userIdentityService)
         {
             _issueService = issueService;
+            _userIdentityService = userIdentityService;
+            _lazyUserId = new Lazy<int>(InitializeUserId);
+        }
+
+        private int InitializeUserId()
+        {
+            return _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+        }
+
+        private int GetUserId()
+        {
+            return _lazyUserId.Value;
         }
 
         [Authorize(Policy = "SupervisorOnly")]
@@ -39,6 +54,20 @@ namespace CompanyPMO_.NET.Controllers
             var issues = await _issueService.GetAllIssues(filterParams);
 
             return Ok(issues);
+        }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpPost("new")]
+        [ProducesResponseType(200, Type = typeof(OperationResult<int>))]
+        [ProducesResponseType(400, Type = typeof(OperationResult<int>))]
+        public async Task<IActionResult> NewIssue([FromBody] IssueDto issue, [FromQuery] int taskId, [FromQuery] bool shouldStartNow)
+        {
+            var result = await _issueService.CreateIssue(issue, GetUserId(), taskId, shouldStartNow);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
         }
     }
 }

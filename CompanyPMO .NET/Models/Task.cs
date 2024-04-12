@@ -23,6 +23,8 @@ namespace CompanyPMO_.NET.Models
         public int TaskCreatorId { get; set; }
         [Column("project_id")]
         public int ProjectId { get; set; }
+        [Column("latest_issue_creation")]
+        public DateTime LatestIssueCreation { get; set; }
 
         // Navigation properties
 

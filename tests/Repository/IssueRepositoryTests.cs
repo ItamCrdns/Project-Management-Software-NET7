@@ -7,6 +7,7 @@ using CompanyPMO_.NET.Repository;
 using FakeItEasy;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Tests.Repository
 {
@@ -56,7 +57,7 @@ namespace Tests.Repository
 
             if (!await dbContext.Tasks.AnyAsync())
             {
-                for (int i = 1 ; i < 4; i++)
+                for (int i = 1; i < 4; i++)
                 {
                     dbContext.Tasks.Add(
                         new CompanyPMO_.NET.Models.Task
@@ -215,6 +216,142 @@ namespace Tests.Repository
             result.Count.Should().BeGreaterThanOrEqualTo(0);
             result.Pages.Should().BeGreaterThanOrEqualTo(0);
             result.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async void IssueRepository_GetIssuesByTaskId_ReturnsIssues()
+        {
+            int taskId = 1;
+
+            var fakeFilterParams = A.Fake<FilterParams>();
+
+            var dbContext = await GetDatabaseContext();
+
+            var issueRepository = new IssueRepository(dbContext, _utility);
+
+            int[] issuesIds = [1, 2, 3];
+
+            var tupleResult = (issuesIds, 3, 1);
+
+            A.CallTo(() => _utility.GetEntitiesByEntityId<Issue>(
+                A<int>._,
+                A<string>._,
+                A<string>._,
+                A<int>._,
+                A<int>._))
+                .Returns(tupleResult);
+
+            Expression<Func<Issue, bool>> fakeBoolExpression = x => true; // Just evaluate to true
+            Expression<Func<Issue, object>> fakeObjectExpression = x => x.Name;
+
+            var tupleExpressionsResult = (fakeBoolExpression, fakeObjectExpression);
+
+            A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Issue>(
+                A<int>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                .Returns(tupleExpressionsResult);
+
+            var result = await issueRepository.GetIssuesByTaskId(taskId, fakeFilterParams);
+
+            result.Should().BeOfType<DataCountPages<IssueDto>>();
+            result.Data.Should().BeOfType<List<IssueDto>>();
+            result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
+            result.Count.Should().BeGreaterThanOrEqualTo(1);
+            result.Pages.Should().BeGreaterThanOrEqualTo(1);
+            result.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async void IssueRepository_GetIssuesByTaskId_ReturnsNoIssues()
+        {
+            int taskId = 9999;
+
+            var fakeFilterParams = A.Fake<FilterParams>();
+
+            var dbContext = await GetDatabaseContext();
+
+            var issueRepository = new IssueRepository(dbContext, _utility);
+
+            int[] issuesIds = [];
+
+            var tupleResult = (issuesIds, 0, 0);
+
+            A.CallTo(() => _utility.GetEntitiesByEntityId<Issue>(
+                A<int>._,
+                A<string>._,
+                A<string>._,
+                A<int>._,
+                A<int>._))
+                .Returns(tupleResult);
+
+            Expression<Func<Issue, bool>> fakeBoolExpression = x => x.Name == "DOES NOT EXIST"; // Just evaluate to true
+            Expression<Func<Issue, object>> fakeObjectExpression = x => x.Name;
+
+            var tupleExpressionsResult = (fakeBoolExpression, fakeObjectExpression);
+
+            A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Issue>(
+                A<int>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                .Returns(tupleExpressionsResult);
+
+            var result = await issueRepository.GetIssuesByTaskId(taskId, fakeFilterParams);
+
+            result.Should().BeOfType<DataCountPages<IssueDto>>();
+            result.Data.Should().BeOfType<List<IssueDto>>();
+            result.Data.Should().HaveCount(0);
+            result.Count.Should().BeGreaterThanOrEqualTo(0);
+            result.Pages.Should().BeGreaterThanOrEqualTo(0);
+            result.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async void IssueRepository_CreateIssue_ReturnsSuccess()
+        {
+            int supervisorId = 1;
+            int taskId = 1;
+
+            IssueDto newIssues = new()
+            {
+                Name = "FakeName",
+                Description = "FakeDescription",
+                Created = DateTime.Now,
+                StartedWorking = DateTime.Now.AddMinutes(15),
+                ExpectedDeliveryDate = DateTime.Now.AddHours(1),
+            };
+
+            var dbContext = await GetDatabaseContext();
+
+            var issueRepository = new IssueRepository(dbContext, _utility);
+
+            var result = await issueRepository.CreateIssue(newIssues, supervisorId, taskId, true);
+
+            result.Should().BeOfType<OperationResult<int>>();
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Issue created successfully");
+        }
+
+        [Fact]
+        public async void IssueRepository_CreateIssue_ReturnsFailure()
+        {
+            int supervisorId = 1;
+            int taskId = 1;
+
+            IssueDto newIssues = new()
+            {
+                Name = "",
+                Description = "",
+                Created = DateTime.Now,
+                StartedWorking = DateTime.Now.AddMinutes(15),
+                ExpectedDeliveryDate = DateTime.Now.AddHours(1),
+            };
+
+            var dbContext = await GetDatabaseContext();
+
+            var issueRepository = new IssueRepository(dbContext, _utility);
+
+            var result = await issueRepository.CreateIssue(newIssues, supervisorId, taskId, false);
+            
+            result.Should().BeOfType<OperationResult<int>>();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Issue name and description are required");
         }
     }
 }

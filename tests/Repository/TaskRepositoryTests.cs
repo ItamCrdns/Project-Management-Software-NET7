@@ -115,8 +115,8 @@ namespace Tests.Repository
                     dbContext.EmployeeTasks.Add(
                         new EmployeeTask
                         {
-                            EmployeeId = (i % 2) + 2,
-                            TaskId = (i % 3) + 1
+                            EmployeeId = i <= 2 ? 4 : i,
+                            TaskId = i
                         });
                 }
             }
@@ -286,7 +286,7 @@ namespace Tests.Repository
         public async void TaskRepository_FinishedWorkingOnTask_ReturnsTrue()
         {
             int taskId = 1;
-            int employeeId = 3;
+            int employeeId = 4;
 
             var dbContext = await GetDatabaseContext();
 
@@ -578,7 +578,7 @@ namespace Tests.Repository
         public async void TaskRepository_IsEmployeeAlreadyInTask_ReturnsTrue()
         {
             int taskId = 1;
-            int employeeId = 3;
+            int employeeId = 4;
 
             var dbContext = await GetDatabaseContext();
 
@@ -658,7 +658,7 @@ namespace Tests.Repository
         public async void TaskRepository_StartingWorkingOnTask_ReturnsTrue()
         {
             int taskId = 1;
-            int employeeId = 3;
+            int employeeId = 4;
 
             var dbContext = await GetDatabaseContext();
 
@@ -878,6 +878,62 @@ namespace Tests.Repository
                 data.Name.Should().NotBeNullOrEmpty();
                 data.Created.Should().NotBe(default);
             }
+        }
+
+        [Fact]
+        public async void TaskRepository_IsParticipant_ReturnsTrue()
+        {
+            int taskId = 7;
+            int employeeId = 7;
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility);
+
+            var result = await taskRepository.IsParticipant(taskId, employeeId);
+
+            result.Should().BeTrue();
+        }
+
+        [Fact]
+        public async void TaskRepository_IsParticipant_ReturnsFalse()
+        {
+            int taskId = 1;
+            int employeeId = 100;
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility);
+
+            var result = await taskRepository.IsParticipant(taskId, employeeId);
+
+            result.Should().BeFalse();
+        }
+
+        [Fact]
+        public async void TaskRepository_IsOwner_ReturnsTrue()
+        {
+            int taskId = 1;
+            int employeeId = 1;
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility);
+
+            var result = await taskRepository.IsOwner(taskId, employeeId);
+
+            result.Should().BeTrue();
+        }
+
+        [Fact]
+        public async void TaskRepository_IsOwner_ReturnsFalse()
+        {
+            int taskId = 1;
+            int employeeId = 100;
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility);
+
+            var result = await taskRepository.IsOwner(taskId, employeeId);
+
+            result.Should().BeFalse();
         }
     }
 }

@@ -13,24 +13,24 @@ namespace CompanyPMO_.NET.Controllers
         private readonly ICompany _companyService;
         private readonly IUserIdentity _userIdentityService;
         private readonly IEmployee _employeeService;
-        private readonly Lazy<Task<int>> _lazyUserId;
+        private readonly Lazy<int> _lazyUserId;
 
         public CompanyController(ICompany companyService, IUserIdentity userIdentityService, IEmployee employeeService)
         {
             _companyService = companyService;
             _userIdentityService = userIdentityService;
             _employeeService = employeeService;
-            _lazyUserId = new Lazy<Task<int>>(InitializeUserId);
+            _lazyUserId = new Lazy<int>(InitializeUserId);
         }
 
-        private async Task<int> InitializeUserId()
+        private int InitializeUserId()
         {
-            return await _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+            return _userIdentityService.GetUserIdFromClaims(HttpContext.User);
         }
 
-        private async Task<int> GetUserId()
+        private int GetUserId()
         {
-            return await _lazyUserId.Value;
+            return _lazyUserId.Value;
         }
 
         [Authorize(Policy = "SupervisorOnly")]
@@ -45,7 +45,7 @@ namespace CompanyPMO_.NET.Controllers
                 return StatusCode(400, ModelState);
             }
 
-            var (created, returnedCompany) = await _companyService.AddCompany(await GetUserId(), newCompany, images, logoFile);
+            var (created, returnedCompany) = await _companyService.AddCompany(GetUserId(), newCompany, images, logoFile);
 
             if (!created)
             {
@@ -66,7 +66,7 @@ namespace CompanyPMO_.NET.Controllers
                 return StatusCode(400, ModelState);
             }
 
-            int companyId = await _companyService.CreateNewCompany(await GetUserId(), newCompany.Name);
+            int companyId = await _companyService.CreateNewCompany(GetUserId(), newCompany.Name);
 
             if (companyId.Equals(0))
             {
@@ -113,7 +113,7 @@ namespace CompanyPMO_.NET.Controllers
                 return StatusCode(400, ModelState);
             }
 
-            var (updated, company) = await _companyService.UpdateCompany(await GetUserId(), companyId, companyDto, images);
+            var (updated, company) = await _companyService.UpdateCompany(GetUserId(), companyId, companyDto, images);
 
             if (!updated)
             {

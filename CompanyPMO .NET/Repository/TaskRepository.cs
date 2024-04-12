@@ -40,6 +40,18 @@ namespace CompanyPMO_.NET.Repository
 
             var project = await _context.Projects.FindAsync(projectId);
 
+            bool isUserOwner = await _context.Projects.AnyAsync(p => p.ProjectId.Equals(projectId) && p.ProjectCreatorId.Equals(employeeId));
+
+            if (project is null || !isUserOwner)
+            {
+                return new OperationResult<int>
+                {
+                    Success = false,
+                    Message = "Project not found or you are not the owner",
+                    Data = 0
+                };
+            }
+
             var newTask = new Models.Task
             {
                 Name = task.Name,
@@ -217,12 +229,12 @@ namespace CompanyPMO_.NET.Repository
 
             var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Models.Task>(projectId, taskIds, "TaskId", "ProjectId", "Created", filterParams);
 
-            bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
-            bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
+            bool shallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
+            bool shallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
 
             List<Models.Task> tasks = new();
 
-            if (ShallOrderAscending)
+            if (shallOrderAscending)
             {
                 tasks = await _context.Tasks
                     .Where(whereExpression)
@@ -232,7 +244,7 @@ namespace CompanyPMO_.NET.Repository
                     .Include(p => p.Project)
                     .ToListAsync();
             }
-            else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
+            else if (shallOrderDescending || (!shallOrderAscending && !shallOrderDescending))
             {
                 tasks = await _context.Tasks
                     .Where(whereExpression)
@@ -497,5 +509,11 @@ namespace CompanyPMO_.NET.Repository
                 Pages = totalPages
             };
         }
+
+        public async Task<bool> IsParticipant(int taskId, int employeeId) => await _context.EmployeeTasks
+            .AnyAsync(et => et.TaskId.Equals(taskId) && et.EmployeeId.Equals(employeeId));
+
+        public async Task<bool> IsOwner(int taskId, int employeeId) => await _context.Tasks
+            .AnyAsync(t => t.TaskId.Equals(taskId) && t.TaskCreatorId.Equals(employeeId));
     }
 }

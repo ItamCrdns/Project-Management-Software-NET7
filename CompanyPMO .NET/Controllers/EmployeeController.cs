@@ -189,7 +189,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetEmployeesShowcasePaginated(int page, int pageSize)
         {
-            int employeeId = await _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User);
 
             var employees = await _employeeService.GetEmployeesShowcasePaginated(employeeId, page, pageSize);
 
@@ -207,7 +207,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> SearchEmployeesShowcasePaginated(string employee, int page, int pageSize)
         {
-            int employeeId = await _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User);
 
             var employees = await _employeeService.SearchEmployeesShowcasePaginated(employeeId, employee, page, pageSize);
 
@@ -304,7 +304,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(Employee))]
         public async Task<IActionResult> GetEmployeeByIdForClaims()
         {
-            int employeeId = await _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
+            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
 
             TierDto tier = await _employeeService.GetEmployeeTier(employeeId);
 
@@ -316,7 +316,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(EmployeeDto))]
         public async Task<IActionResult> GetMyEmployee()
         {
-            int employeeId = await _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
+            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
 
             // Get the username because im lazy
             string username = await _employeeService.GetEmployeeUsernameById(employeeId);
@@ -332,7 +332,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesErrorResponseType(typeof(OperationResult<EmployeeShowcaseDto>))]
         public async Task<IActionResult> UpdateMyEmployee([FromForm] UpdateEmployeeDto employee, [FromForm] IFormFile? profilePicture, [FromForm] string currentPassword)
         {
-            int employeeId = await _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
+            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
 
             var result = await _employeeService.UpdateEmployee(employeeId, employee, profilePicture, currentPassword);
 
