@@ -141,9 +141,15 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}/limited")]
         [ProducesResponseType(200, Type = typeof(EntityParticipantOrOwnerDTO<ProjectSomeInfoDto>))]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> GetProjectNameCreatorAndTeam(int projectId)
         {
             var project = await _projectService.GetProjectNameCreatorLifecyclePriorityAndTeam(projectId);
+
+            if (project is null)
+            {
+                return NotFound();
+            }
 
             bool isParticipantOfProject = await _projectService.IsParticipant(projectId, GetUserId());
 

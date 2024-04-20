@@ -153,7 +153,18 @@ namespace CompanyPMO_.NET.Controllers
         {
             var issues = await _issueService.GetIssuesByTaskId(taskId, filterParams);
 
-            return Ok(issues);
+            bool isTaskParticipant = await _taskService.IsParticipant(taskId, GetUserId());
+
+            bool isOwner = await _taskService.IsOwner(taskId, GetUserId());
+
+            var result = new Dictionary<string, object>
+            {
+                { "entity", issues },
+                { "isTaskParticipant", isTaskParticipant },
+                { "isTaskOwner", isOwner }
+            };
+
+            return Ok(result);
         }
     }
 }

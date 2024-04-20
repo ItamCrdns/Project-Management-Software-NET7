@@ -145,7 +145,8 @@ namespace CompanyPMO_.NET.Repository
                         Task = new TaskShowcaseDto
                         {
                             TaskId = x.Task.TaskId,
-                            Name = x.Task.Name
+                            Name = x.Task.Name,
+                            ProjectId = x.Task.ProjectId
                         }
                     })
                     .ToListAsync();
@@ -175,7 +176,8 @@ namespace CompanyPMO_.NET.Repository
                         Task = new TaskShowcaseDto
                         {
                             TaskId = x.Task.TaskId,
-                            Name = x.Task.Name
+                            Name = x.Task.Name,
+                            ProjectId = x.Task.ProjectId
                         }
                     })
                     .ToListAsync();
