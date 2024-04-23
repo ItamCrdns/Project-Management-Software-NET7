@@ -763,5 +763,37 @@ namespace tests.Repository
             result.Data.Should().BeOfType(typeof(EmployeeShowcaseDto));
             result.Data.Should().NotBeNull();
         }
+
+        [Fact]
+        public async void EmployeeRepository_ConfirmPassword_ReturnsSuccess()
+        {
+            int employeeId = 1;
+            string password = "test0";
+
+            var dbContext = await GetDatabaseContext();
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+
+            var result = await employeeRepository.ConfirmPassword(employeeId, password);
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Password confirmed");
+        }
+
+        [Fact]
+        public async void EmployeeRepository_ConfirmPassword_ReturnsFailure()
+        {
+            int employeeId = 1;
+            string password = "test99999999999999";
+
+            var dbContext = await GetDatabaseContext();
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+
+            var result = await employeeRepository.ConfirmPassword(employeeId, password);
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Password does not match");
+        }
     }
 }

@@ -133,7 +133,9 @@ namespace CompanyPMO_.NET.Repository
         public async Task<Employee> GetEmployeeById(int employeeId)
         {
             return await _context.Employees
-                .FindAsync(employeeId);
+                .Where(x => x.EmployeeId == employeeId)
+                .Include(t => t.Tier)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<Employee>> GetEmployeesBySupervisorId(int supervisorId)
@@ -787,6 +789,22 @@ namespace CompanyPMO_.NET.Repository
             else
             {
                 return new OperationResult<EmployeeShowcaseDto> { Success = false, Message = "Something went wrong", Data = new EmployeeShowcaseDto() };
+            }
+        }
+
+        public async Task<OperationResult<bool>> ConfirmPassword(int employeeId, string password)
+        {
+            var pw = await _context.Employees.Where(x => x.EmployeeId == employeeId).Select(x => x.Password).FirstOrDefaultAsync(); 
+
+            bool passwordMatches = BCrypt.Net.BCrypt.Verify(password, pw);
+            
+            if (passwordMatches)
+            {
+                return new OperationResult<bool> { Success = true, Message = "Password confirmed", Data = true };
+            }
+            else
+            {
+                return new OperationResult<bool> { Success = false, Message = "Password does not match", Data = false };
             }
         }
     }

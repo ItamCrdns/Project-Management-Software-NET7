@@ -28,5 +28,6 @@ namespace CompanyPMO_.NET.Interfaces
         Task<string> GetEmployeeUsernameById(int employeeId);
         Task<Dictionary<string, object>> GetAndSearchEmployeesByProjectsCreatedInClient(string? employeeIds, int clientId, int page, int pageSize);
         Task<IEnumerable<EmployeeShowcaseDto>> GetEmployeesFromAListOfEmployeeIds(string employeeIds); // * STRING SHOULD BE A LIST OF INTEGERS SEPARATED BY '-' (i.e 1-2-3-4-5)
+        Task<OperationResult<bool>> ConfirmPassword(int employeeId, string password);
     }
 }

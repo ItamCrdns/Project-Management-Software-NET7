@@ -17,4 +17,9 @@
         public int TierId { get; set; }
         public int? SupervisorId { get; set; }
     }
+
+    public class EmployeePasswordDto
+    {
+        public string Password { get; set; }
+    }
 }

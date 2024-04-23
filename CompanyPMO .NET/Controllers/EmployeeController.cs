@@ -318,10 +318,7 @@ namespace CompanyPMO_.NET.Controllers
         {
             int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
 
-            // Get the username because im lazy
-            string username = await _employeeService.GetEmployeeUsernameById(employeeId);
-
-            EmployeeDto employee = await _employeeService.GetEmployeeByUsername(username);
+            var employee = await _employeeService.GetEmployeeById(employeeId);
 
             return Ok(employee);
         }
@@ -369,6 +366,22 @@ namespace CompanyPMO_.NET.Controllers
             }
 
             return Ok(employees);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpPost("me/confirm-password")]
+        public async Task<IActionResult> ConfirmPassword([FromBody] EmployeePasswordDto employee)
+        {
+            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
+
+            var isPasswordCorrect = await _employeeService.ConfirmPassword(employeeId, employee.Password);
+
+            if (isPasswordCorrect == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(isPasswordCorrect);
         }
     }
 }
