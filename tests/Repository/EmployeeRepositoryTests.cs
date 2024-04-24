@@ -65,9 +65,10 @@ namespace tests.Repository
                             LockedEnabled = true,
                             LoginAttempts = i,
                             LockedUntil = DateTime.UtcNow,
-                            SupervisorId = i
+                            SupervisorId = i,
+                            PasswordVerified = i == 8 ? null : DateTime.UtcNow.AddMinutes(-i)
                         });
-                }
+                };
             }
 
             if (!await dbContext.Tiers.AnyAsync())
@@ -794,6 +795,54 @@ namespace tests.Repository
             result.Should().NotBeNull();
             result.Success.Should().BeFalse();
             result.Message.Should().Be("Password does not match");
+        }
+
+        [Fact]
+        public async void EmployeeRepository_PasswordLastVerification_ReturnsSuccess()
+        {
+            int employeeId = 1;
+
+            var dbContext = await GetDatabaseContext();
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+
+            var result = await employeeRepository.PasswordLastVerification(employeeId);
+
+            result.Should().NotBeNull();
+            result.Should().BeOfType(typeof(OperationResult<DateTime>));
+            result.Message.Should().Be("Password has been verified");
+            result.Success.Should().BeTrue();
+        }
+
+        [Fact]
+        public async void EmployeeRepository_PasswordLastVerification_ReturnsFailure()
+        {
+            int employeeId = 7;
+
+            var dbContext = await GetDatabaseContext();
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+
+            var result = await employeeRepository.PasswordLastVerification(employeeId);
+
+            result.Should().NotBeNull();
+            result.Should().BeOfType(typeof(OperationResult<DateTime>));
+            result.Message.Should().Be("Password not verified in the last 5 minutes");
+            result.Success.Should().BeFalse();
+        }
+
+        [Fact]
+        public async void EmployeeRepository_PasswordLastVerification_ReturnsNull()
+        {
+            int employeeId = 9;
+
+            var dbContext = await GetDatabaseContext();
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+
+            var result = await employeeRepository.PasswordLastVerification(employeeId);
+
+            result.Should().NotBeNull();
+            result.Should().BeOfType(typeof(OperationResult<DateTime>));
+            result.Message.Should().Be("Password has never been verified");
+            result.Success.Should().BeFalse();
         }
     }
 }

@@ -370,6 +370,7 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpPost("me/confirm-password")]
+        [ProducesResponseType(200, Type = typeof(OperationResult<bool>))]
         public async Task<IActionResult> ConfirmPassword([FromBody] EmployeePasswordDto employee)
         {
             int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
@@ -382,6 +383,18 @@ namespace CompanyPMO_.NET.Controllers
             }
 
             return Ok(isPasswordCorrect);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("me/password-last-verification")]
+        [ProducesResponseType(200, Type = typeof(OperationResult<DateTime>))]
+        public async Task<IActionResult> PasswordLastVerification()
+        {
+            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
+
+            var lastVerification = await _employeeService.PasswordLastVerification(employeeId);
+
+            return Ok(lastVerification);
         }
     }
 }

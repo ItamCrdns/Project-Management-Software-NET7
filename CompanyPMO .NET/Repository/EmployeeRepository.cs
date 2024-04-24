@@ -5,6 +5,7 @@ using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using CompanyPMO_.NET.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -800,11 +801,53 @@ namespace CompanyPMO_.NET.Repository
             
             if (passwordMatches)
             {
-                return new OperationResult<bool> { Success = true, Message = "Password confirmed", Data = true };
+                var employee = await _context.Employees.FindAsync(employeeId);
+                employee.PasswordVerified = DateTime.UtcNow;
+                int rowsAffected = await _context.SaveChangesAsync();
+
+                string message = rowsAffected > 0 ? "Password confirmed" : "Password confirmed, but failed to update the database";
+
+                return new OperationResult<bool> { Success = true, Message = message, Data = true };
             }
             else
             {
                 return new OperationResult<bool> { Success = false, Message = "Password does not match", Data = false };
+            }
+        }
+
+        public async Task<OperationResult<DateTime>> PasswordLastVerification(int employeeId)
+        {
+            DateTime? lastVerification = await _context.Employees.Where(x => x.EmployeeId == employeeId).Select(x => x.PasswordVerified).FirstOrDefaultAsync();
+
+            if (lastVerification is null)
+            {
+                return new OperationResult<DateTime>
+                {
+                    Success = false,
+                    Message = "Password has never been verified",
+                    Data = DateTime.UtcNow
+                };
+            }
+
+            DateTime lastVerificationPlus5 = lastVerification.Value.AddMinutes(5);
+
+            if (DateTime.UtcNow < lastVerificationPlus5)
+            {
+                return new OperationResult<DateTime>
+                {
+                    Success = true,
+                    Message = "Password has been verified",
+                    Data = lastVerification.Value
+                };
+            }
+            else
+            {
+                return new OperationResult<DateTime>
+                {
+                    Success = false,
+                    Message = "Password not verified in the last 5 minutes",
+                    Data = lastVerification.Value
+                };
             }
         }
     }

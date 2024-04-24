@@ -42,6 +42,8 @@ namespace CompanyPMO_.NET.Models
         public DateTime? LockedUntil { get; set; }
         [Column("supervisor_id")]
         public int? SupervisorId { get; set; }
+        [Column("password_verified")]
+        public DateTime? PasswordVerified { get; set; } // Timestamp of the last time the employee verified their password
 
         // Navigation properties
 
