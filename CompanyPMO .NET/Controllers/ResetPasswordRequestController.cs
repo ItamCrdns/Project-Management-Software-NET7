@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Interfaces;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,9 +10,11 @@ namespace CompanyPMO_.NET.Controllers
     public class ResetPasswordRequestController : ControllerBase
     {
         private readonly IResetPasswordRequest _resetPasswordRequestService;
-        public ResetPasswordRequestController(IResetPasswordRequest resetPasswordRequestService)
+        private readonly IUserIdentity _userIdentityService;
+        public ResetPasswordRequestController(IResetPasswordRequest resetPasswordRequestService, IUserIdentity userIdentityService)
         {
             _resetPasswordRequestService = resetPasswordRequestService;
+            _userIdentityService = userIdentityService;
         }
 
         [HttpGet("exists/{requestGuid}")]
@@ -39,11 +42,35 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(result);
         }
 
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword)
+        {
+            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+
+            var result = await _resetPasswordRequestService.ResetPasswordWithCurrentPassword(employeeId, currentPassword, newPassword);
+
+            return Ok(result);
+        }
+
         [AllowAnonymous]
         [HttpGet("is-token-valid")]
+        [ProducesResponseType(200, Type = typeof(OperationResult<bool>))]
+        [ProducesResponseType(400, Type = typeof(OperationResult<bool>))]
+        [ProducesResponseType(404, Type = typeof(OperationResult<bool>))]
         public async Task<IActionResult> IsTokenValid(int token, Guid requestGuid)
         {
             var result = await _resetPasswordRequestService.IsTokenValid(token, requestGuid);
+
+            if (result.Message == "Employee not found.")
+            {
+                return NotFound(result);
+            }
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
 
             return Ok(result);
         }

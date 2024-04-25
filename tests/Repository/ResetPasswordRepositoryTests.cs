@@ -302,5 +302,74 @@ namespace Tests.Repository
             result.Success.Should().BeFalse();
             result.Message.Should().Be("The token provided is invalid or has expired.");
         }
+
+        [Fact]
+        public async void ResetPasswordRequestRepository_ResetPasswordWithCurrentPassword_ReturnsSuccess()
+        {
+            var dbContext = await GetDatabaseContext();
+            var repository = new ResetPasswordRequestRepository(dbContext, _emailSender);
+
+            var result = await repository.ResetPasswordWithCurrentPassword(1, "test0", "newPassword");
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Your password has been reset successfully.");
+        }
+
+        [Fact]
+        public async void ResetPasswordRequestRepository_ResetPasswordWithCurrentPassword_ReturnsFailureWrongPassword()
+        {
+            var dbContext = await GetDatabaseContext();
+            var repository = new ResetPasswordRequestRepository(dbContext, _emailSender);
+
+            var result = await repository.ResetPasswordWithCurrentPassword(1, "wrongPassword", "newPassword");
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("The current password provided is incorrect.");
+            result.Data.Should().BeFalse();
+        }
+
+        [Fact]
+        public async void ResetPasswordRequestRepository_ResetPasswordWithCurrentPassword_ReturnsFailureAnyFieldEmpytString()
+        {
+            var dbContext = await GetDatabaseContext();
+            var repository = new ResetPasswordRequestRepository(dbContext, _emailSender);
+
+            var result = await repository.ResetPasswordWithCurrentPassword(1, "test0", "   ");
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Please fill all fields.");
+            result.Data.Should().BeFalse();
+        }
+
+        [Fact]
+        public async void ResetPasswordRequestRepository_ResetPasswordWithCurrentPassword_ReturnsFailureNoEmployee()
+        {
+            var dbContext = await GetDatabaseContext();
+            var repository = new ResetPasswordRequestRepository(dbContext, _emailSender);
+
+            var result = await repository.ResetPasswordWithCurrentPassword(999, "test0", "newPassword");
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Employee not found.");
+            result.Data.Should().BeFalse();
+        }
+
+        [Fact]
+        public async void ResetPasswordRequestRepository_ResetPasswordWithCurrentPassword_ReturnsFailurePasswordTooShort()
+        {
+            var dbContext = await GetDatabaseContext();
+            var repository = new ResetPasswordRequestRepository(dbContext, _emailSender);
+
+            var result = await repository.ResetPasswordWithCurrentPassword(1, "test0", "123");
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("The new password must be at least 8 characters long.");
+            result.Data.Should().BeFalse();
+        }
     }
 }

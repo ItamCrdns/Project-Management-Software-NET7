@@ -166,5 +166,48 @@ namespace CompanyPMO_.NET.Repository
 
             return new OperationResult<bool> { Success = true, Message = "Valid" };
         }
+
+        public async Task<OperationResult<bool>> ResetPasswordWithCurrentPassword(int employeeId, string currentPassword, string newPassword)
+        {
+            if (employeeId == 0 || string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
+            {
+                return new OperationResult<bool> { Success = false, Message = "Please fill all fields." };
+            }
+
+            if (newPassword.Length < 8)
+            {
+                return new OperationResult<bool> { Success = false, Message = "The new password must be at least 8 characters long." };
+            }
+
+            var employee = await _context.Employees.FindAsync(employeeId);
+
+            if (employee is null)
+            {
+                return new OperationResult<bool> { Success = false, Message = "Employee not found." };
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(currentPassword, employee.Password))
+            {
+                return new OperationResult<bool> { Success = false, Message = "The current password provided is incorrect." };
+            }
+
+            string salt = BCrypt.Net.BCrypt.GenerateSalt();
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword, salt);
+
+            employee.Password = hashedPassword;
+
+            _context.Employees.Update(employee);
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                return new OperationResult<bool> { Success = true, Message = "Your password has been reset successfully." };
+            }
+            else
+            {
+                return new OperationResult<bool> { Success = false, Message = "Something went wrong" };
+            }
+        }
     }
 }
