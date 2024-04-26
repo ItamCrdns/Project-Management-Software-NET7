@@ -327,7 +327,7 @@ namespace CompanyPMO_.NET.Controllers
         [HttpPatch("me/update")]
         [ProducesResponseType(200, Type = typeof(OperationResult<EmployeeShowcaseDto>))]
         [ProducesErrorResponseType(typeof(OperationResult<EmployeeShowcaseDto>))]
-        public async Task<IActionResult> UpdateMyEmployee([FromForm] UpdateEmployeeDto employee, [FromForm] IFormFile? profilePicture, [FromForm] string currentPassword)
+        public async Task<IActionResult> UpdateMyEmployee([FromForm] UpdateEmployeeDto employee, [FromForm] IFormFile? profilePicture, [FromForm] string? currentPassword)
         {
             int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
 

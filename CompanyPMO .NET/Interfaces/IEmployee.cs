@@ -7,7 +7,7 @@ namespace CompanyPMO_.NET.Interfaces
     public interface IEmployee
     {
         Task<(string result, bool status)> RegisterEmployee(EmployeeRegisterDto employee, IFormFile image);
-        Task<OperationResult<EmployeeShowcaseDto>> UpdateEmployee(int employeeId, UpdateEmployeeDto employee, IFormFile? image, string currentPassword);
+        Task<OperationResult<EmployeeShowcaseDto>> UpdateEmployee(int employeeId, UpdateEmployeeDto employee, IFormFile? image, string? currentPassword);
         Task<(AuthenticationResult result, string message, EmployeeDto employee)> AuthenticateEmployee(string username, string password);
         Task<bool?> IsAccountLocked(string username);
         Task<Employee> GetEmployeeForClaims(string username);

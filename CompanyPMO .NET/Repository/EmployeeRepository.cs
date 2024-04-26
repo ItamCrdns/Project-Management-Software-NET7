@@ -720,7 +720,7 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<OperationResult<EmployeeShowcaseDto>> UpdateEmployee(int employeeId, UpdateEmployeeDto employee, IFormFile? profilePicture, string currentPassword)
+        public async Task<OperationResult<EmployeeShowcaseDto>> UpdateEmployee(int employeeId, UpdateEmployeeDto employee, IFormFile? profilePicture, string? currentPassword)
         {
             Employee employeeToUpdate = await _context.Employees.FindAsync(employeeId);
 
@@ -729,9 +729,23 @@ namespace CompanyPMO_.NET.Repository
                 return new OperationResult<EmployeeShowcaseDto> { Success = false, Message = "Employee not found", Data = new EmployeeShowcaseDto() };
             }
 
-            if (!BCrypt.Net.BCrypt.Verify(currentPassword, employeeToUpdate.Password))
+            if (currentPassword is null || string.IsNullOrWhiteSpace(currentPassword))
             {
-                return new OperationResult<EmployeeShowcaseDto> { Success = false, Message = "Wrong password", Data = new EmployeeShowcaseDto() };
+                // If the password has been verified it means the user has provided the correct password no more than 5 minutes ago
+                var latestVerification = await PasswordLastVerification(employeeId);
+
+                if (latestVerification.Success is false)
+                {
+                    return new OperationResult<EmployeeShowcaseDto> { Success = false, Message = latestVerification.Message, Data = new EmployeeShowcaseDto() };
+                }
+                // If true we just continue with the updateq
+            }
+            else // If a password is provided compare
+            {
+                if (!BCrypt.Net.BCrypt.Verify(currentPassword, employeeToUpdate.Password))
+                {
+                    return new OperationResult<EmployeeShowcaseDto> { Success = false, Message = "Wrong password", Data = new EmployeeShowcaseDto() };
+                }
             }
 
             if (employee.Email is not null && !string.IsNullOrWhiteSpace(employee.Email))
@@ -795,10 +809,10 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<OperationResult<bool>> ConfirmPassword(int employeeId, string password)
         {
-            var pw = await _context.Employees.Where(x => x.EmployeeId == employeeId).Select(x => x.Password).FirstOrDefaultAsync(); 
+            var pw = await _context.Employees.Where(x => x.EmployeeId == employeeId).Select(x => x.Password).FirstOrDefaultAsync();
 
             bool passwordMatches = BCrypt.Net.BCrypt.Verify(password, pw);
-            
+
             if (passwordMatches)
             {
                 var employee = await _context.Employees.FindAsync(employeeId);

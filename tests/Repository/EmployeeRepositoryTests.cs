@@ -766,6 +766,26 @@ namespace tests.Repository
         }
 
         [Fact]
+        public async void EmployeeRepository_UpdateEmployee_ReturnsFailurePasswordNotProvidedAndNotVerifiedInTheLast5Mins()
+        {
+            int employeeId = 8;
+            var fakeEmployee = A.Fake<UpdateEmployeeDto>();
+            fakeEmployee.Email = "update";
+            var fakeImage = A.Fake<IFormFile>();
+
+            var dbContext = await GetDatabaseContext();
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+
+            var result = await employeeRepository.UpdateEmployee(employeeId, fakeEmployee, fakeImage, null);
+
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Password not verified in the last 5 minutes");
+            result.Success.Should().BeFalse();
+            result.Data.Should().BeOfType(typeof(EmployeeShowcaseDto));
+            result.Data.Should().NotBeNull();
+        }
+
+        [Fact]
         public async void EmployeeRepository_ConfirmPassword_ReturnsSuccess()
         {
             int employeeId = 1;
