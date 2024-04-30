@@ -199,12 +199,18 @@ namespace Tests.EmployeeControllerTests
         {
             // Arrange
             int supervisorId = 1;
-            var employees = A.Fake<IEnumerable<Employee>>();
+            int page = 1;
+            int pageSize = 5;
 
-            A.CallTo(() => _employeeService.GetEmployeesBySupervisorId(supervisorId)).Returns(employees);
+            var employees = A.Fake<DataCountPages<EmployeeShowcaseDto>>();
+
+            employees.Count = 3;
+
+            A.CallTo(() => _userIdentityService.GetUserIdFromClaims(A<ClaimsPrincipal>.Ignored)).Returns(supervisorId);
+            A.CallTo(() => _employeeService.GetEmployeesBySupervisorId(supervisorId, page, pageSize)).Returns(employees);
 
             // Act
-            var result = await _employeeController.GetEmployeesBySupervisorId(supervisorId);
+            var result = await _employeeController.GetEmployeesBySupervisorId(page, pageSize);
 
             // Assert
             result.Should().BeAssignableTo<IActionResult>();
@@ -215,13 +221,16 @@ namespace Tests.EmployeeControllerTests
         public async void EmplyeeController_GetEmployeesBySupervisorId_ReturnNotFound()
         {
             // Arrange
-            int supervisorId = 1;
-            IEnumerable<Employee> nullEmployees = null;
+            int supervisorId = 999;
+            int page = 1;
+            int pageSize = 5;
+            var employees = A.Fake<DataCountPages<EmployeeShowcaseDto>>();
 
-            A.CallTo(() => _employeeService.GetEmployeesBySupervisorId(supervisorId)).Returns(nullEmployees);
+            A.CallTo(() => _userIdentityService.GetUserIdFromClaims(A<ClaimsPrincipal>.Ignored)).Returns(supervisorId);
+            A.CallTo(() => _employeeService.GetEmployeesBySupervisorId(supervisorId, page, pageSize)).Returns(employees);
 
             // Act
-            var result = await _employeeController.GetEmployeesBySupervisorId(supervisorId);
+            var result = await _employeeController.GetEmployeesBySupervisorId(page, pageSize);
 
             // Assert
             result.Should().BeAssignableTo<IActionResult>();

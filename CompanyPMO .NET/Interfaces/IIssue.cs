@@ -12,5 +12,6 @@ namespace CompanyPMO_.NET.Interfaces
         ICollection<IssueDto> IssueSelectQuery(ICollection<Issue> issues); 
         Task<DataCountPages<IssueDto>> GetIssuesByTaskId(int taskId, FilterParams filterParams);
         Task<OperationResult<int>> CreateIssue(IssueDto issue, int employeeId, int taskId, bool shouldStartNow);
+        Task<EntityParticipantOrOwnerDTO<IssueDto>> GetIssueById(int issueId, int taskId, int projectId, int userId);
     }
 }

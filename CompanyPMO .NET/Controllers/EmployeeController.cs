@@ -111,14 +111,16 @@ namespace CompanyPMO_.NET.Controllers
         }
 
         [Authorize(Policy = "SupervisorOnly")]
-        [HttpGet("supervisor/{supervisorId}/employees")]
-        [ProducesResponseType(200, Type = typeof(Employee))]
+        [HttpGet("my-team")]
+        [ProducesResponseType(200, Type = typeof(DataCountPages<EmployeeShowcaseDto>))]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> GetEmployeesBySupervisorId(int supervisorId)
+        public async Task<IActionResult> GetEmployeesBySupervisorId(int page = 1, int pageSize = 5)
         {
-            IEnumerable<Employee> employees = await _employeeService.GetEmployeesBySupervisorId(supervisorId);
+            int supervisorId = _userIdentityService.GetUserIdFromClaims(HttpContext.User);
 
-            if (employees == null)
+            var employees = await _employeeService.GetEmployeesBySupervisorId(supervisorId, page, pageSize);
+
+            if (employees == null || employees.Count == 0)
             {
                 return NotFound();
             }

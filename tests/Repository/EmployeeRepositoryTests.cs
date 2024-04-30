@@ -65,7 +65,7 @@ namespace tests.Repository
                             LockedEnabled = true,
                             LoginAttempts = i,
                             LockedUntil = DateTime.UtcNow,
-                            SupervisorId = i,
+                            SupervisorId = i == 8 ? null : i,
                             PasswordVerified = i == 8 ? null : DateTime.UtcNow.AddMinutes(-i)
                         });
                 };
@@ -170,14 +170,39 @@ namespace tests.Repository
         public async void EmployeeRepository_GetEmployeeBySupervisorId_ReturnsListOfEmployees()
         {
             int id = 1;
+            int page = 1;
+            int pageSize = 5;
+
             var dbContext = await GetDatabaseContext();
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 
-            var result = await employeeRepository.GetEmployeesBySupervisorId(id);
+            var result = await employeeRepository.GetEmployeesBySupervisorId(id, page, pageSize);
 
             result.Should().NotBeNull();
-            result.Should().HaveCountGreaterThanOrEqualTo(1);
-            result.Should().BeOfType(typeof(List<Employee>));
+            result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
+            result.Count.Should().BeGreaterThanOrEqualTo(1);
+            result.Pages.Should().BeGreaterThanOrEqualTo(1);
+            result.Should().BeOfType(typeof(DataCountPages<EmployeeShowcaseDto>));
+            result.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
+        }
+
+        [Fact]
+        public async void EmployeeRepository_GetEmployeeBySupervisorId_ReturnsNoEmployees()
+        {
+            int id = 8;
+            int page = 1;
+            int pageSize = 5;
+
+            var dbContext = await GetDatabaseContext();
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+
+            var result = await employeeRepository.GetEmployeesBySupervisorId(id, page, pageSize);
+
+            result.Should().NotBeNull();
+            result.Data.Should().HaveCount(0);
+            result.Count.Should().Be(0);
+            result.Pages.Should().Be(0);
+            result.Should().BeOfType(typeof(DataCountPages<EmployeeShowcaseDto>));
         }
 
         [Fact]

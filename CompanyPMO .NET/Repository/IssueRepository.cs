@@ -109,6 +109,47 @@ namespace CompanyPMO_.NET.Repository
             }; ;
         }
 
+        public async Task<EntityParticipantOrOwnerDTO<IssueDto>?> GetIssueById(int issueId, int taskId, int projectId, int userId)
+        {
+            return await _context.Issues
+                .Where(i => i.IssueId == issueId && i.TaskId == taskId && i.Task.ProjectId == projectId)
+                .Select(x => new EntityParticipantOrOwnerDTO<IssueDto>
+                {
+                    Entity = new IssueDto
+                    {
+                        IssueId = x.IssueId,
+                        Name = x.Name,
+                        Description = x.Description,
+                        Created = x.Created,
+                        StartedWorking = x.StartedWorking,
+                        ExpectedDeliveryDate = x.ExpectedDeliveryDate,
+                        Finished = x.Finished,
+                        IssueCreator = new EmployeeShowcaseDto
+                        {
+                            EmployeeId = x.IssueCreator.EmployeeId,
+                            Username = x.IssueCreator.Username,
+                            ProfilePicture = x.IssueCreator.ProfilePicture
+                        },
+                        Employees = x.Employees.Select(e => new EmployeeShowcaseDto
+                        {
+                            EmployeeId = e.EmployeeId,
+                            Username = e.Username,
+                            ProfilePicture = e.ProfilePicture
+                        }).ToList(),
+                        EmployeeCount = x.Employees.Count,
+                        Task = new TaskShowcaseDto
+                        {
+                            TaskId = x.Task.TaskId,
+                            Name = x.Task.Name,
+                            ProjectId = x.Task.ProjectId
+                        }
+                    },
+                    IsOwner = x.IssueCreatorId == userId,
+                    IsParticipant = x.Employees.Any(e => e.EmployeeId == userId)
+                })
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<DataCountPages<IssueDto>> GetIssuesByTaskId(int taskId, FilterParams filterParams)
         {
             var (issueIds, totalIssuesCount, totalPages) = await _utilityService.GetEntitiesByEntityId<Issue>(taskId, "TaskId", "IssueId", filterParams.Page, filterParams.PageSize);

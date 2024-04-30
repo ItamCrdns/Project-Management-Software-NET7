@@ -10,8 +10,10 @@ namespace CompanyPMO_.NET.Dto
         public DateTime? Created { get; set; }
         public DateTime? StartedWorking { get; set; }
         public DateTime? ExpectedDeliveryDate { get; set; }
+        public DateTime? Finished { get; set; }
         public IEnumerable<EmployeeShowcaseDto>? Employees { get; set; }
         public EmployeeShowcaseDto? IssueCreator { get; set; }
+        public int EmployeeCount { get; set; }
         public TaskShowcaseDto? Task { get; set; }
     }
 }

@@ -52,9 +52,15 @@ namespace CompanyPMO_.NET.Controllers
 
         [HttpGet("{taskId}")]
         [ProducesResponseType(200, Type = typeof(EntityParticipantOrOwnerDTO<TaskDto>))]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> GetTaskById(int taskId, int projectId)
         {
             var task = await _taskService.GetTaskById(taskId, projectId, GetUserId());
+
+            if (task is null)
+            {
+                return NotFound();
+            }
 
             return Ok(task);
         }

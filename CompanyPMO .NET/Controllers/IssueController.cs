@@ -69,5 +69,20 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("{issueId}")]
+        [ProducesResponseType(200, Type = typeof(EntityParticipantOrOwnerDTO<IssueDto>))]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetIssueById(int issueId, int taskId, int projectId)
+        {
+            var issue = await _issueService.GetIssueById(issueId, taskId, projectId, GetUserId());
+
+            if (issue is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(issue);
+        }
     }
 }

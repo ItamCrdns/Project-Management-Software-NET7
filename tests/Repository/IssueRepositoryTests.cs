@@ -103,7 +103,7 @@ namespace Tests.Repository
 
             if (!await dbContext.Employees.AnyAsync())
             {
-                for (int i = 1; i < 11; i++)
+                for (int i = 2; i < 11; i++)
                 {
                     dbContext.EmployeeIssues.Add(
                         new EmployeeIssue
@@ -111,6 +111,12 @@ namespace Tests.Repository
                             EmployeeId = i,
                             IssueId = i
                         });
+
+                    dbContext.EmployeeIssues.Add(new EmployeeIssue
+                    {
+                        EmployeeId = i,
+                        IssueId = 1
+                    });
                 }
             }
 
@@ -352,6 +358,44 @@ namespace Tests.Repository
             result.Should().BeOfType<OperationResult<int>>();
             result.Success.Should().BeFalse();
             result.Message.Should().Be("Issue name and description are required");
+        }
+
+        [Fact]
+        public async void IssueRepository_GetIssueById_ReturnsIssue()
+        {
+            int issueId = 1;
+            int taskId = 1;
+            int projectId = 1;
+            int userId = 1;
+
+            var dbContext = await GetDatabaseContext();
+
+            var issueRepository = new IssueRepository(dbContext, _utility);
+
+            var result = await issueRepository.GetIssueById(issueId, taskId, projectId, userId);
+
+            result.Should().NotBeNull();
+            result.Should().BeOfType<EntityParticipantOrOwnerDTO<IssueDto>>();
+            result.Entity.Should().NotBeNull();
+            result.Entity.Should().BeOfType<IssueDto>();
+            result.Entity.IssueCreator.Should().NotBeNull();
+            result.Entity.IssueCreator.Should().BeOfType<EmployeeShowcaseDto>();
+            result.Entity.IssueCreator.Username.Should().NotBeNullOrEmpty();
+            result.Entity.IssueCreator.Username.Should().NotBeNullOrWhiteSpace();
+            result.Entity.Task.Should().NotBeNull();
+            result.Entity.Task.Should().BeOfType<TaskShowcaseDto>();
+            result.Entity.Task.Name.Should().NotBeNullOrEmpty();
+            result.Entity.EmployeeCount.Should().BeGreaterThanOrEqualTo(1);
+            result.Entity.Employees.Should().NotBeEmpty();
+            result.Entity.Employees.Should().HaveCountGreaterThanOrEqualTo(1);
+            foreach (var employee in result.Entity.Employees)
+            {
+                employee.Should().NotBeNull();
+                employee.Should().BeOfType<EmployeeShowcaseDto>();
+                employee.Username.Should().NotBeNullOrEmpty();
+            }
+            result.IsOwner.Should().BeTrue();
+            result.IsParticipant.Should().BeFalse();
         }
     }
 }

@@ -3,9 +3,7 @@ using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
-using CompanyPMO_.NET.Services;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -21,6 +19,7 @@ namespace CompanyPMO_.NET.Repository
             _imageService = imageService;
             _utilityService = utilityService;
         }
+
         public async Task<(AuthenticationResult result, string message, EmployeeDto employee)> AuthenticateEmployee(string username, string password)
         {
             bool? isAccountLocked = await IsAccountLocked(username);
@@ -139,15 +138,54 @@ namespace CompanyPMO_.NET.Repository
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<Employee>> GetEmployeesBySupervisorId(int supervisorId)
+        public async Task<DataCountPages<EmployeeShowcaseDto>> GetEmployeesBySupervisorId(int supervisorId, int page, int pageSize)
         {
+            int toSkip = (page - 1) * pageSize;
+
+            int totalEmployeesCount = await _context.Employees
+                .Where(x => x.SupervisorId == supervisorId)
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
+
             var employees = await _context.Employees
                 .Where(x => x.SupervisorId == supervisorId)
-                .Include(t => t.Tier)
-                .Include(c => c.Company)
+                .Select(x => new EmployeeShowcaseDto
+                {
+                    EmployeeId = x.EmployeeId,
+                    Username = x.Username,
+                    ProfilePicture = x.ProfilePicture,
+                    LastLogin = x.LastLogin,
+                    Tier = new TierDto
+                    {
+                        TierId = x.Tier.TierId,
+                        Name = x.Tier.Name,
+                        Duty = x.Tier.Duty
+                    },
+                    Workload = new WorkloadDto
+                    {
+                        Count = x.Tasks.Where(x => x.Finished == null).Count() +
+                        x.Projects.Where(x => x.Finished == null).Count() +
+                        x.Issues.Where(x => x.Finished == null).Count(),
+
+                        Workload = (
+                        (x.Projects.Where(x => x.Finished == null).Count() + x.Tasks.Where(x => x.Finished == null).Count() + x.Issues.Where(x => x.Finished == null).Count()) == 0 ? "None" :
+                        (x.Projects.Where(x => x.Finished == null).Count() + x.Tasks.Where(x => x.Finished == null).Count() + x.Issues.Where(x => x.Finished == null).Count()) < 10 ? "Low" :
+                        (x.Projects.Where(x => x.Finished == null).Count() + x.Tasks.Where(x => x.Finished == null).Count() + x.Issues.Where(x => x.Finished == null).Count()) < 20 ? "Medium" :
+                        (x.Projects.Where(x => x.Finished == null).Count() + x.Tasks.Where(x => x.Finished == null).Count() + x.Issues.Where(x => x.Finished == null).Count()) < 30 ? "High" : "Very High")
+                    }
+
+                })
+                .Skip(toSkip)
+                .Take(pageSize)
                 .ToListAsync();
 
-            return employees;
+            return new DataCountPages<EmployeeShowcaseDto>
+            {
+                Data = employees,
+                Count = totalEmployeesCount,
+                Pages = totalPages
+            };
         }
 
         public async Task<EmployeeDto> GetEmployeeByUsername(string username)
