@@ -138,47 +138,73 @@ namespace CompanyPMO_.NET.Repository
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<DataCountPages<EmployeeShowcaseDto>> GetEmployeesBySupervisorId(int supervisorId, int page, int pageSize)
+        public async Task<DataCountPages<EmployeeShowcaseDto>> GetEmployeesBySupervisorId(int supervisorId, FilterParams filterParams)
         {
+            // TODO: FIX WORKLOAD ORDER BY. NOT WORKING
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Employee>(supervisorId, null, null, "SupervisorId", "Created", filterParams);
+
+            bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
+            bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
+
+            var page = filterParams.Page;
+            var pageSize = filterParams.PageSize;
+
             int toSkip = (page - 1) * pageSize;
 
             int totalEmployeesCount = await _context.Employees
-                .Where(x => x.SupervisorId == supervisorId)
+                .Where(whereExpression)
                 .CountAsync();
 
             int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
 
-            var employees = await _context.Employees
-                .Where(x => x.SupervisorId == supervisorId)
-                .Select(x => new EmployeeShowcaseDto
-                {
-                    EmployeeId = x.EmployeeId,
-                    Username = x.Username,
-                    ProfilePicture = x.ProfilePicture,
-                    LastLogin = x.LastLogin,
-                    Tier = new TierDto
-                    {
-                        TierId = x.Tier.TierId,
-                        Name = x.Tier.Name,
-                        Duty = x.Tier.Duty
-                    },
-                    Workload = new WorkloadDto
-                    {
-                        Count = x.Tasks.Where(x => x.Finished == null).Count() +
-                        x.Projects.Where(x => x.Finished == null).Count() +
-                        x.Issues.Where(x => x.Finished == null).Count(),
+            List<EmployeeShowcaseDto> employees = new();
 
-                        Workload = (
-                        (x.Projects.Where(x => x.Finished == null).Count() + x.Tasks.Where(x => x.Finished == null).Count() + x.Issues.Where(x => x.Finished == null).Count()) == 0 ? "None" :
-                        (x.Projects.Where(x => x.Finished == null).Count() + x.Tasks.Where(x => x.Finished == null).Count() + x.Issues.Where(x => x.Finished == null).Count()) < 10 ? "Low" :
-                        (x.Projects.Where(x => x.Finished == null).Count() + x.Tasks.Where(x => x.Finished == null).Count() + x.Issues.Where(x => x.Finished == null).Count()) < 20 ? "Medium" :
-                        (x.Projects.Where(x => x.Finished == null).Count() + x.Tasks.Where(x => x.Finished == null).Count() + x.Issues.Where(x => x.Finished == null).Count()) < 30 ? "High" : "Very High")
-                    }
-
-                })
-                .Skip(toSkip)
-                .Take(pageSize)
-                .ToListAsync();
+            if (ShallOrderAscending)
+            {
+                employees = await _context.Employees
+                    .Where(whereExpression)
+                    .OrderBy(orderByExpression)
+                    .Select(x => new EmployeeShowcaseDto
+                    {
+                        EmployeeId = x.EmployeeId,
+                        Username = x.Username,
+                        ProfilePicture = x.ProfilePicture,
+                        LastLogin = x.LastLogin,
+                        Tier = new TierDto
+                        {
+                            TierId = x.Tier.TierId,
+                            Name = x.Tier.Name,
+                            Duty = x.Tier.Duty
+                        },
+                        Workload = x.Workload
+                    })
+                    .Skip(toSkip)
+                    .Take(pageSize)
+                    .ToListAsync();
+            }
+            else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
+            {
+                employees = await _context.Employees
+                    .Where(whereExpression)
+                    .OrderByDescending(orderByExpression)
+                    .Select(x => new EmployeeShowcaseDto
+                    {
+                        EmployeeId = x.EmployeeId,
+                        Username = x.Username,
+                        ProfilePicture = x.ProfilePicture,
+                        LastLogin = x.LastLogin,
+                        Tier = new TierDto
+                        {
+                            TierId = x.Tier.TierId,
+                            Name = x.Tier.Name,
+                            Duty = x.Tier.Duty
+                        },
+                        Workload = x.Workload
+                    })
+                    .Skip(toSkip)
+                    .Take(pageSize)
+                    .ToListAsync();
+            }
 
             return new DataCountPages<EmployeeShowcaseDto>
             {

@@ -3,7 +3,9 @@ using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -99,7 +101,15 @@ namespace CompanyPMO_.NET.Repository
                 }
 
                 await _context.EmployeeProjects.AddRangeAsync(employeesToAdd);
-                int employeeRowsAffected = await _context.SaveChangesAsync();
+                int employeeRowsAffected = await _context.SaveChangesAsync(); // Returns the number of added employees
+
+                // Based on this we can execute the stored procedure to update each employees workload
+                foreach (var employeeId in employees)
+                {
+                    var parameter = new NpgsqlParameter("@EmployeeId", employeeId);
+                    
+                    await _context.Database.ExecuteSqlRawAsync("CALL sp_update_employee_workload(@EmployeeId)", parameter);
+                }
 
                 if (employeeRowsAffected is 0)
                 {

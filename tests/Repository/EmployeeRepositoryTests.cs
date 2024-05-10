@@ -9,6 +9,7 @@ using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using Tests;
 
 namespace tests.Repository
@@ -170,13 +171,26 @@ namespace tests.Repository
         public async void EmployeeRepository_GetEmployeeBySupervisorId_ReturnsListOfEmployees()
         {
             int id = 1;
-            int page = 1;
-            int pageSize = 5;
+            var filterParams = new FilterParams
+            {
+                Page = 1,
+                PageSize = 5
+            };
 
             var dbContext = await GetDatabaseContext();
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 
-            var result = await employeeRepository.GetEmployeesBySupervisorId(id, page, pageSize);
+
+            Expression<Func<Employee, bool>> fakeBoolExpression = employee => true;
+            Expression<Func<Employee, object>> fakeObjectExpression = employee => employee.FirstName;
+
+            var tupleResult = (fakeBoolExpression, fakeObjectExpression);
+
+            A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Employee>(
+                A<int>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                .Returns(tupleResult);
+
+            var result = await employeeRepository.GetEmployeesBySupervisorId(id, filterParams);
 
             result.Should().NotBeNull();
             result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
@@ -190,13 +204,25 @@ namespace tests.Repository
         public async void EmployeeRepository_GetEmployeeBySupervisorId_ReturnsNoEmployees()
         {
             int id = 8;
-            int page = 1;
-            int pageSize = 5;
+            var filterParams = new FilterParams
+            {
+                Page = 1,
+                PageSize = 5
+            };
 
             var dbContext = await GetDatabaseContext();
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 
-            var result = await employeeRepository.GetEmployeesBySupervisorId(id, page, pageSize);
+            Expression<Func<Employee, bool>> fakeBoolExpression = employee => employee.EmployeeId == 888;
+            Expression<Func<Employee, object>> fakeObjectExpression = employee => employee.FirstName;
+
+            var tupleResult = (fakeBoolExpression, fakeObjectExpression);
+
+            A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Employee>(
+                A<int>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                .Returns(tupleResult);
+
+            var result = await employeeRepository.GetEmployeesBySupervisorId(id, filterParams);
 
             result.Should().NotBeNull();
             result.Data.Should().HaveCount(0);

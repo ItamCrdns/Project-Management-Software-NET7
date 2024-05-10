@@ -114,11 +114,11 @@ namespace CompanyPMO_.NET.Controllers
         [HttpGet("my-team")]
         [ProducesResponseType(200, Type = typeof(DataCountPages<EmployeeShowcaseDto>))]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> GetEmployeesBySupervisorId(int page = 1, int pageSize = 5)
+        public async Task<IActionResult> GetEmployeesBySupervisorId([FromQuery] FilterParams filterParams)
         {
             int supervisorId = _userIdentityService.GetUserIdFromClaims(HttpContext.User);
 
-            var employees = await _employeeService.GetEmployeesBySupervisorId(supervisorId, page, pageSize);
+            var employees = await _employeeService.GetEmployeesBySupervisorId(supervisorId, filterParams);
 
             if (employees == null || employees.Count == 0)
             {

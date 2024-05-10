@@ -13,7 +13,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<Employee> GetEmployeeForClaims(string username);
         Task<Employee> GetEmployeeById(int employeeId);
         Task<EmployeeDto> GetEmployeeByUsername(string username);
-        Task<DataCountPages<EmployeeShowcaseDto>> GetEmployeesBySupervisorId(int supervisorId, int page, int pageSize);
+        Task<DataCountPages<EmployeeShowcaseDto>> GetEmployeesBySupervisorId(int supervisorId, FilterParams filterParams);
         Employee EmployeeQuery(Employee employee);
         Task<DataCountPages<EmployeeShowcaseDto>> GetEmployeesWorkingInTheSameCompany(string username, int page, int pageSize);
         Task<DataCountPages<EmployeeShowcaseDto>> SearchEmployeesWorkingInTheSameCompany(string search, string username, int page, int pageSize);

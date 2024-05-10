@@ -7,6 +7,6 @@
         public string ProfilePicture { get; set; }
         public DateTime? LastLogin { get; set; }
         public TierDto Tier { get; set; }
-        public WorkloadDto Workload { get; set; }
+        public string? Workload { get; set; }
     }
 }

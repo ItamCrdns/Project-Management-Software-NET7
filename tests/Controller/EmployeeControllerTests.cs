@@ -199,18 +199,20 @@ namespace Tests.EmployeeControllerTests
         {
             // Arrange
             int supervisorId = 1;
-            int page = 1;
-            int pageSize = 5;
-
+            FilterParams filterParams = new()
+            {
+                Page = 1,
+                PageSize = 5
+            };
             var employees = A.Fake<DataCountPages<EmployeeShowcaseDto>>();
 
             employees.Count = 3;
 
             A.CallTo(() => _userIdentityService.GetUserIdFromClaims(A<ClaimsPrincipal>.Ignored)).Returns(supervisorId);
-            A.CallTo(() => _employeeService.GetEmployeesBySupervisorId(supervisorId, page, pageSize)).Returns(employees);
+            A.CallTo(() => _employeeService.GetEmployeesBySupervisorId(supervisorId, filterParams)).Returns(employees);
 
             // Act
-            var result = await _employeeController.GetEmployeesBySupervisorId(page, pageSize);
+            var result = await _employeeController.GetEmployeesBySupervisorId(filterParams);
 
             // Assert
             result.Should().BeAssignableTo<IActionResult>();
@@ -226,11 +228,13 @@ namespace Tests.EmployeeControllerTests
             int pageSize = 5;
             var employees = A.Fake<DataCountPages<EmployeeShowcaseDto>>();
 
+            var filterParams = new FilterParams();
+
             A.CallTo(() => _userIdentityService.GetUserIdFromClaims(A<ClaimsPrincipal>.Ignored)).Returns(supervisorId);
-            A.CallTo(() => _employeeService.GetEmployeesBySupervisorId(supervisorId, page, pageSize)).Returns(employees);
+            A.CallTo(() => _employeeService.GetEmployeesBySupervisorId(supervisorId, filterParams)).Returns(employees);
 
             // Act
-            var result = await _employeeController.GetEmployeesBySupervisorId(page, pageSize);
+            var result = await _employeeController.GetEmployeesBySupervisorId(filterParams);
 
             // Assert
             result.Should().BeAssignableTo<IActionResult>();

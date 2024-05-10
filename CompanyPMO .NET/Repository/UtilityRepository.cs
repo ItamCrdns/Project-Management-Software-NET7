@@ -150,8 +150,15 @@ namespace CompanyPMO_.NET.Repository
             }
             else
             {
-                MemberExpression property = Expression.Property(parameter, filterString);
-                return property;
+                try
+                {
+                    MemberExpression property = Expression.Property(parameter, filterString);
+                    return property;
+                }
+                catch (Exception ex)
+                {
+                    throw;
+                }
             }
         }
 
@@ -335,9 +342,20 @@ namespace CompanyPMO_.NET.Repository
 
             if (constantId is not null && constantId > 0)
             {
+                //MemberExpression newFilterString = null;
                 MemberExpression newFilterString = FilterStringSplitter(parameter, defaultWhere);
                 var constant = Expression.Constant(constantId);
-                firstEquals = Expression.Equal(newFilterString, constant);
+
+                if (newFilterString.Type == typeof(int?))
+                {
+                    // If nullable int convert to int to avoid error, however thisll trow exception if the integer is null, handle with care
+                    var notNullableFilterString = Expression.Convert(newFilterString, typeof(int));
+
+                    firstEquals = Expression.Equal(notNullableFilterString, constant);
+                } else
+                {
+                    firstEquals = Expression.Equal(newFilterString, constant);
+                }
             }
 
             BinaryExpression secondEquals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
