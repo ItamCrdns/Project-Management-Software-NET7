@@ -44,8 +44,6 @@ namespace CompanyPMO_.NET.Models
         public int? SupervisorId { get; set; }
         [Column("password_verified")]
         public DateTime? PasswordVerified { get; set; } // Timestamp of the last time the employee verified their password
-        [Column("workload")]
-        public string? Workload { get; set; }
 
         // Navigation properties
 
@@ -56,5 +54,6 @@ namespace CompanyPMO_.NET.Models
         public List<Issue>? Issues { get; set; }
         public Employee? Supervisor { get; set; }
         public List<Employee>? Employees { get; set; }
+        public Workload Workload { get; set; }
     }
 }

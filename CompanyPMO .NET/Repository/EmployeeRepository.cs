@@ -69,67 +69,6 @@ namespace CompanyPMO_.NET.Repository
             return (new AuthenticationResult { SomethingWrong = true }, "Something went wrong.", null);
         }
 
-        public Employee EmployeeQuery(Employee employee)
-        {
-            var query = new Employee
-            {
-                EmployeeId = employee.EmployeeId,
-                Username = employee.Username,
-                Role = employee.Role,
-                Email = employee.Email,
-                PhoneNumber = employee.PhoneNumber,
-                Password = employee.Password,
-                FirstName = employee.FirstName,
-                LastName = employee.LastName,
-                Gender = employee.Gender,
-                Created = employee.Created,
-                ProfilePicture = employee.ProfilePicture,
-                LastLogin = employee.LastLogin,
-                LockedEnabled = employee.LockedEnabled,
-                LoginAttempts = employee.LoginAttempts,
-                LockedUntil = employee.LockedUntil,
-                Tier = employee.Tier,
-                Company = employee.Company,
-                SupervisorId = employee.SupervisorId,
-                Supervisor = new Employee
-                {
-                    EmployeeId = employee.Supervisor.EmployeeId,
-                    Username = employee.Supervisor.Username,
-                    ProfilePicture = employee.Supervisor.ProfilePicture,
-                },
-                Projects = employee.Projects.Select(project => new Project
-                {
-                    ProjectId = project.ProjectId,
-                    Name = project.Name,
-                    Description = project.Description,
-                    Created = project.Created,
-                    Finished = project.Finished
-                }).ToList(),
-                Tasks = employee.Tasks.Select(task => new Models.Task
-                {
-                    TaskId = task.TaskId,
-                    Name = task.Name,
-                    Description = task.Description,
-                    Created = task.Created,
-                    StartedWorking = task.StartedWorking,
-                    Finished = task.Finished,
-                }).ToList(),
-                Issues = employee.Issues.Select(issue => new Issue
-                {
-                    IssueId = issue.IssueId,
-                    Name = issue.Name,
-                    Description = issue.Description,
-                    Created = issue.Created,
-                    StartedWorking = issue.StartedWorking,
-                    Finished = issue.Finished,
-                    IssueCreatorId = issue.IssueCreatorId,
-                    TaskId = issue.TaskId
-                }).ToList()
-            };
-
-            return query;
-        }
-
         public async Task<Employee> GetEmployeeById(int employeeId)
         {
             return await _context.Employees
@@ -214,76 +153,26 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<EmployeeDto> GetEmployeeByUsername(string username)
+        public async Task<EmployeeDto?> GetEmployeeByUsername(string username)
         {
-            Employee employee = await _context.Employees
-                .Where(e => e.Username.Equals(username))
-                .Include(t => t.Tier)
-                .Include(s => s.Supervisor)
-                .FirstOrDefaultAsync();
-
-            if (employee is null)
-            {
-                return null;
-            }
-
-            // Projects user is working on or created
-            int projectsParticipantCount = await _context.EmployeeProjects
-                .Where(p => p.EmployeeId.Equals(employee.EmployeeId))
-                .CountAsync();
-
-            int projectsCreatedCount = await _context.Projects
-                .Where(p => p.ProjectCreatorId.Equals(employee.EmployeeId))
-                .CountAsync();
-
-            int totalProjectsCount = projectsParticipantCount + projectsCreatedCount;
-
-            // Tasks user is working on or created
-            int tasksParticipantCount = await _context.EmployeeTasks
-                .Where(t => t.EmployeeId.Equals(employee.EmployeeId))
-                .CountAsync();
-
-            int tasksCreatedCount = await _context.Tasks
-                .Where(t => t.TaskCreatorId.Equals(employee.EmployeeId))
-                .CountAsync();
-
-            int totalTasksCount = tasksParticipantCount + tasksCreatedCount;
-
-            // Issues user is working on or created
-            int issuesParticipantCount = await _context.EmployeeIssues
-                .Where(i => i.EmployeeId.Equals(employee.EmployeeId))
-                .CountAsync();
-
-            int issuesCreatedCount = await _context.Issues
-                .Where(i => i.IssueCreatorId.Equals(employee.EmployeeId))
-                .CountAsync();
-
-            int totalIssuesCount = issuesParticipantCount + issuesCreatedCount;
-
-            var employeeDto = new EmployeeDto
-            {
-                EmployeeId = employee.EmployeeId,
-                Username = employee.Username,
-                Role = employee.Role,
-                ProfilePicture = employee.ProfilePicture,
-                Tier = employee.Tier,
-                Supervisor = employee.SupervisorId is not null ? new EmployeeDto
+            return await _context.Employees
+                .Where(e => e.Username == username)
+                .Select(x => new EmployeeDto
                 {
-                    Username = employee.Supervisor.Username,
-                    ProfilePicture = employee.Supervisor.ProfilePicture,
-                } : null,
-                ProjectTotalCount = totalProjectsCount,
-                ProjectsParticipant = projectsParticipantCount,
-                ProjectsCreated = projectsCreatedCount,
-                TaskTotalCount = totalTasksCount,
-                TasksParticipant = tasksParticipantCount,
-                TasksCreated = tasksCreatedCount,
-                IssueTotalCount = totalIssuesCount,
-                IssuesParticipant = issuesParticipantCount,
-                IssuesCreated = issuesCreatedCount
-            };
-
-            return employeeDto;
+                    EmployeeId = x.EmployeeId,
+                    Username = x.Username,
+                    Role = x.Role,
+                    ProfilePicture = x.ProfilePicture,
+                    Tier = x.Tier,
+                    Supervisor = x.Supervisor == null ? null : new EmployeeDto
+                    {
+                        EmployeeId = x.Supervisor.EmployeeId,
+                        Username = x.Supervisor.Username,
+                        ProfilePicture = x.Supervisor.ProfilePicture
+                    },
+                    Workload = x.Workload
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<Employee?> GetEmployeeForClaims(string username)

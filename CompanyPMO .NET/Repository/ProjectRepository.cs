@@ -6,6 +6,8 @@ using CompanyPMO_.NET.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using NpgsqlTypes;
+using System.Reflection.Metadata;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -14,12 +16,14 @@ namespace CompanyPMO_.NET.Repository
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
         private readonly IUtility _utilityService;
+        private readonly IWorkload _workloadService;
 
-        public ProjectRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService)
+        public ProjectRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkload workloadService)
         {
             _context = context;
             _imageService = imageService;
             _utilityService = utilityService;
+            _workloadService = workloadService;
         }
 
         public async Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToProject(int projectId, List<int> employees)
@@ -103,13 +107,8 @@ namespace CompanyPMO_.NET.Repository
                 await _context.EmployeeProjects.AddRangeAsync(employeesToAdd);
                 int employeeRowsAffected = await _context.SaveChangesAsync(); // Returns the number of added employees
 
-                // Based on this we can execute the stored procedure to update each employees workload
-                foreach (var employeeId in employees)
-                {
-                    var parameter = new NpgsqlParameter("@EmployeeId", employeeId);
-                    
-                    await _context.Database.ExecuteSqlRawAsync("CALL sp_update_employee_workload(@EmployeeId)", parameter);
-                }
+                // Based on this we can execute the stored procedure to update assigned_projects on the workload table for the employee
+                await _workloadService.SpUpdateEmployeeAssignedProjectsCount(employeesToAdd.Select(x => x.EmployeeId).ToArray());
 
                 if (employeeRowsAffected is 0)
                 {
@@ -255,7 +254,7 @@ namespace CompanyPMO_.NET.Repository
                     },
                     IsOwner = x.ProjectCreatorId == userId,
                     IsParticipant = x.Employees.Any(e => e.EmployeeId == userId)
-                    })
+                })
                 .FirstOrDefaultAsync();
         }
 
@@ -386,7 +385,7 @@ namespace CompanyPMO_.NET.Repository
 
             bool isProjectNullOrNotFinalized = project?.Finished is null || project?.ExpectedDeliveryDate > DateTime.UtcNow;
 
-            if(project is not null && isProjectNullOrNotFinalized)
+            if (project is not null && isProjectNullOrNotFinalized)
             {
                 project.Finished = DateTime.UtcNow;
                 _context.Update(project);
@@ -422,7 +421,8 @@ namespace CompanyPMO_.NET.Repository
                     .Include(e => e.Employees)
                     .Include(p => p.ProjectCreator)
                     .ToListAsync();
-            } else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
+            }
+            else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
             {
                 projects = await _context.Projects
                     .Where(whereExpression)

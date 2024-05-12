@@ -4,6 +4,8 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using NpgsqlTypes;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -12,12 +14,14 @@ namespace CompanyPMO_.NET.Repository
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
         private readonly IUtility _utilityService;
+        private readonly IWorkload _workloadService;
 
-        public TaskRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService)
+        public TaskRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkload workloadService)
         {
             _context = context;
             _imageService = imageService;
             _utilityService = utilityService;
+            _workloadService = workloadService;
         }
 
         public async Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds)
@@ -96,7 +100,12 @@ namespace CompanyPMO_.NET.Repository
                     errors.Add("You can't add yourself");
                 }
 
-                var (status, _) = await AddEmployeesToTask(newTask.TaskId, employeeIds);
+                var (status, addedEmployees) = await AddEmployeesToTask(newTask.TaskId, employeeIds);
+
+                if (addedEmployees.Any())
+                {
+                    await _workloadService.SpUpdateEmployeeWorkloadAssignedTasksAndIssues(addedEmployees.Select(x => x.EmployeeId).ToArray());
+                }
 
                 // If its not the success response, then its an error
                 if (status != "All employees were added successfully" && !string.IsNullOrWhiteSpace(status))
@@ -142,44 +151,44 @@ namespace CompanyPMO_.NET.Repository
         public async Task<List<Employee>> GetEmployeesWorkingOnTask(int taskId) => await _context.Tasks.Where(t => t.TaskId.Equals(taskId)).Include(e => e.Employees).SelectMany(e => e.Employees).ToListAsync();
 
         public async Task<EntityParticipantOrOwnerDTO<TaskDto>?> GetTaskById(int taskId, int projectId, int userId)
-            {
-           return await _context.Tasks
-                .Where(t => t.TaskId == taskId && t.ProjectId == projectId)
-                .Select(x => new EntityParticipantOrOwnerDTO<TaskDto>
-                {
-                    Entity = new TaskDto
-                    {
-                        TaskId = x.TaskId,
-                        Name = x.Name,
-                        Description = x.Description,
-                        Created = x.Created,
-                        StartedWorking = x.StartedWorking,
-                        ExpectedDeliveryDate = x.ExpectedDeliveryDate,
-                        Finished = x.Finished,
-                        TaskCreator = new EmployeeShowcaseDto
-                        {
-                            EmployeeId = x.TaskCreator.EmployeeId,
-                            Username = x.TaskCreator.Username,
-                            ProfilePicture = x.TaskCreator.ProfilePicture
-                        },
-                        Employees = x.Employees.Select(employee => new EmployeeShowcaseDto
-                        {
-                            EmployeeId = employee.EmployeeId,
-                            Username = employee.Username,
-                            ProfilePicture = employee.ProfilePicture,
-                        }).Take(5).ToList(),
-                        EmployeeCount = x.Employees.Count,
-                        Project = new ProjectShowcaseDto
-                        {
-                            ProjectId = x.Project.ProjectId,
-                            Name = x.Project.Name,
-                            Priority = x.Project.Priority
-                        }
-                    },
-                    IsOwner = x.TaskCreatorId == userId,
-                    IsParticipant = x.Employees.Any(e => e.EmployeeId == userId)
-                })
-                .FirstOrDefaultAsync(); 
+        {
+            return await _context.Tasks
+                 .Where(t => t.TaskId == taskId && t.ProjectId == projectId)
+                 .Select(x => new EntityParticipantOrOwnerDTO<TaskDto>
+                 {
+                     Entity = new TaskDto
+                     {
+                         TaskId = x.TaskId,
+                         Name = x.Name,
+                         Description = x.Description,
+                         Created = x.Created,
+                         StartedWorking = x.StartedWorking,
+                         ExpectedDeliveryDate = x.ExpectedDeliveryDate,
+                         Finished = x.Finished,
+                         TaskCreator = new EmployeeShowcaseDto
+                         {
+                             EmployeeId = x.TaskCreator.EmployeeId,
+                             Username = x.TaskCreator.Username,
+                             ProfilePicture = x.TaskCreator.ProfilePicture
+                         },
+                         Employees = x.Employees.Select(employee => new EmployeeShowcaseDto
+                         {
+                             EmployeeId = employee.EmployeeId,
+                             Username = employee.Username,
+                             ProfilePicture = employee.ProfilePicture,
+                         }).Take(5).ToList(),
+                         EmployeeCount = x.Employees.Count,
+                         Project = new ProjectShowcaseDto
+                         {
+                             ProjectId = x.Project.ProjectId,
+                             Name = x.Project.Name,
+                             Priority = x.Project.Priority
+                         }
+                     },
+                     IsOwner = x.TaskCreatorId == userId,
+                     IsParticipant = x.Employees.Any(e => e.EmployeeId == userId)
+                 })
+                 .FirstOrDefaultAsync();
         }
 
         public async Task<List<Models.Task>> GetTasks(int page, int pageSize)

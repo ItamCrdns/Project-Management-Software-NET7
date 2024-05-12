@@ -1,4 +1,6 @@
-﻿namespace CompanyPMO_.NET.Dto
+﻿using CompanyPMO_.NET.Models;
+
+namespace CompanyPMO_.NET.Dto
 {
     public class EmployeeShowcaseDto
     {
@@ -7,6 +9,6 @@
         public string ProfilePicture { get; set; }
         public DateTime? LastLogin { get; set; }
         public TierDto Tier { get; set; }
-        public string? Workload { get; set; }
+        public Workload? Workload { get; set; }
     }
 }

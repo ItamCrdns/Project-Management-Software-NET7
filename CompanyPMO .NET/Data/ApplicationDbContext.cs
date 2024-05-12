@@ -44,6 +44,7 @@ namespace CompanyPMO_.NET.Data
             modelBuilder.Entity<Image>().HasKey(i => i.ImageId);
             modelBuilder.Entity<Changelog>().HasKey(c => c.LogId);
             modelBuilder.Entity<ResetPasswordRequest>().HasKey(r => r.RequestId);
+            modelBuilder.Entity<Workload>().HasKey(w => w.WorkloadId);
 
             // Relationships
 
@@ -67,10 +68,11 @@ namespace CompanyPMO_.NET.Data
                 .WithMany(e => e.Employees)
                 .HasForeignKey(s => s.SupervisorId);
 
-            //modelBuilder.Entity<Project>()
-            //    .HasOne(c => c.Company)
-            //    .WithMany(p => p.Projects)
-            //    .HasForeignKey(c => c.CompanyId);
+            // One to one Employee-Workload relationship
+            modelBuilder.Entity<Employee>()
+                .HasOne(w => w.Workload)
+                .WithOne(e => e.Employee)
+                .HasForeignKey<Workload>(w => w.WorkloadId);
 
             // Junction table for many to many
 

@@ -8,19 +8,8 @@ namespace CompanyPMO_.NET.Dto
         public string Username { get; set; }
         public string Role { get; set; }
         public string? ProfilePicture { get; set; }
-        public Tier Tier { get; set; }
+        public Tier? Tier { get; set; }
         public EmployeeDto? Supervisor { get; set; }
-
-        public int ProjectTotalCount { get; set; }
-        public int ProjectsCreated { get; set; }
-        public int ProjectsParticipant { get; set; }
-
-        public int TaskTotalCount { get; set; }
-        public int TasksCreated { get; set; }
-        public int TasksParticipant { get; set; }
-
-        public int IssueTotalCount { get; set; }
-        public int IssuesCreated { get; set; }
-        public int IssuesParticipant { get; set; }
+        public Workload? Workload { get; set; }
     }
 }
