@@ -281,5 +281,15 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(project);
         }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpPost("set/finished/bulk")]
+        [ProducesResponseType(200, Type = typeof(OperationResult<int[]>))]
+        public async Task<IActionResult> SetProjectsFininishedBulk([FromBody] int[] projectIds)
+        {
+            var result = await _projectService.SetProjectsFininishedBulk(projectIds);
+
+            return Ok(result);
+        }
     }
 }

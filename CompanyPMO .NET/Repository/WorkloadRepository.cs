@@ -27,7 +27,13 @@ namespace CompanyPMO_.NET.Repository
 
         public Task SpUpdateEmployeeCompletedProjects(int[] employees)
         {
-            throw new NotImplementedException();
+            // Calls the stored procedure that updates the employee's completed projects
+            var parameter = new NpgsqlParameter("@EmployeeId", NpgsqlDbType.Array | NpgsqlDbType.Integer)
+            {
+                Value = employees
+            };
+
+            return _context.Database.ExecuteSqlRawAsync("CALL sp_update_employees_completed_projects(@EmployeeId)", parameter);
         }
 
         public async Task SpUpdateEmployeeWorkloadAssignedTasksAndIssues(int[] employees)

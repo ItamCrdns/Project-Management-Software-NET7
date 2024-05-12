@@ -3,11 +3,8 @@ using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
-using NpgsqlTypes;
-using System.Reflection.Metadata;
+using System.ComponentModel.Design;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -540,6 +537,54 @@ namespace CompanyPMO_.NET.Repository
                     Priority = p.Priority
                 })
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<OperationResult<int[]>> SetProjectsFininishedBulk(int[] projectIds)
+        {
+            var projects = await _context.Projects
+                .Include(x => x.Employees)
+                .Where(p => projectIds.Contains(p.ProjectId))
+                .ToListAsync();
+
+            if (projects == null || !projects.Any())
+            {
+                return new OperationResult<int[]>
+                {
+                    Success = false,
+                    Message = "No projects found",
+                    Data = projectIds
+                };
+            }
+
+            projects.ForEach(p => p.Finished = DateTime.UtcNow);
+
+            _context.UpdateRange(projects);
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected is 0)
+            {
+                return new OperationResult<int[]>
+                {
+                    Success = false,
+                    Message = "Failed to finish the projects",
+                    Data = projectIds
+                };
+            }
+
+            int[] employeeIdsWorkingInProjects = projects.SelectMany(p => p.Employees.Select(e => e.EmployeeId)).ToArray();
+
+            if (employeeIdsWorkingInProjects.Length > 0)
+            {
+                await _workloadService.SpUpdateEmployeeCompletedProjects(employeeIdsWorkingInProjects);
+            }
+
+            return new OperationResult<int[]>
+            {
+                Success = true,
+                Message = "Projects finished successfully",
+                Data = projectIds
+            };
         }
     }
 }

@@ -42,7 +42,6 @@ namespace Tests.Repository
                         new Employee
                         {
                             Username = $"test{i}",
-                            Role = $"test{i}",
                             Email = $"test{i}",
                             PhoneNumber = $"test{i}",
                             Password = BCrypt.Net.BCrypt.HashPassword($"test{i}"),

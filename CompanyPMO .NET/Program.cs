@@ -77,8 +77,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Claim based authorization
 builder.Services.AddAuthorization(options =>
 { 
-    options.AddPolicy("SupervisorOnly", policy => policy.RequireClaim(ClaimTypes.Role, "supervisor"));
-    options.AddPolicy("EmployeesAllowed", policy => policy.RequireClaim(ClaimTypes.Role, "employee", "supervisor"));
+    options.AddPolicy("SupervisorOnly", policy => policy.RequireClaim(ClaimTypes.Role, "Supervisor"));
+    options.AddPolicy("EmployeesAllowed", policy => policy.RequireClaim(ClaimTypes.Role, "Employee", "Intern", "Trainee", "Supervisor"));
     options.AddPolicy("OnlyUser", policy =>
     {
         policy.RequireClaim(ClaimTypes.NameIdentifier);
@@ -91,7 +91,7 @@ builder.Services.AddAuthorization(options =>
                 var idFromUrl = context.Resource as DefaultHttpContext;
                 var employeeId = idFromUrl.Request.RouteValues["employeeId"].ToString();
                 
-                if(!string.IsNullOrEmpty(employeeId) && idClaim.Value.Equals(employeeId) || context.User.HasClaim(ClaimTypes.Role, "supervisor"))
+                if(!string.IsNullOrEmpty(employeeId) && idClaim.Value.Equals(employeeId) || context.User.HasClaim(ClaimTypes.Role, "Supervisor"))
                 {
                     return true;
                 }
@@ -114,6 +114,11 @@ cloduinary.Api.Secure = true;
 builder.Services.AddSingleton(cloduinary);
 
 var app = builder.Build();
+
+if (args.Length == 1 && args[0].ToLower() == "seed")
+{
+    Seed.SeedData(app);
+}
 
 app.UseCors(MyAllowSpecificOrigins);
 

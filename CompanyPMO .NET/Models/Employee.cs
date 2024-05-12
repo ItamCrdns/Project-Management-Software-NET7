@@ -10,8 +10,6 @@ namespace CompanyPMO_.NET.Models
         public int EmployeeId { get; set; }
         [Column("username")]
         public string Username { get; set; }
-        [Column("role")]
-        public string Role { get; set; }
         [Column("email")]
         public string Email { get; set; }
         [Column("phone_number")]

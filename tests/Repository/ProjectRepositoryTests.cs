@@ -90,7 +90,6 @@ namespace Tests.Repository
                         new Employee
                         {
                             Username = $"test{i}",
-                            Role = $"test{i}",
                             Email = $"test{i}",
                             PhoneNumber = $"test{i}",
                             Password = $"test{i}",
@@ -196,7 +195,7 @@ namespace Tests.Repository
             result.Should().BeEquivalentTo(tupleResult);
             result.Item2.Should().BeEquivalentTo(fakeEmployeeDtos);
             result.Item2.Should().HaveCountGreaterThan(1);
-            result.Item2.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
+            result.Item2.Should().BeAssignableTo(typeof(IEnumerable<EmployeeShowcaseDto>));
             result.status.Should().Be("Success").And.BeOfType<string>();
         }
 
@@ -248,7 +247,7 @@ namespace Tests.Repository
             result.Should().BeEquivalentTo(tupleResult);
             result.Item2.Should().BeEquivalentTo(fakeImages);
             result.Item2.Should().HaveCountGreaterThan(1);
-            result.Item2.Should().BeOfType(typeof(List<ImageDto>));
+            result.Item2.Should().BeAssignableTo(typeof(IEnumerable<ImageDto>));
             result.status.Should().Be("Success").And.BeOfType<string>();
         }
 
@@ -853,7 +852,40 @@ namespace Tests.Repository
             result.Should().BeOfType(typeof(ProjectShowcaseDto));
             result.ProjectId.Should().Be(projectId);
             result.Name.Should().NotBeNullOrEmpty().And.Be("Project 0");
+        }
 
+        [Fact]
+        public async void ProjectRepository_SetProjectsFininishedBulk_ReturnsSuccess()
+        {
+            int[] projectIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+            var dbContext = await GetDatabaseContext();
+            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload);
+
+            var result = await projectRepository.SetProjectsFininishedBulk(projectIds);
+
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Projects finished successfully");
+            result.Success.Should().BeTrue();
+            result.Data.Should().BeOfType(typeof(int[]));
+            result.Data.Should().HaveCount(10);
+        }
+
+        [Fact]
+        public async void ProjectRepository_SetProjectsFininishedBulk_ReturnsFailure()
+        {
+            int[] projectIds = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+
+            var dbContext = await GetDatabaseContext();
+            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload);
+
+            var result = await projectRepository.SetProjectsFininishedBulk(projectIds);
+
+            result.Should().NotBeNull();
+            result.Message.Should().Be("No projects found");
+            result.Success.Should().BeFalse();
+            result.Data.Should().BeOfType(typeof(int[]));
+            result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
         }
     }
 }

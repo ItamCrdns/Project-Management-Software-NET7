@@ -150,15 +150,8 @@ namespace CompanyPMO_.NET.Repository
             }
             else
             {
-                try
-                {
-                    MemberExpression property = Expression.Property(parameter, filterString);
-                    return property;
-                }
-                catch (Exception ex)
-                {
-                    throw;
-                }
+                MemberExpression property = Expression.Property(parameter, filterString);
+                return property;
             }
         }
 
@@ -352,7 +345,8 @@ namespace CompanyPMO_.NET.Repository
                     var notNullableFilterString = Expression.Convert(newFilterString, typeof(int));
 
                     firstEquals = Expression.Equal(notNullableFilterString, constant);
-                } else
+                }
+                else
                 {
                     firstEquals = Expression.Equal(newFilterString, constant);
                 }
@@ -381,6 +375,7 @@ namespace CompanyPMO_.NET.Repository
                     foreach (var pair in pairs)
                     {
                         MemberExpression property = Expression.Property(parameter, pair.fBy);
+                        Type propertyType = property.Type;
 
                         if (pair.fValue.Contains('-'))
                         {
@@ -396,9 +391,58 @@ namespace CompanyPMO_.NET.Repository
                         else
                         {
                             // If it does not contain a '-', we will just compare the property with the value (x => x.Whatever EQUALS value)
-                            ConstantExpression constant = Expression.Constant(Convert.ToInt32(pair.fValue)); // Well, It'll only work with ints for now
-                            BinaryExpression equals = Expression.Equal(property, constant);
-                            combinedExpression = Expression.AndAlso(combinedExpression, equals);
+                            if (pair.fValue == "NoValue")
+                            {
+                                // handle fValue will be null. This will be usefull when we want to do for example x.Finished == null to get unfinished entities
+                                ConstantExpression nullish = Expression.Constant(null, propertyType);
+                                BinaryExpression equalsNull = Expression.Equal(property, nullish);
+                                combinedExpression = Expression.AndAlso(combinedExpression, equalsNull);
+                            }
+                            else if (pair.fValue == "NotNull")
+                            {
+                                // Handle fValue not equal to null
+                                ConstantExpression notNull = Expression.Constant(null, propertyType);
+                                BinaryExpression notEqualsNull = Expression.NotEqual(property, notNull);
+                                combinedExpression = Expression.AndAlso(combinedExpression, notEqualsNull);
+                            }
+                            else if (pair.fValue == "RightNowDate")
+                            {
+                                // Handle fValue will be the current date
+                                ConstantExpression notNull = Expression.Constant(null, propertyType);
+                                BinaryExpression notEqualsNull = Expression.NotEqual(property, notNull);
+
+                                // Build the following expression, for overdue entities: x => x.Finished != null && x.Finished < DateTime.UtcNow
+                                combinedExpression = Expression.AndAlso(combinedExpression, notEqualsNull);
+
+                                DateTime? rNow = DateTime.UtcNow;
+                                ConstantExpression constant = Expression.Constant(rNow, propertyType);
+                                BinaryExpression equals = Expression.LessThan(property, constant);
+
+                                combinedExpression = Expression.AndAlso(combinedExpression, equals);
+                            }
+                            else if (pair.fValue == "Ongoing")
+                            {
+                                // Handle fValue will be the current date
+                                ConstantExpression notNull = Expression.Constant(null, propertyType);
+                                BinaryExpression notEqualsNull = Expression.NotEqual(property, notNull);
+
+                                // Build the following expression, for overdue entities: x => x.Finished != null && x.Finished < DateTime.UtcNow
+                                combinedExpression = Expression.AndAlso(combinedExpression, notEqualsNull);
+
+                                DateTime? rNow = DateTime.UtcNow;
+                                ConstantExpression constant = Expression.Constant(rNow, propertyType);
+                                BinaryExpression equals = Expression.GreaterThan(property, constant);
+
+                                combinedExpression = Expression.AndAlso(combinedExpression, equals);
+                            }
+                            else
+                            {
+                                // handle fValue will be a value
+                                object convertedValue = Convert.ChangeType(pair.fValue, propertyType);
+                                ConstantExpression constant = Expression.Constant(convertedValue, propertyType);
+                                BinaryExpression equals = Expression.Equal(property, constant);
+                                combinedExpression = Expression.AndAlso(combinedExpression, equals);
+                            }
                         }
                     }
                 }

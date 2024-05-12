@@ -1,4 +1,5 @@
-﻿using CompanyPMO_.NET.Dto;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -13,13 +14,15 @@ namespace CompanyPMO_.NET.Controllers
         private readonly ICompany _companyService;
         private readonly IUserIdentity _userIdentityService;
         private readonly IEmployee _employeeService;
+        private readonly IProject _projectService;
         private readonly Lazy<int> _lazyUserId;
 
-        public CompanyController(ICompany companyService, IUserIdentity userIdentityService, IEmployee employeeService)
+        public CompanyController(ICompany companyService, IUserIdentity userIdentityService, IEmployee employeeService, IProject projectService)
         {
             _companyService = companyService;
             _userIdentityService = userIdentityService;
             _employeeService = employeeService;
+            _projectService = projectService;
             _lazyUserId = new Lazy<int>(InitializeUserId);
         }
 
@@ -170,6 +173,90 @@ namespace CompanyPMO_.NET.Controllers
             var employees = await _employeeService.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize);
 
             return Ok(employees);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{clientId}/projects/ongoing")]
+        [ProducesResponseType(200, Type = typeof(DataCountPages<ProjectDto>))]
+        public async Task<IActionResult> GetOngoingProjectsByClient(int clientId, [FromQuery] FilterParams filterParams)
+        {
+            string filterBy = filterParams.FilterBy == null ? "finished_expectedDeliveryDate" : filterParams.FilterBy + "_finished_expectedDeliveryDate";
+            string filterValue = filterParams.FilterValue == null ? "NoValue_Ongoing" : filterParams.FilterValue + "_NoValue_Ongoing";
+
+            // New instance of FilterParams to ensure that the FilterBy and FilterValue are set correctly and not overwritten by the client
+            FilterParams interalFilterParams = new()
+            {
+                Page = filterParams.Page,
+                PageSize = filterParams.PageSize,
+                OrderBy = filterParams.OrderBy,
+                Sort = filterParams.Sort,
+                SearchBy = filterParams.SearchBy,
+                SearchValue = filterParams.SearchValue,
+                FilterBy = filterBy,
+                FilterValue = filterValue,
+                FilterWhere = filterParams.FilterWhere,
+                FilterWhereValue = filterParams.FilterWhereValue
+            };
+
+            var projects = await _projectService.GetProjectsByCompanyName(clientId, interalFilterParams);
+
+            return Ok(projects);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{clientId}/projects/finished")]
+        [ProducesResponseType(200, Type = typeof(DataCountPages<ProjectDto>))]
+        public async Task<IActionResult> GetFinishedProjectsByClient(int clientId, [FromQuery] FilterParams filterParams)
+        {
+            string filterBy = filterParams.FilterBy == null ? "finished" : filterParams.FilterBy + "_finished";
+            string filterValue = filterParams.FilterValue == null ? "NotNull" : filterParams.FilterValue + "_NotNull";
+
+            // New instance of FilterParams to ensure that the FilterBy and FilterValue are set correctly and not overwritten by the client
+            FilterParams interalFilterParams = new()
+            {
+                Page = filterParams.Page,
+                PageSize = filterParams.PageSize,
+                OrderBy = filterParams.OrderBy,
+                Sort = filterParams.Sort,
+                SearchBy = filterParams.SearchBy,
+                SearchValue = filterParams.SearchValue,
+                FilterBy = filterBy,
+                FilterValue = filterValue, // x => x.Finished != null
+                FilterWhere = filterParams.FilterWhere,
+                FilterWhereValue = filterParams.FilterWhereValue
+            };
+
+            var projects = await _projectService.GetProjectsByCompanyName(clientId, interalFilterParams);
+
+            return Ok(projects);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{clientId}/projects/overdue")]
+        [ProducesResponseType(200, Type = typeof(DataCountPages<ProjectDto>))]
+        public async Task<IActionResult> GetOverdueProjectsByClient(int clientId, [FromQuery] FilterParams filterParams)
+        {
+            string filterBy = filterParams.FilterBy == null ? "expectedDeliveryDate" : filterParams.FilterBy + "_expectedDeliveryDate";
+            string filterValue = filterParams.FilterValue == null ? "RightNowDate" : filterParams.FilterValue + "_RightNowDate";
+
+            // New instance of FilterParams to ensure that the FilterBy and FilterValue are set correctly and not overwritten by the client
+            FilterParams interalFilterParams = new()
+            {
+                Page = filterParams.Page,
+                PageSize = filterParams.PageSize,
+                OrderBy = filterParams.OrderBy,
+                Sort = filterParams.Sort,
+                SearchBy = filterParams.SearchBy,
+                SearchValue = filterParams.SearchValue,
+                FilterBy = filterBy,
+                FilterValue = filterValue, // x => x.ExpectedDeliveryDate < DateTime.Now
+                FilterWhere = filterParams.FilterWhere,
+                FilterWhereValue = filterParams.FilterWhereValue
+            };
+
+            var projects = await _projectService.GetProjectsByCompanyName(clientId, interalFilterParams);
+
+            return Ok(projects);
         }
     }
 }

@@ -161,7 +161,6 @@ namespace CompanyPMO_.NET.Repository
                 {
                     EmployeeId = x.EmployeeId,
                     Username = x.Username,
-                    Role = x.Role,
                     ProfilePicture = x.ProfilePicture,
                     Tier = x.Tier,
                     Supervisor = x.Supervisor == null ? null : new EmployeeDto
@@ -178,12 +177,13 @@ namespace CompanyPMO_.NET.Repository
         public async Task<Employee?> GetEmployeeForClaims(string username)
         {
             return await _context.Employees
+                .Include(x => x.Tier)
                 .Where(u => u.Username.Equals(username))
                 .Select(employee => new Employee
                 {
                     EmployeeId = employee.EmployeeId,
                     Username = employee.Username,
-                    Role = employee.Role
+                    Tier = employee.Tier
                 })
                 .FirstOrDefaultAsync();
         }
@@ -361,7 +361,6 @@ namespace CompanyPMO_.NET.Repository
             var newEmployee = new Employee
             {
                 Username = employee.Username,
-                Role = employee.Role,
                 Email = employee.Email,
                 PhoneNumber = employee.PhoneNumber,
                 Password = hashedPassword,
