@@ -331,7 +331,7 @@ namespace CompanyPMO_.NET.Repository
             var parameter = Expression.Parameter(typeof(T), "x");
 
             // * If constantId is provided, build the first expression. (x => x.EntityId EQUALS constantId)
-            BinaryExpression firstEquals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
+            BinaryExpression equals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
 
             if (constantId is not null && constantId > 0)
             {
@@ -344,18 +344,13 @@ namespace CompanyPMO_.NET.Repository
                     // If nullable int convert to int to avoid error, however thisll trow exception if the integer is null, handle with care
                     var notNullableFilterString = Expression.Convert(newFilterString, typeof(int));
 
-                    firstEquals = Expression.Equal(notNullableFilterString, constant);
+                    equals = Expression.Equal(notNullableFilterString, constant);
                 }
                 else
                 {
-                    firstEquals = Expression.Equal(newFilterString, constant);
+                    equals = Expression.Equal(newFilterString, constant);
                 }
             }
-
-            BinaryExpression secondEquals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
-
-            // Start an empty expression, to hold all of the values. Defaulting to true.
-            BinaryExpression combinedExpression = Expression.Equal(firstEquals, secondEquals);
 
             // * If filterParams are filterValue are provided, build the second expression. (x => x.FilterBy EQUALS filterValue)
             if (filterParams.FilterBy is not null && filterParams.FilterValue is not null)
@@ -386,7 +381,7 @@ namespace CompanyPMO_.NET.Repository
 
                             // Checks if x.Whatever is in the list of ints (x => valueInts.Contains(x.Whatever))
                             Expression containsCall = Expression.Call(valueIntsConstant, containsMethod, property);
-                            combinedExpression = Expression.AndAlso(combinedExpression, containsCall);
+                            equals = Expression.AndAlso(equals, containsCall);
                         }
                         else
                         {
@@ -396,14 +391,14 @@ namespace CompanyPMO_.NET.Repository
                                 // handle fValue will be null. This will be usefull when we want to do for example x.Finished == null to get unfinished entities
                                 ConstantExpression nullish = Expression.Constant(null, propertyType);
                                 BinaryExpression equalsNull = Expression.Equal(property, nullish);
-                                combinedExpression = Expression.AndAlso(combinedExpression, equalsNull);
+                                equals = Expression.AndAlso(equals, equalsNull);
                             }
                             else if (pair.fValue == "NotNull")
                             {
                                 // Handle fValue not equal to null
                                 ConstantExpression notNull = Expression.Constant(null, propertyType);
                                 BinaryExpression notEqualsNull = Expression.NotEqual(property, notNull);
-                                combinedExpression = Expression.AndAlso(combinedExpression, notEqualsNull);
+                                equals = Expression.AndAlso(equals, notEqualsNull);
                             }
                             else if (pair.fValue == "RightNowDate")
                             {
@@ -412,13 +407,13 @@ namespace CompanyPMO_.NET.Repository
                                 BinaryExpression notEqualsNull = Expression.NotEqual(property, notNull);
 
                                 // Build the following expression, for overdue entities: x => x.Finished != null && x.Finished < DateTime.UtcNow
-                                combinedExpression = Expression.AndAlso(combinedExpression, notEqualsNull);
+                                equals = Expression.AndAlso(equals, notEqualsNull);
 
                                 DateTime? rNow = DateTime.UtcNow;
                                 ConstantExpression constant = Expression.Constant(rNow, propertyType);
-                                BinaryExpression equals = Expression.LessThan(property, constant);
+                                BinaryExpression scopedEquals = Expression.LessThan(property, constant);
 
-                                combinedExpression = Expression.AndAlso(combinedExpression, equals);
+                                equals = Expression.AndAlso(equals, scopedEquals);
                             }
                             else if (pair.fValue == "Ongoing")
                             {
@@ -427,21 +422,21 @@ namespace CompanyPMO_.NET.Repository
                                 BinaryExpression notEqualsNull = Expression.NotEqual(property, notNull);
 
                                 // Build the following expression, for overdue entities: x => x.Finished != null && x.Finished < DateTime.UtcNow
-                                combinedExpression = Expression.AndAlso(combinedExpression, notEqualsNull);
+                                equals = Expression.AndAlso(equals, notEqualsNull);
 
                                 DateTime? rNow = DateTime.UtcNow;
                                 ConstantExpression constant = Expression.Constant(rNow, propertyType);
-                                BinaryExpression equals = Expression.GreaterThan(property, constant);
+                                BinaryExpression scopedEquals = Expression.GreaterThan(property, constant);
 
-                                combinedExpression = Expression.AndAlso(combinedExpression, equals);
+                                equals = Expression.AndAlso(equals, scopedEquals);
                             }
                             else
                             {
                                 // handle fValue will be a value
                                 object convertedValue = Convert.ChangeType(pair.fValue, propertyType);
                                 ConstantExpression constant = Expression.Constant(convertedValue, propertyType);
-                                BinaryExpression equals = Expression.Equal(property, constant);
-                                combinedExpression = Expression.AndAlso(combinedExpression, equals);
+                                BinaryExpression scopedEquals = Expression.Equal(property, constant);
+                                equals = Expression.AndAlso(equals, scopedEquals);
                             }
                         }
                     }
@@ -450,12 +445,10 @@ namespace CompanyPMO_.NET.Repository
                 {
                     MemberExpression newFilterString = FilterStringSplitter(parameter, filterParams.FilterBy);
                     var otherConstant = Expression.Constant(Convert.ToInt32(filterParams.FilterValue));
-                    secondEquals = Expression.Equal(newFilterString, otherConstant);
+                    var scopedEquals = Expression.Equal(newFilterString, otherConstant);
+                    equals = Expression.AndAlso(equals, scopedEquals);
                 }
             }
-
-            // * Join the two where expressions (Exp1 && exp2) (x => x.EntityId EQUALS constantId && x => x.FilterBy EQUALS filterValue)
-            combinedExpression = Expression.AndAlso(combinedExpression, secondEquals);
 
             // If whereIds its not null, we are going to create a new expression to filter by the given ids. Example: Get all the tasks that belong to the projectIds 1, 2 and 3
             // This is so it can work together with the GetEntitiesByEntityId method. (x => x.TaskIds.Contains("TaskId")
@@ -467,11 +460,9 @@ namespace CompanyPMO_.NET.Repository
 
                 Expression containsCall = Expression.Call(whereIdsConstant, containsMethod, whereIdsProperty); // Check if the whereIds list contains the whereId property
 
-                // Updates combinedExpression by combining the previous combinedExpression with the new containsCall expression using
-                combinedExpression = Expression.AndAlso(combinedExpression, containsCall);
+                // Updates equals by combining the previous equals with the new containsCall expression using
+                equals = Expression.AndAlso(equals, containsCall);
             }
-
-            BinaryExpression thirdEquals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
 
             if (!string.IsNullOrWhiteSpace(filterParams.SearchBy) && !string.IsNullOrWhiteSpace(filterParams.SearchValue))
             {
@@ -487,10 +478,10 @@ namespace CompanyPMO_.NET.Repository
                 // This creates an expression to search case-insensitive x.Name.ToLower().Contains("text")
                 Expression searchContainsCall = Expression.Call(searchPropertyToLower, containsMethod, searchConstant);
 
-                combinedExpression = Expression.AndAlso(combinedExpression, searchContainsCall);
+                equals = Expression.AndAlso(equals, searchContainsCall);
             }
 
-            var whereExpression = Expression.Lambda<Func<T, bool>>(combinedExpression, parameter);
+            var whereExpression = Expression.Lambda<Func<T, bool>>(equals, parameter);
 
             MemberExpression newOrderString = FilterStringSplitter(parameter, filterParams.OrderBy ?? defaultOrderBy);
             UnaryExpression orderConvert = Expression.Convert(newOrderString, typeof(object));

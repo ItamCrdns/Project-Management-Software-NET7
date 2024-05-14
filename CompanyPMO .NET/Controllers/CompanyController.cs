@@ -180,8 +180,8 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(DataCountPages<ProjectDto>))]
         public async Task<IActionResult> GetOngoingProjectsByClient(int clientId, [FromQuery] FilterParams filterParams)
         {
-            string filterBy = filterParams.FilterBy == null ? "finished_expectedDeliveryDate" : filterParams.FilterBy + "_finished_expectedDeliveryDate";
-            string filterValue = filterParams.FilterValue == null ? "NoValue_Ongoing" : filterParams.FilterValue + "_NoValue_Ongoing";
+            string filterBy = filterParams.FilterBy == null ? "startedWorking_finished_expectedDeliveryDate" : filterParams.FilterBy + "_startedWorking_finished_expectedDeliveryDate";
+            string filterValue = filterParams.FilterValue == null ? "NotNull_NoValue_Ongoing" : filterParams.FilterValue + "_NotNull_NoValue_Ongoing";
 
             // New instance of FilterParams to ensure that the FilterBy and FilterValue are set correctly and not overwritten by the client
             FilterParams interalFilterParams = new()
@@ -250,6 +250,33 @@ namespace CompanyPMO_.NET.Controllers
                 SearchValue = filterParams.SearchValue,
                 FilterBy = filterBy,
                 FilterValue = filterValue, // x => x.ExpectedDeliveryDate < DateTime.Now
+                FilterWhere = filterParams.FilterWhere,
+                FilterWhereValue = filterParams.FilterWhereValue
+            };
+
+            var projects = await _projectService.GetProjectsByCompanyName(clientId, interalFilterParams);
+
+            return Ok(projects);
+        }
+
+        [Authorize(Policy = "EmployeesAllowed")]
+        [HttpGet("{clientId}/projects/not-started")]
+        [ProducesResponseType(200, Type = typeof(DataCountPages<ProjectDto>))]
+        public async Task<IActionResult> GetNotStartedProjectsByClient(int clientId, [FromQuery] FilterParams filterParams)
+        {
+            string filterBy = filterParams.FilterBy == null ? "startedWorking_finished" : filterParams.FilterBy + "_startedWorking_finished";
+            string filterValue = filterParams.FilterValue == null ? "NoValue_NoValue" : filterParams.FilterValue + "_NoValue_NoValue";
+
+            FilterParams interalFilterParams = new()
+            {
+                Page = filterParams.Page,
+                PageSize = filterParams.PageSize,
+                OrderBy = filterParams.OrderBy,
+                Sort = filterParams.Sort,
+                SearchBy = filterParams.SearchBy,
+                SearchValue = filterParams.SearchValue,
+                FilterBy = filterBy,
+                FilterValue = filterValue, //  x => x.StartedWorking == null && x.Finished == null
                 FilterWhere = filterParams.FilterWhere,
                 FilterWhereValue = filterParams.FilterWhereValue
             };
