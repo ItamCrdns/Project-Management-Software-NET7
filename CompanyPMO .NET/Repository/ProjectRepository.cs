@@ -4,7 +4,6 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.Design;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -152,7 +151,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountPages<ProjectDto>> GetProjectsByCompanyName(int companyId, FilterParams filterParams)
         {
-            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Project>(companyId, null, null, "CompanyId", "Created", filterParams);
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Project>(companyId, null, null, null, "CompanyId", "Created", filterParams);
 
             bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
@@ -400,14 +399,20 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountPages<ProjectDto>> GetProjectsByEmployeeUsername(string username, FilterParams filterParams)
         {
-            var (projectIds, totalProjectsCount, totalPages) = await _utilityService.GetEntitiesEmployeeCreatedOrParticipates<EmployeeProject, Project>(username, "ProjectCreatorId", "ProjectId", filterParams.Page, filterParams.PageSize);
-
-            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Project>(null, projectIds, "ProjectId", "ProjectId", "Created", filterParams);
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Project>(null, username, null, "ProjectId", "ProjectCreatorUsername", "Created", filterParams);
 
             bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
 
+            int totalProjectsCount = await _context.Projects
+                .Where(whereExpression)
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalProjectsCount / filterParams.PageSize);
+
             List<Project> projects = new();
+
+            int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
 
             if (ShallOrderAscending)
             {
@@ -417,6 +422,8 @@ namespace CompanyPMO_.NET.Repository
                     .Include(c => c.Company)
                     .Include(e => e.Employees)
                     .Include(p => p.ProjectCreator)
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
                     .ToListAsync();
             }
             else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
@@ -427,6 +434,8 @@ namespace CompanyPMO_.NET.Repository
                     .Include(c => c.Company)
                     .Include(e => e.Employees)
                     .Include(p => p.ProjectCreator)
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
                     .ToListAsync();
             }
             var projectDtos = ProjectSelectQuery(projects);

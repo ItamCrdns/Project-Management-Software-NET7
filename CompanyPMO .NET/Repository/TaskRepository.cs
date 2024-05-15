@@ -236,7 +236,7 @@ namespace CompanyPMO_.NET.Repository
             // ATM We are just ordering the entities so this count and pages are actually good i think
             var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEntityId<Models.Task>(projectId, "ProjectId", "TaskId", filterParams.Page, filterParams.PageSize);
 
-            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Models.Task>(projectId, taskIds, "TaskId", "ProjectId", "Created", filterParams);
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Models.Task>(projectId, null, taskIds, "TaskId", "ProjectId", "Created", filterParams);
 
             bool shallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool shallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");

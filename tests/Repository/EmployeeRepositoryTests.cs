@@ -186,7 +186,7 @@ namespace tests.Repository
             var tupleResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Employee>(
-                A<int>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleResult);
 
             var result = await employeeRepository.GetEmployeesBySupervisorId(id, filterParams);
@@ -218,7 +218,7 @@ namespace tests.Repository
             var tupleResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Employee>(
-                A<int>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleResult);
 
             var result = await employeeRepository.GetEmployeesBySupervisorId(id, filterParams);

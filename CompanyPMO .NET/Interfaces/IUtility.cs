@@ -73,7 +73,9 @@ namespace CompanyPMO_.NET.Interfaces
         // * Build Where and orderBy expressions during runtime
         (Expression<Func<T, bool>>, Expression<Func<T, object>>?) BuildWhereAndOrderByExpressions<T>(
             int? constantId,
+            string? constantString, // Do not pass both constantId and constantStringIncludes at the same time
             // ! Just pass null, null if you dont want to use the whereIds and whereId parameters. This will disable the extra .Where (x => x.whereIds.Contains(x.whereId) expression
+            // TODO: Might deprecate whereIds
             IEnumerable<int>? whereIds, // * Pass a list of ids here: example: new List<int> { 1, 2, 3 }. This will be used to filter the data and will only return the data that matches the given ids
             string? whereId, // * Used to build the where expression along with the whereIds list. Example: x => whereIds.Contains(x.whereId)
             string defaultWhere, // * Pass it here: example:  filterParams.FilterWhere ?? "CompanyId"

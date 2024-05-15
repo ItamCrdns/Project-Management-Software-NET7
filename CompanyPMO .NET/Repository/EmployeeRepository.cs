@@ -80,7 +80,7 @@ namespace CompanyPMO_.NET.Repository
         public async Task<DataCountPages<EmployeeShowcaseDto>> GetEmployeesBySupervisorId(int supervisorId, FilterParams filterParams)
         {
             // TODO: FIX WORKLOAD ORDER BY. NOT WORKING
-            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Employee>(supervisorId, null, null, "SupervisorId", "Created", filterParams);
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Employee>(supervisorId, null, null, null, "SupervisorId", "Created", filterParams);
 
             bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");

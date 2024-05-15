@@ -154,7 +154,7 @@ namespace CompanyPMO_.NET.Repository
         {
             var (issueIds, totalIssuesCount, totalPages) = await _utilityService.GetEntitiesByEntityId<Issue>(taskId, "TaskId", "IssueId", filterParams.Page, filterParams.PageSize);
 
-            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Issue>(taskId, issueIds, "IssueId", "TaskId", "Created", filterParams);
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Issue>(taskId, null, issueIds, "IssueId", "TaskId", "Created", filterParams);
 
             bool shallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool shallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");

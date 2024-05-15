@@ -252,7 +252,7 @@ namespace Tests.Repository
             var tupleExpressionsResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Issue>(
-                A<int>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleExpressionsResult);
 
             var result = await issueRepository.GetIssuesByTaskId(taskId, fakeFilterParams);
@@ -294,7 +294,7 @@ namespace Tests.Repository
             var tupleExpressionsResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Issue>(
-                A<int>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleExpressionsResult);
 
             var result = await issueRepository.GetIssuesByTaskId(taskId, fakeFilterParams);

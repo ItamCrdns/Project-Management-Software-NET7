@@ -110,6 +110,11 @@ namespace CompanyPMO_.NET.Repository
                 filterString = "Employees.Count";
             }
 
+            if (lowerCaseFilterString.Equals("projectcreatorusername"))
+            {
+                filterString = "ProjectCreator.Username";
+            }
+
             if (lowerCaseFilterString.Equals("projectcreator"))
             {
                 filterString = "ProjectCreator.employeeId";
@@ -325,7 +330,7 @@ namespace CompanyPMO_.NET.Repository
             return (entityIds, totalEntitiesCount, totalPages);
         }
 
-        public (Expression<Func<T, bool>>, Expression<Func<T, object>>?) BuildWhereAndOrderByExpressions<T>(int? constantId, IEnumerable<int>? whereIds, string? whereId, string defaultWhere, string defaultOrderBy, FilterParams filterParams)
+        public (Expression<Func<T, bool>>, Expression<Func<T, object>>?) BuildWhereAndOrderByExpressions<T>(int? constantId, string? constantString, IEnumerable<int>? whereIds, string? whereId, string defaultWhere, string defaultOrderBy, FilterParams filterParams)
         {
             // This method will build and return two expressions that can be used by LINQ "Where" and "OrderBy" or "OrderByDescending" methods
             var parameter = Expression.Parameter(typeof(T), "x");
@@ -333,7 +338,7 @@ namespace CompanyPMO_.NET.Repository
             // * If constantId is provided, build the first expression. (x => x.EntityId EQUALS constantId)
             BinaryExpression equals = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
 
-            if (constantId is not null && constantId > 0)
+            if (constantId is not null && constantId > 0 && constantString is null)
             {
                 //MemberExpression newFilterString = null;
                 MemberExpression newFilterString = FilterStringSplitter(parameter, defaultWhere);
@@ -350,6 +355,15 @@ namespace CompanyPMO_.NET.Repository
                 {
                     equals = Expression.Equal(newFilterString, constant);
                 }
+            }
+            else if (constantString is not null)
+            {
+                // If constantString is provided, build the first expression. Ex: (x => x.ProjectCreator.Username == username)
+                // Only one expression can be built either with constantId or constantString do not pass them together
+                MemberExpression newFilterString = FilterStringSplitter(parameter, defaultWhere);
+                var constant = Expression.Constant(constantString);
+
+                equals = Expression.Equal(newFilterString, constant);
             }
 
             // * If filterParams are filterValue are provided, build the second expression. (x => x.FilterBy EQUALS filterValue)

@@ -389,7 +389,7 @@ namespace Tests.Repository
             var tupleResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Project>(
-                A<int>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleResult);
 
             var result = await projectRepository.GetProjectsByCompanyName(companyId, filterParams);
@@ -418,7 +418,7 @@ namespace Tests.Repository
             var tupleResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Project>(
-                A<int>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleResult);
 
             var result = await projectRepository.GetProjectsByCompanyName(companyId, filterParams);
@@ -643,7 +643,7 @@ namespace Tests.Repository
             var tupleExpressionsResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Project>(
-                null, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                null, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleExpressionsResult);
 
             var result = await projectRepository.GetProjectsByEmployeeUsername(username, filterParams);
@@ -676,7 +676,7 @@ namespace Tests.Repository
             var tupleExpressionsResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Project>(
-                               null, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                null, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleExpressionsResult);
 
             var result = await projectRepository.GetProjectsByEmployeeUsername(username, filterParams);
