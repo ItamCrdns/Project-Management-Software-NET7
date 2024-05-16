@@ -1,29 +1,27 @@
-﻿using CloudinaryDotNet.Actions;
-using CloudinaryDotNet;
+﻿using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using CompanyPMO_.NET.Data;
+using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
-using CompanyPMO_.NET.Dto;
 
-namespace CompanyPMO_.NET.Repository
+namespace CompanyPMO_.NET.Services
 {
-    public class ImageRepository : IImage
+    public class ImageService : IImage
     {
         private readonly ApplicationDbContext _context;
         private readonly Cloudinary _cloudinary;
-
-        public ImageRepository(ApplicationDbContext context, Cloudinary cloudinary)
+        public ImageService(ApplicationDbContext context, Cloudinary cloudinary)
         {
             _context = context;
             _cloudinary = cloudinary;
         }
-
-        public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingEntity(int entityId, List<IFormFile>? images, string entityType, int? imagesInEntity)
+        public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingEntity(int entity, List<IFormFile>? images, string entityType, int? imagesInEntity)
         {
             if (images is not null && images.Count > 0)
             {
                 // If more than 10 images in the entity the count of this collection will be 0
-                var imageCollection = await AddImagesToNewEntity(images, entityId, entityType, imagesInEntity);
+                var imageCollection = await AddImagesToNewEntity(images, entity, entityType, imagesInEntity);
 
                 var imageCollectionToReturn = imageCollection.Select(i => new ImageDto
                 {
@@ -94,7 +92,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<(string imageUrl, string publicId)> UploadToCloudinary(IFormFile file, int width, int height)
         {
-            if(file is not null && file.Length > 0)
+            if (file is not null && file.Length > 0)
             {
                 await using var stream = file.OpenReadStream();
 

@@ -5,16 +5,16 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace CompanyPMO_.NET.Repository
+namespace CompanyPMO_.NET.Services
 {
     public class JwtService : IJwt
     {
         private readonly IConfiguration _config;
-
         public JwtService(IConfiguration config)
         {
             _config = config;
         }
+
         public string JwtTokenGenerator(Employee employee)
         {
             var claims = new List<Claim>

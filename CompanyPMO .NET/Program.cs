@@ -14,17 +14,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<ICompany, CompanyRepository>();
 builder.Services.AddScoped<IEmployee, EmployeeRepository>();
-builder.Services.AddScoped<IImage, ImageRepository>();
 builder.Services.AddScoped<IProject, ProjectRepository>();
 builder.Services.AddScoped<ITask, TaskRepository>();
-builder.Services.AddScoped<IUserIdentity, UserIdentityRepository>();
-builder.Services.AddScoped<IUtility, UtilityRepository>();
 builder.Services.AddScoped<IIssue, IssueRepository>();
 builder.Services.AddScoped<IJwt, JwtService>();
 builder.Services.AddScoped<ILatestStuff, LatestStuffRepository>();
 builder.Services.AddScoped<IResetPasswordRequest, ResetPasswordRequestRepository>();
 builder.Services.AddScoped<IWorkload, WorkloadRepository>();
 
+builder.Services.AddScoped<IImage, ImageService>();
+builder.Services.AddScoped<IUtility, UtilityService>();
+builder.Services.AddScoped<IUserIdentity, GetUserIdService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 // Add services to the container.

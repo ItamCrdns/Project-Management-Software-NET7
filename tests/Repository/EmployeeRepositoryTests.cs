@@ -4,7 +4,6 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using CompanyPMO_.NET.Repository;
-using CompanyPMO_.NET.Services;
 using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;

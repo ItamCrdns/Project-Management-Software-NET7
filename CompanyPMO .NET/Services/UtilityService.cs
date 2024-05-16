@@ -8,18 +8,18 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 
-namespace CompanyPMO_.NET.Repository
+namespace CompanyPMO_.NET.Services
 {
-    public class UtilityRepository : IUtility
+    public class UtilityService : IUtility
     {
         private readonly ApplicationDbContext _context;
-
-        public UtilityRepository(ApplicationDbContext context)
+        public UtilityService(ApplicationDbContext context)
         {
             _context = context;
         }
-
-        public async Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToEntity<TEntity, UEntity>(List<int> employeeIds, string entityName, int entityId, Func<int, int, Task<bool>> isEmployeeAlreadyInEntity) where TEntity : class, new() where UEntity : class
+        public async Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToEntity<TEntity, UEntity>(List<int> employeeIds, string entityName, int entityId, Func<int, int, Task<bool>> isEmployeeAlreadyInEntity)
+            where TEntity : class, new()
+            where UEntity : class
         {
             // Check if entity exists (i.e "api/Project/3/add/employees" will check if Project with ID #3 existts)
             bool entityExists = await _context.Set<UEntity>().FindAsync(entityId) is not null;
@@ -94,240 +94,6 @@ namespace CompanyPMO_.NET.Repository
                 string response = "No employees were added. Are you trying to add employees that are already working in this project?";
                 return (response, null);
             }
-        }
-
-        public MemberExpression FilterStringSplitter(ParameterExpression parameter, string filterString)
-        {
-            // * FilterBy and OrderBy
-            // * Returns a property: 
-            // Creating expression for a single property if the filter string does not have a dot (Ex: {x.Priority})
-            // If the filter string has a dot, we will split it and create a nested expression for each property (Ex: {x.TaskCreator.EmployeeId})
-
-            string lowerCaseFilterString = filterString.ToLower();
-
-            if (lowerCaseFilterString.Equals("employees"))
-            {
-                filterString = "Employees.Count";
-            }
-
-            if (lowerCaseFilterString.Equals("projectcreatorusername"))
-            {
-                filterString = "ProjectCreator.Username";
-            }
-
-            if (lowerCaseFilterString.Equals("projectcreator"))
-            {
-                filterString = "ProjectCreator.employeeId";
-            }
-
-            if (lowerCaseFilterString.Equals("company"))
-            {
-                filterString = "Company.companyId";
-            }
-
-            if (lowerCaseFilterString.Equals("issuecreator"))
-            {
-                filterString = "IssueCreator.employeeId";
-            }
-
-            if (lowerCaseFilterString.Equals("task"))
-            {
-                filterString = "Task.taskId";
-            }
-
-            if (lowerCaseFilterString.Equals("taskcreator"))
-            {
-                filterString = "TaskCreator.employeeId";
-            }
-
-            if (lowerCaseFilterString.Equals("project"))
-            {
-                filterString = "Project.projectId";
-            }
-
-            if (filterString.Contains('.'))
-            {
-                string[] parts = filterString.Split(".");
-                MemberExpression splitPropertyExpression = Expression.Property(parameter, parts[0]);
-                MemberExpression splitPropertyExpression2 = Expression.Property(splitPropertyExpression, parts[1]);
-
-                return splitPropertyExpression2;
-            }
-            else
-            {
-                MemberExpression property = Expression.Property(parameter, filterString);
-                return property;
-            }
-        }
-
-        public async Task<(ICollection<T> entity, int totalEntitiesCount, int totalPages)> GetAllEntities<T>(FilterParams filterParams, List<string> navigationProperties = null) where T : class
-        {
-            var filterProperty = typeof(T).GetProperty(filterParams.OrderBy ?? "Created", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-
-            // * If ascending or descending orders are provided in the query params, we will use them
-            bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
-            bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
-
-            bool filterExists = filterProperty is not null;
-
-            if (!filterExists)
-            {
-                var entity = new Collection<T>();
-                return (entity, 0, 0);
-            }
-
-            int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
-
-            var parameter = Expression.Parameter(typeof(T), "x");
-
-            // Initialize the empty WHERE and ORDERBY expression
-            var whereExpression = Expression.Lambda<Func<T, bool>>(Expression.Constant(true), Expression.Parameter(typeof(T)));
-            var orderExpression = Expression.Lambda<Func<T, object>>(Expression.Constant(null, typeof(object)), Expression.Parameter(typeof(T)));
-
-            if (filterParams.FilterBy is not null && filterParams.FilterValue is not null)
-            {
-                MemberExpression newFilterString = FilterStringSplitter(parameter, filterParams.FilterBy);
-                UnaryExpression convertedWhereProperty = Expression.Convert(newFilterString, typeof(object));
-                BinaryExpression whereEquals = Expression.Equal(convertedWhereProperty, Expression.Constant(filterParams.FilterValue));
-                whereExpression = Expression.Lambda<Func<T, bool>>(whereEquals, parameter);
-            }
-            else
-            {
-                // Fallback if no filterBy and filterValue query params are provided
-                whereExpression = p => true; // Will have no effect
-            }
-
-            if (filterParams.OrderBy is not null)
-            {
-                MemberExpression newFilterString = FilterStringSplitter(parameter, filterParams.OrderBy);
-                UnaryExpression convertedOrderByProperty = Expression.Convert(newFilterString, typeof(object));
-                orderExpression = Expression.Lambda<Func<T, object>>(convertedOrderByProperty, parameter);
-            }
-
-            ICollection<T> entities = new List<T>();
-
-            IQueryable<T> query = _context.Set<T>();
-
-            if (navigationProperties is not null)
-            {
-                foreach (var navProperty in navigationProperties)
-                {
-                    query = query.Include(navProperty);
-                }
-            }
-
-            if (ShallOrderAscending)
-            {
-                entities = await query
-                    .OrderBy(orderExpression)
-                    .Where(whereExpression)
-                    .Skip(toSkip)
-                    .Take(filterParams.PageSize)
-                    .ToListAsync();
-            }
-            else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
-            {
-                entities = await query
-                    .OrderByDescending(orderExpression)
-                    .Where(whereExpression)
-                    .Skip(toSkip)
-                    .Take(filterParams.PageSize)
-                    .ToListAsync();
-            }
-
-            int totalEntitiesCount = await query
-                .Where(whereExpression)
-                .CountAsync();
-
-            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / filterParams.PageSize);
-
-            return (entities, totalEntitiesCount, totalPages);
-        }
-
-        public async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEmployeeUsername<TEntity>(string username, string entityName, int? page, int? pageSize) where TEntity : class, IEmployeeEntity // TEntity is constrained with IEmployeeEntity
-        {
-            // Generic method to return a list of entities that the employee belongs to, its count and the total pages.
-            // Result comes paginated.
-
-            // Get the employeeId from the username. Why? Junction tables store the Id, not the username
-            int employeeId = await _context.Employees
-                .Where(e => e.Username.Equals(username))
-                .Select(e => e.EmployeeId)
-                .FirstOrDefaultAsync();
-
-            // Count the total entities that the employee belongs to
-            int totalEntitiesCount = await _context.Set<TEntity>()
-                .Where(i => i.EmployeeId.Equals(employeeId))
-                .CountAsync();
-
-            // If the pageSize is null, return all the entities
-
-            int pageValue = page ?? 1;
-            int pageValueSize = pageSize ?? totalEntitiesCount;
-
-            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / pageValueSize);
-
-            int toSkip = (pageValue - 1) * pageValueSize;
-
-            // Use reflection to get the EntityId
-            var entityId = typeof(TEntity).GetProperty(entityName);
-
-            // Returns a list of integers of all the entity ids that the employee belongs to
-            List<int> entityIds = await _context.Set<TEntity>()
-                .Where(i => i.EmployeeId.Equals(employeeId))
-                .Select(e => (int)entityId.GetValue(e))
-                .Skip(toSkip)
-                .Take(pageValueSize)
-                .ToListAsync();
-
-            return (entityIds, totalEntitiesCount, totalPages);
-        }
-
-        public async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEntityId<TEntity>(int entityId, string entityName, string primaryKeyName, int? page, int? pageSize) where TEntity : class
-        {
-            // The name its kind of redundant but its what it says: it will, for example, return tasks based on the projectId
-
-            var entityProperty = typeof(TEntity).GetProperty(entityName);
-            var primaryKey = typeof(TEntity).GetProperty(primaryKeyName);
-
-            // Use expression tree to build a predicate value for the where clause
-            var parameter = Expression.Parameter(typeof(TEntity), "x");
-
-            // Create the property access expression (x => x.Property)
-            var propertyAccess = Expression.Property(parameter, entityProperty);
-
-            // Create the comparasion expression (x => x.Property EQUALS entityId)
-            var equals = Expression.Equal(propertyAccess, Expression.Constant(entityId));
-
-            // Create a lambda expression (x => x.Property EQUALS entityId)
-            var whereExpression = Expression.Lambda<Func<TEntity, bool>>(equals, parameter);
-
-            // Compile the lambda expression into a delegate
-            //var predicate = lambda.Compile(); //+		System.Linq.Expressions.Expression<TDelegate>.Compile devuelto	{Method = <Internal Error evaluating expression>}	System.Func<CompanyPMO_.NET.Models.Task, bool>
-
-            // Count the total entities that the employee belongs to
-            var totalEntitiesCount = _context.Set<TEntity>()
-                .Where(whereExpression)
-                .Select(x => (int)entityProperty.GetValue(x))
-                .Count();
-
-            // If the pageSize is null, return all the entities
-            int pageValue = page ?? 1;
-            int pageValueSize = pageSize ?? totalEntitiesCount;
-
-            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / pageValueSize);
-
-            int toSkip = (pageValue - 1) * pageValueSize;
-
-            // Get a list of the entity Ids
-            List<int> entityIds = await _context.Set<TEntity>()
-                .Where(whereExpression)
-                .Select(x => (int)primaryKey.GetValue(x)) // Select the primary key of the entity and return a list of those primary keys
-                .Skip(toSkip)
-                .Take(pageValueSize)
-                .ToListAsync();
-
-            return (entityIds, totalEntitiesCount, totalPages);
         }
 
         public (Expression<Func<T, bool>>, Expression<Func<T, object>>?) BuildWhereAndOrderByExpressions<T>(int? constantId, string? constantString, IEnumerable<int>? whereIds, string? whereId, string defaultWhere, string defaultOrderBy, FilterParams filterParams)
@@ -504,6 +270,200 @@ namespace CompanyPMO_.NET.Repository
             return (whereExpression, orderByExpression);
         }
 
+        public MemberExpression FilterStringSplitter(ParameterExpression parameter, string filterString)
+        {
+            // * FilterBy and OrderBy
+            // * Returns a property: 
+            // Creating expression for a single property if the filter string does not have a dot (Ex: {x.Priority})
+            // If the filter string has a dot, we will split it and create a nested expression for each property (Ex: {x.TaskCreator.EmployeeId})
+
+            string lowerCaseFilterString = filterString.ToLower();
+
+            if (lowerCaseFilterString.Equals("employees"))
+            {
+                filterString = "Employees.Count";
+            }
+
+            if (lowerCaseFilterString.Equals("projectcreatorusername"))
+            {
+                filterString = "ProjectCreator.Username";
+            }
+
+            if (lowerCaseFilterString.Equals("projectcreator"))
+            {
+                filterString = "ProjectCreator.employeeId";
+            }
+
+            if (lowerCaseFilterString.Equals("company"))
+            {
+                filterString = "Company.companyId";
+            }
+
+            if (lowerCaseFilterString.Equals("issuecreator"))
+            {
+                filterString = "IssueCreator.employeeId";
+            }
+
+            if (lowerCaseFilterString.Equals("task"))
+            {
+                filterString = "Task.taskId";
+            }
+
+            if (lowerCaseFilterString.Equals("taskcreator"))
+            {
+                filterString = "TaskCreator.employeeId";
+            }
+
+            if (lowerCaseFilterString.Equals("project"))
+            {
+                filterString = "Project.projectId";
+            }
+
+            if (filterString.Contains('.'))
+            {
+                string[] parts = filterString.Split(".");
+                MemberExpression splitPropertyExpression = Expression.Property(parameter, parts[0]);
+                MemberExpression splitPropertyExpression2 = Expression.Property(splitPropertyExpression, parts[1]);
+
+                return splitPropertyExpression2;
+            }
+            else
+            {
+                MemberExpression property = Expression.Property(parameter, filterString);
+                return property;
+            }
+        }
+
+        public async Task<(ICollection<T> entity, int totalEntitiesCount, int totalPages)> GetAllEntities<T>(FilterParams filterParams, List<string>? navigationProperties = null) where T : class
+        {
+            var filterProperty = typeof(T).GetProperty(filterParams.OrderBy ?? "Created", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+
+            // * If ascending or descending orders are provided in the query params, we will use them
+            bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
+            bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
+
+            bool filterExists = filterProperty is not null;
+
+            if (!filterExists)
+            {
+                var entity = new Collection<T>();
+                return (entity, 0, 0);
+            }
+
+            int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
+
+            var parameter = Expression.Parameter(typeof(T), "x");
+
+            // Initialize the empty WHERE and ORDERBY expression
+            var whereExpression = Expression.Lambda<Func<T, bool>>(Expression.Constant(true), Expression.Parameter(typeof(T)));
+            var orderExpression = Expression.Lambda<Func<T, object>>(Expression.Constant(null, typeof(object)), Expression.Parameter(typeof(T)));
+
+            if (filterParams.FilterBy is not null && filterParams.FilterValue is not null)
+            {
+                MemberExpression newFilterString = FilterStringSplitter(parameter, filterParams.FilterBy);
+                UnaryExpression convertedWhereProperty = Expression.Convert(newFilterString, typeof(object));
+                BinaryExpression whereEquals = Expression.Equal(convertedWhereProperty, Expression.Constant(filterParams.FilterValue));
+                whereExpression = Expression.Lambda<Func<T, bool>>(whereEquals, parameter);
+            }
+            else
+            {
+                // Fallback if no filterBy and filterValue query params are provided
+                whereExpression = p => true; // Will have no effect
+            }
+
+            if (filterParams.OrderBy is not null)
+            {
+                MemberExpression newFilterString = FilterStringSplitter(parameter, filterParams.OrderBy);
+                UnaryExpression convertedOrderByProperty = Expression.Convert(newFilterString, typeof(object));
+                orderExpression = Expression.Lambda<Func<T, object>>(convertedOrderByProperty, parameter);
+            }
+
+            ICollection<T> entities = new List<T>();
+
+            IQueryable<T> query = _context.Set<T>();
+
+            if (navigationProperties is not null)
+            {
+                foreach (var navProperty in navigationProperties)
+                {
+                    query = query.Include(navProperty);
+                }
+            }
+
+            if (ShallOrderAscending)
+            {
+                entities = await query
+                    .OrderBy(orderExpression)
+                    .Where(whereExpression)
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
+                    .ToListAsync();
+            }
+            else if (ShallOrderDescending || (!ShallOrderAscending && !ShallOrderDescending))
+            {
+                entities = await query
+                    .OrderByDescending(orderExpression)
+                    .Where(whereExpression)
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
+                    .ToListAsync();
+            }
+
+            int totalEntitiesCount = await query
+                .Where(whereExpression)
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / filterParams.PageSize);
+
+            return (entities, totalEntitiesCount, totalPages);
+        }
+
+        public async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEntityId<TEntity>(int entityId, string entityName, string primaryKeyName, int? page, int? pageSize) where TEntity : class
+        {
+            // The name its kind of redundant but its what it says: it will, for example, return tasks based on the projectId
+            var entityProperty = typeof(TEntity).GetProperty(entityName);
+            var primaryKey = typeof(TEntity).GetProperty(primaryKeyName);
+
+            // Use expression tree to build a predicate value for the where clause
+            var parameter = Expression.Parameter(typeof(TEntity), "x");
+
+            // Create the property access expression (x => x.Property)
+            var propertyAccess = Expression.Property(parameter, entityProperty);
+
+            // Create the comparasion expression (x => x.Property EQUALS entityId)
+            var equals = Expression.Equal(propertyAccess, Expression.Constant(entityId));
+
+            // Create a lambda expression (x => x.Property EQUALS entityId)
+            var whereExpression = Expression.Lambda<Func<TEntity, bool>>(equals, parameter);
+
+            // Compile the lambda expression into a delegate
+            //var predicate = lambda.Compile(); //+		System.Linq.Expressions.Expression<TDelegate>.Compile devuelto	{Method = <Internal Error evaluating expression>}	System.Func<CompanyPMO_.NET.Models.Task, bool>
+
+            // Count the total entities that the employee belongs to
+            var totalEntitiesCount = _context.Set<TEntity>()
+                .Where(whereExpression)
+                .Select(x => (int)entityProperty.GetValue(x))
+                .Count();
+
+            // If the pageSize is null, return all the entities
+            int pageValue = page ?? 1;
+            int pageValueSize = pageSize ?? totalEntitiesCount;
+
+            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / pageValueSize);
+
+            int toSkip = (pageValue - 1) * pageValueSize;
+
+            // Get a list of the entity Ids
+            List<int> entityIds = await _context.Set<TEntity>()
+                .Where(whereExpression)
+                .Select(x => (int)primaryKey.GetValue(x)) // Select the primary key of the entity and return a list of those primary keys
+                .Skip(toSkip)
+                .Take(pageValueSize)
+                .ToListAsync();
+
+            return (entityIds, totalEntitiesCount, totalPages);
+        }
+
         public int MinutesUntilTimeArrival(DateTimeOffset? time)
         {
             DateTimeOffset currentTime = DateTimeOffset.Now;
@@ -610,6 +570,45 @@ namespace CompanyPMO_.NET.Repository
             {
                 return (false, dto);
             }
+        }
+
+        async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> IUtility.GetEntitiesByEmployeeUsername<TEntity>(string username, string entityName, int? page, int? pageSize)
+        {
+            // Generic method to return a list of entities that the employee belongs to, its count and the total pages.
+            // Result comes paginated.
+
+            // Get the employeeId from the username. Why? Junction tables store the Id, not the username
+            int employeeId = await _context.Employees
+                .Where(e => e.Username.Equals(username))
+                .Select(e => e.EmployeeId)
+                .FirstOrDefaultAsync();
+
+            // Count the total entities that the employee belongs to
+            int totalEntitiesCount = await _context.Set<TEntity>()
+                .Where(i => i.EmployeeId.Equals(employeeId))
+                .CountAsync();
+
+            // If the pageSize is null, return all the entities
+
+            int pageValue = page ?? 1;
+            int pageValueSize = pageSize ?? totalEntitiesCount;
+
+            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / pageValueSize);
+
+            int toSkip = (pageValue - 1) * pageValueSize;
+
+            // Use reflection to get the EntityId
+            var entityId = typeof(TEntity).GetProperty(entityName);
+
+            // Returns a list of integers of all the entity ids that the employee belongs to
+            List<int> entityIds = await _context.Set<TEntity>()
+                .Where(i => i.EmployeeId.Equals(employeeId))
+                .Select(e => (int)entityId.GetValue(e))
+                .Skip(toSkip)
+                .Take(pageValueSize)
+                .ToListAsync();
+
+            return (entityIds, totalEntitiesCount, totalPages);
         }
 
         async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> IUtility.GetEntitiesEmployeeCreatedOrParticipates<TEntity, UEntity>(string username, string entityNameForEntityCreatorId, string entityIdToSelect, int? page, int? pageSize)
