@@ -104,7 +104,12 @@ namespace CompanyPMO_.NET.Repository
 
                 if (addedEmployees.Any())
                 {
-                    await _workloadService.SpUpdateEmployeeWorkloadAssignedTasksAndIssues(addedEmployees.Select(x => x.EmployeeId).ToArray());
+                    var workloadUpdateResult = await _workloadService.UpdateEmployeeWorkloadAssignedTasksAndIssues(addedEmployees.Select(x => x.EmployeeId).ToArray());
+
+                    if (!workloadUpdateResult.Success)
+                    {
+                        errors.Add($"Failed to update employee workload {workloadUpdateResult.Message}");
+                    }
                 }
 
                 // If its not the success response, then its an error

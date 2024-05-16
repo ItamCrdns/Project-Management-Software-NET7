@@ -1,13 +1,12 @@
-﻿using CompanyPMO_.NET.Dto;
-using CompanyPMO_.NET.Models;
-using Task = System.Threading.Tasks.Task;
+﻿using CompanyPMO_.NET.Common;
+using CompanyPMO_.NET.Dto;
 
 namespace CompanyPMO_.NET.Interfaces
 {
     public interface IWorkload
     {
-        Task SpUpdateEmployeeAssignedProjectsCount(int[] employees);
-        Task SpUpdateEmployeeWorkloadAssignedTasksAndIssues(int[] employees);
-        Task SpUpdateEmployeeCompletedProjects(int[] employees);
+        Task<OperationResult> UpdateEmployeeAssignedProjectsCount(int[] employees);
+        Task<OperationResult> UpdateEmployeeCompletedProjects(int[] employees); // List<string> is a list of the updated workloadsums returned. Example: ["Very high", "High", "None"]. Just for testing purposes
+        Task<OperationResult<List<WorkloadDto>>> UpdateEmployeeWorkloadAssignedTasksAndIssues(int[] employees);
     }
 }

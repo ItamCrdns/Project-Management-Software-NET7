@@ -103,8 +103,13 @@ namespace CompanyPMO_.NET.Repository
                 await _context.EmployeeProjects.AddRangeAsync(employeesToAdd);
                 int employeeRowsAffected = await _context.SaveChangesAsync(); // Returns the number of added employees
 
-                // Based on this we can execute the stored procedure to update assigned_projects on the workload table for the employee
-                await _workloadService.SpUpdateEmployeeAssignedProjectsCount(employeesToAdd.Select(x => x.EmployeeId).ToArray());
+                // Based on this we can execute the method to update assigned_projects on the workload table for the employee
+                var workloadUpdateResult = await _workloadService.UpdateEmployeeAssignedProjectsCount(employeesToAdd.Select(x => x.EmployeeId).ToArray());
+
+                if (!workloadUpdateResult.Success)
+                {
+                    errors.Add($"Failed to update the workload of the employees. Error = {workloadUpdateResult.Message}");
+                }
 
                 if (employeeRowsAffected is 0)
                 {
@@ -583,16 +588,24 @@ namespace CompanyPMO_.NET.Repository
 
             int[] employeeIdsWorkingInProjects = projects.SelectMany(p => p.Employees.Select(e => e.EmployeeId)).ToArray();
 
+            List<string> errors = new();
+
             if (employeeIdsWorkingInProjects.Length > 0)
             {
-                await _workloadService.SpUpdateEmployeeCompletedProjects(employeeIdsWorkingInProjects);
+                var workloadUpdateResult = await _workloadService.UpdateEmployeeCompletedProjects(employeeIdsWorkingInProjects);
+
+                if (!workloadUpdateResult.Success)
+                {
+                    errors.Add($"Failed to update the workload of the employees. Error = {workloadUpdateResult.Message}");
+                }
             }
 
             return new OperationResult<int[]>
             {
                 Success = true,
                 Message = "Projects finished successfully",
-                Data = projectIds
+                Data = projectIds,
+                Errors = errors
             };
         }
     }
