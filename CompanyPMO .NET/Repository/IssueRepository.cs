@@ -4,6 +4,7 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -69,15 +70,37 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountPages<IssueDto>> GetAllIssues(FilterParams filterParams)
         {
-            List<string> navProperties = new() { "IssueCreator", "Employees", "Task" };
+           Expression<Func<Issue, IssueDto>> predicate = x => new IssueDto
+           {
+                IssueId = x.IssueId,
+                Name = x.Name,
+                Created = x.Created,
+                Employees = x.Employees.Select(e => new EmployeeShowcaseDto
+                {
+                    EmployeeId = e.EmployeeId,
+                    Username = e.Username,
+                    ProfilePicture = e.ProfilePicture
+                }).ToList(),
+                IssueCreator = new EmployeeShowcaseDto
+                {
+                    EmployeeId = x.IssueCreator.EmployeeId,
+                    Username = x.IssueCreator.Username,
+                    ProfilePicture = x.IssueCreator.ProfilePicture
+                },
+                Task = new TaskShowcaseDto
+                {
+                    TaskId = x.Task.TaskId,
+                    ProjectId = x.Task.ProjectId,
+                    Name = x.Task.Name,
+                    ClientId = x.Task.Project.Company.CompanyId
+                }
+            };
 
-            var (issues, totalIssuesCount, totalPages) = await _utilityService.GetAllEntities<Issue>(filterParams, navProperties);
-
-            var issueDtos = IssueSelectQuery(issues);
+            var (issues, totalIssuesCount, totalPages) = await _utilityService.GetAllEntities(filterParams, predicate);
 
             return new DataCountPages<IssueDto>
             {
-                Data = issueDtos,
+                Data = issues,
                 Count = totalIssuesCount,
                 Pages = totalPages
             };
@@ -85,14 +108,16 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountPages<IssueShowcaseDto>> GetAllIssuesShowcase(int page, int pageSize)
         {
+            Expression<Func<Issue, IssueShowcaseDto>> predicate = x => new IssueShowcaseDto
+            {
+                IssueId = x.IssueId,
+                Name = x.Name
+            };
+
             int toSkip = (page - 1) * pageSize;
             IEnumerable<IssueShowcaseDto> issues = await _context.Issues
                 .OrderByDescending(i => i.Created)
-                .Select(i => new IssueShowcaseDto
-                {
-                    IssueId = i.IssueId,
-                    Name = i.Name
-                })
+                .Select(predicate)
                 .Skip(toSkip)
                 .Take(pageSize)
                 .ToListAsync();
@@ -275,7 +300,8 @@ namespace CompanyPMO_.NET.Repository
                 Task = new TaskShowcaseDto
                 {
                     TaskId = issue.Task.TaskId,
-                    Name = issue.Task.Name
+                    Name = issue.Task.Name,
+                    ClientId = issue.Task.Project.Company.CompanyId
                 }
             }).ToList();
 

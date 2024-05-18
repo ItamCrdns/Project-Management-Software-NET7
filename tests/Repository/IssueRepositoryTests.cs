@@ -134,11 +134,14 @@ namespace Tests.Repository
 
             var dbContextIssues = await dbContext.Issues.ToListAsync();
 
-            ICollection<Issue> issuesCollection = dbContextIssues.ToList();
+            ICollection<IssueDto> issuesCollection = dbContextIssues.Select(x => new IssueDto
+            {
+                Name = x.Name,
+            }).ToList();
 
             var tupleResult = (issuesCollection, 10, 1);
 
-            A.CallTo(() => _utility.GetAllEntities<Issue>(A<FilterParams>._, A<List<string>>._))
+            A.CallTo(() => _utility.GetAllEntities(A<FilterParams>._, A<Expression<Func<Issue, IssueDto>>>._))
                 .Returns(tupleResult);
 
             var result = await issueRepository.GetAllIssues(filterParams);
@@ -353,7 +356,7 @@ namespace Tests.Repository
             var issueRepository = new IssueRepository(dbContext, _utility);
 
             var result = await issueRepository.CreateIssue(newIssues, supervisorId, taskId, false);
-            
+
             result.Should().BeOfType<OperationResult<int>>();
             result.Success.Should().BeFalse();
             result.Message.Should().Be("Issue name and description are required");

@@ -9,5 +9,6 @@
         public ProjectSomeInfoDto Project { get; set; }
         public EmployeeShowcaseDto TaskCreator { get; set; }
         public ICollection<EmployeeShowcaseDto> Employees { get; set; }
+        public int? ClientId { get; set; }
     }
 }

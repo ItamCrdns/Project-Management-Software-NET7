@@ -25,7 +25,7 @@ namespace CompanyPMO_.NET.Interfaces
         // TEntity represents the junction table. UEntity represents the entity irself (i.e Project, Task, Issue)
         Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToEntity<TEntity, UEntity>(
             List<int> employeeIds, // List of employees to add
-            // Takes two integers as arguments one for the entityId and the other one for the employeeId
+                                   // Takes two integers as arguments one for the entityId and the other one for the employeeId
             string entityName, // Entity name used to identify whether its a task, project or issue
             int entityId,
             Func<int, int, Task<bool>> isEmployeeAlreadyInEntity) // Check if the employee already exists in the entity (i.e employee its already working on a project)
@@ -62,10 +62,12 @@ namespace CompanyPMO_.NET.Interfaces
             where TEntity : class, IEmployeeEntity // TEntity will be used to represent the junction table
             where UEntity : class; // UEntity will be used to represent the entity itself (i.e Project, Task, Issue)
 
-        Task<(ICollection<T> entity, int totalEntitiesCount, int totalPages)> GetAllEntities<T>(
-            FilterParams filterParams, 
-            List<string>? navigationProperties = null)
-            where T : class;
+        Task<(ICollection<U> entity, int totalEntitiesCount, int totalPages)> GetAllEntities<T, U>(
+            FilterParams filterParams,
+            Expression<Func<T, U>> predicate) // Predicate to select the data from the entity. Example: x => x.Project == project
+            where T : class
+            where U : class;
+
 
         // Splits the given filter from 'FilterExample' to 'Filter.Example' for linq querying purposes
         MemberExpression FilterStringSplitter(ParameterExpression parameter, string filterString);
@@ -74,8 +76,8 @@ namespace CompanyPMO_.NET.Interfaces
         (Expression<Func<T, bool>>, Expression<Func<T, object>>?) BuildWhereAndOrderByExpressions<T>(
             int? constantId,
             string? constantString, // Do not pass both constantId and constantStringIncludes at the same time
-            // ! Just pass null, null if you dont want to use the whereIds and whereId parameters. This will disable the extra .Where (x => x.whereIds.Contains(x.whereId) expression
-            // TODO: Might deprecate whereIds
+                                    // ! Just pass null, null if you dont want to use the whereIds and whereId parameters. This will disable the extra .Where (x => x.whereIds.Contains(x.whereId) expression
+                                    // TODO: Might deprecate whereIds
             IEnumerable<int>? whereIds, // * Pass a list of ids here: example: new List<int> { 1, 2, 3 }. This will be used to filter the data and will only return the data that matches the given ids
             string? whereId, // * Used to build the where expression along with the whereIds list. Example: x => whereIds.Contains(x.whereId)
             string defaultWhere, // * Pass it here: example:  filterParams.FilterWhere ?? "CompanyId"

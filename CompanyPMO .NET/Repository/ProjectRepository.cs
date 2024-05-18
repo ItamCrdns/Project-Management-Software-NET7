@@ -4,6 +4,7 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -140,15 +141,39 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountPages<ProjectDto>> GetAllProjects(FilterParams filterParams)
         {
-            List<string> navProperties = new() { "Company", "Employees", "ProjectCreator" };
+            Expression<Func<Project, ProjectDto>> predicate = p => new ProjectDto
+            {
+                ProjectId = p.ProjectId,
+                Name = p.Name,
+                Description = p.Description,
+                Created = p.Created,
+                Finished = p.Finished,
+                Priority = p.Priority,
+                Company = new CompanyShowcaseDto
+                {
+                    CompanyId = p.Company.CompanyId,
+                    Name = p.Company.Name,
+                    Logo = p.Company.Logo
+                },
+                Team = p.Employees.Select(p => new EmployeeShowcaseDto
+                {
+                    EmployeeId = p.EmployeeId,
+                    Username = p.Username,
+                    ProfilePicture = p.ProfilePicture
+                }).ToList(),
+                Creator = new EmployeeShowcaseDto
+                {
+                    EmployeeId = p.ProjectCreator.EmployeeId,
+                    Username = p.ProjectCreator.Username,
+                    ProfilePicture = p.ProjectCreator.ProfilePicture
+                }
+            };
 
-            var (projects, totalProjectsCount, totalPages) = await _utilityService.GetAllEntities<Project>(filterParams, navProperties);
-
-            var projectDtos = ProjectSelectQuery(projects);
+            var (projects, totalProjectsCount, totalPages) = await _utilityService.GetAllEntities(filterParams, predicate);
 
             return new DataCountPages<ProjectDto>
             {
-                Data = projectDtos,
+                Data = projects,
                 Count = totalProjectsCount,
                 Pages = totalPages
             };

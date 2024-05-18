@@ -358,9 +358,14 @@ namespace Tests.Repository
 
             var filterParams = A.Fake<FilterParams>();
 
-            var tupleResult = (dbContext.Projects.ToList(), 1, 1);
+            ICollection<ProjectDto> projectsCollection = [.. dbContext.Projects.Select(p => new ProjectDto
+            {
+                ProjectId = p.ProjectId
+            })];
 
-            A.CallTo(() => _utility.GetAllEntities<Project>(A<FilterParams>._, A<List<string>>._))
+            var tupleResult = (projectsCollection, 1, 1);
+
+            A.CallTo(() => _utility.GetAllEntities(A<FilterParams>._, A<Expression<Func<Project, ProjectDto>>>._))
                 .Returns(tupleResult);
 
             var result = await projectRepository.GetAllProjects(filterParams);
@@ -515,7 +520,7 @@ namespace Tests.Repository
 
             var fakeFilterParams = A.Fake<FilterParams>();
 
-            var result = await projectRepository.GetProjectsGroupedByCompany(fakeFilterParams, page, pageSize,1 );
+            var result = await projectRepository.GetProjectsGroupedByCompany(fakeFilterParams, page, pageSize, 1);
 
             result.Data.Should().BeOfType<List<CompanyProjectGroup>>();
             result.Data.Should().NotBeEmpty();
@@ -779,7 +784,7 @@ namespace Tests.Repository
 
             var result = await projectRepository.IsParticipant(projectId, employeeId);
 
-            result.Should().BeFalse(); 
+            result.Should().BeFalse();
         }
 
         [Fact]

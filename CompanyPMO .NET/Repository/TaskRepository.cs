@@ -4,8 +4,8 @@ using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
-using NpgsqlTypes;
+using System.Linq.Expressions;
+using Task = CompanyPMO_.NET.Models.Task;
 
 namespace CompanyPMO_.NET.Repository
 {
@@ -421,15 +421,40 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountPages<TaskDto>> GetAllTasks(FilterParams filterParams)
         {
-            List<string> navProperties = new() { "Employees", "TaskCreator", "Project" };
+            Expression<Func<Task, TaskDto>> predicate = t => new TaskDto
+            {
+                TaskId = t.TaskId,
+                Name = t.Name,
+                Description = t.Description,
+                Created = t.Created,
+                StartedWorking = t.StartedWorking,
+                Finished = t.Finished,
+                TaskCreator = new EmployeeShowcaseDto
+                {
+                    EmployeeId = t.TaskCreator.EmployeeId,
+                    Username = t.TaskCreator.Username,
+                    ProfilePicture = t.TaskCreator.ProfilePicture
+                },
+                Employees = t.Employees.Select(employee => new EmployeeShowcaseDto
+                {
+                    EmployeeId = employee.EmployeeId,
+                    Username = employee.Username,
+                    ProfilePicture = employee.ProfilePicture,
+                }).ToList(),
+                Project = new ProjectShowcaseDto
+                {
+                    ProjectId = t.Project.ProjectId,
+                    Name = t.Project.Name,
+                    Priority = t.Project.Priority,
+                    ClientId = t.Project.CompanyId
+                }
+            };
 
-            var (tasks, totalTasksCount, totalPages) = await _utilityService.GetAllEntities<Models.Task>(filterParams, navProperties);
-
-            var taskDtos = TaskDtoSelectQuery(tasks);
+            var (tasks, totalTasksCount, totalPages) = await _utilityService.GetAllEntities(filterParams, predicate);
 
             return new DataCountPages<TaskDto>
             {
-                Data = taskDtos,
+                Data = tasks,
                 Count = totalTasksCount,
                 Pages = totalPages
             };
@@ -461,7 +486,8 @@ namespace CompanyPMO_.NET.Repository
                 {
                     ProjectId = task.Project.ProjectId,
                     Name = task.Project.Name,
-                    Priority = task.Project.Priority
+                    Priority = task.Project.Priority,
+                    ClientId = task.Project.CompanyId
                 }
             }).ToList();
 

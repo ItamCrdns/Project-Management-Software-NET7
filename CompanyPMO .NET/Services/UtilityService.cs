@@ -334,7 +334,9 @@ namespace CompanyPMO_.NET.Services
             }
         }
 
-        public async Task<(ICollection<T> entity, int totalEntitiesCount, int totalPages)> GetAllEntities<T>(FilterParams filterParams, List<string>? navigationProperties = null) where T : class
+        public async Task<(ICollection<U> entity, int totalEntitiesCount, int totalPages)> GetAllEntities<T, U>(FilterParams filterParams, Expression<Func<T, U>> predicate)
+            where T : class
+            where U : class
         {
             var filterProperty = typeof(T).GetProperty(filterParams.OrderBy ?? "Created", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
 
@@ -346,7 +348,7 @@ namespace CompanyPMO_.NET.Services
 
             if (!filterExists)
             {
-                var entity = new Collection<T>();
+                var entity = new Collection<U>();
                 return (entity, 0, 0);
             }
 
@@ -378,23 +380,15 @@ namespace CompanyPMO_.NET.Services
                 orderExpression = Expression.Lambda<Func<T, object>>(convertedOrderByProperty, parameter);
             }
 
-            ICollection<T> entities = new List<T>();
-
+            ICollection<U> entities = new List<U>();
             IQueryable<T> query = _context.Set<T>();
-
-            if (navigationProperties is not null)
-            {
-                foreach (var navProperty in navigationProperties)
-                {
-                    query = query.Include(navProperty);
-                }
-            }
 
             if (ShallOrderAscending)
             {
                 entities = await query
                     .OrderBy(orderExpression)
                     .Where(whereExpression)
+                    .Select(predicate)
                     .Skip(toSkip)
                     .Take(filterParams.PageSize)
                     .ToListAsync();
@@ -404,6 +398,7 @@ namespace CompanyPMO_.NET.Services
                 entities = await query
                     .OrderByDescending(orderExpression)
                     .Where(whereExpression)
+                    .Select(predicate)
                     .Skip(toSkip)
                     .Take(filterParams.PageSize)
                     .ToListAsync();

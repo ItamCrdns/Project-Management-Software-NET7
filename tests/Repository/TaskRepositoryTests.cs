@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Text;
+using Task = CompanyPMO_.NET.Models.Task;
 
 namespace Tests.Repository
 {
@@ -768,10 +769,15 @@ namespace Tests.Repository
 
             var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
 
-            var tupleResult = (dbContext.Tasks.ToList(), 10, 1);
+            ICollection<TaskDto> tasksCollection = [.. dbContext.Tasks.Select(x => new TaskDto
+            {
+                Name = x.Name
+            })];
 
-            A.CallTo(() => _utility.GetAllEntities<CompanyPMO_.NET.Models.Task>(
-                A<FilterParams>._, A<List<string>>._
+            var tupleResult = (tasksCollection, 10, 1);
+
+            A.CallTo(() => _utility.GetAllEntities(
+                A<FilterParams>._, A<Expression<Func<Task, TaskDto>>>._
                 )).Returns(tupleResult);
 
             var result = await taskRepository.GetAllTasks(fakeFilterParams);
@@ -796,10 +802,15 @@ namespace Tests.Repository
 
             var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
 
-            var tupleResult = (dbContext.Tasks.ToList(), 0, 0);
+            ICollection<TaskDto> tasksCollection = [.. dbContext.Tasks.Select(x => new TaskDto
+            {
+                Name = x.Name
+            })];
 
-            A.CallTo(() => _utility.GetAllEntities<CompanyPMO_.NET.Models.Task>(
-                A<FilterParams>._, A<List<string>>._
+            var tupleResult = (tasksCollection, 0, 0);
+
+            A.CallTo(() => _utility.GetAllEntities(
+                A<FilterParams>._, A<Expression<Func<Task, TaskDto>>>._
                 )).Returns(tupleResult);
 
             var result = await taskRepository.GetAllTasks(fakeFilterParams);
