@@ -415,6 +415,7 @@ namespace CompanyPMO_.NET.Repository
                 .Where(p => projectIds.Contains(p.ProjectId))
                 .Select(p => new ProjectShowcaseDto
                 {
+                    ClientId = p.Company.CompanyId,
                     ProjectId = p.ProjectId,
                     Name = p.Name,
                     Priority = p.Priority

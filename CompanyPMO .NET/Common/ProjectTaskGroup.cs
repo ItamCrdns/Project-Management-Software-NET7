@@ -6,6 +6,7 @@ namespace CompanyPMO_.NET.Common
     {
         public string ProjectName { get; set; }
         public int ProjectId { get; set; }
+        public int ClientId { get; set; }
         public bool IsCurrentUserOwner { get; set; }
         public bool IsCurrentUserInTeam { get; set; }
         public IEnumerable<TaskShowcaseDto> Tasks { get; set; }

@@ -140,7 +140,8 @@ namespace CompanyPMO_.NET.Repository
                         {
                             TaskId = x.Task.TaskId,
                             Name = x.Task.Name,
-                            ProjectId = x.Task.ProjectId
+                            ProjectId = x.Task.ProjectId,
+                            ClientId = x.Task.Project.Company.CompanyId
                         }
                     },
                     IsOwner = x.IssueCreatorId == userId,

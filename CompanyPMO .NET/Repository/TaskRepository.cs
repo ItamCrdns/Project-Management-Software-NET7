@@ -187,7 +187,8 @@ namespace CompanyPMO_.NET.Repository
                          {
                              ProjectId = x.Project.ProjectId,
                              Name = x.Project.Name,
-                             Priority = x.Project.Priority
+                             Priority = x.Project.Priority,
+                             ClientId = x.Project.CompanyId
                          }
                      },
                      IsOwner = x.TaskCreatorId == userId,
@@ -445,6 +446,7 @@ namespace CompanyPMO_.NET.Repository
                 {
                     ProjectName = x.Key.Name,
                     ProjectId = x.Key.ProjectId,
+                    ClientId = x.Key.CompanyId,
                     IsCurrentUserOwner = x.Key.ProjectCreatorId == employeeId,
                     IsCurrentUserInTeam = _context.EmployeeProjects.Any(t => t.ProjectId == x.Key.ProjectId && t.EmployeeId == employeeId),
                     Tasks = x.Select(t => new TaskShowcaseDto
