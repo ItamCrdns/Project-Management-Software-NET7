@@ -96,7 +96,7 @@ namespace CompanyPMO_.NET.Services
             }
         }
 
-        public (Expression<Func<T, bool>>, Expression<Func<T, object>>?) BuildWhereAndOrderByExpressions<T>(int? constantId, string? constantString, IEnumerable<int>? whereIds, string? whereId, string defaultWhere, string defaultOrderBy, FilterParams filterParams)
+        public (Expression<Func<T, bool>>, Expression<Func<T, object>>?) BuildWhereAndOrderByExpressions<T>(int? constantId, string? constantString, string defaultWhere, string defaultOrderBy, FilterParams filterParams)
         {
             // This method will build and return two expressions that can be used by LINQ "Where" and "OrderBy" or "OrderByDescending" methods
             var parameter = Expression.Parameter(typeof(T), "x");
@@ -228,20 +228,6 @@ namespace CompanyPMO_.NET.Services
                     var scopedEquals = Expression.Equal(newFilterString, otherConstant);
                     equals = Expression.AndAlso(equals, scopedEquals);
                 }
-            }
-
-            // If whereIds its not null, we are going to create a new expression to filter by the given ids. Example: Get all the tasks that belong to the projectIds 1, 2 and 3
-            // This is so it can work together with the GetEntitiesByEntityId method. (x => x.TaskIds.Contains("TaskId")
-            if (whereIds is not null)
-            {
-                ConstantExpression whereIdsConstant = Expression.Constant(whereIds);
-                Expression whereIdsProperty = Expression.Property(parameter, whereId);
-                MethodInfo containsMethod = typeof(List<int>).GetMethod("Contains"); // Retrieving the Contains method from the List<int> class
-
-                Expression containsCall = Expression.Call(whereIdsConstant, containsMethod, whereIdsProperty); // Check if the whereIds list contains the whereId property
-
-                // Updates equals by combining the previous equals with the new containsCall expression using
-                equals = Expression.AndAlso(equals, containsCall);
             }
 
             if (!string.IsNullOrWhiteSpace(filterParams.SearchBy) && !string.IsNullOrWhiteSpace(filterParams.SearchValue))
@@ -412,53 +398,6 @@ namespace CompanyPMO_.NET.Services
 
             return (entities, totalEntitiesCount, totalPages);
         }
-
-        public async Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEntityId<TEntity>(int entityId, string entityName, string primaryKeyName, int? page, int? pageSize) where TEntity : class
-        {
-            // The name its kind of redundant but its what it says: it will, for example, return tasks based on the projectId
-            var entityProperty = typeof(TEntity).GetProperty(entityName);
-            var primaryKey = typeof(TEntity).GetProperty(primaryKeyName);
-
-            // Use expression tree to build a predicate value for the where clause
-            var parameter = Expression.Parameter(typeof(TEntity), "x");
-
-            // Create the property access expression (x => x.Property)
-            var propertyAccess = Expression.Property(parameter, entityProperty);
-
-            // Create the comparasion expression (x => x.Property EQUALS entityId)
-            var equals = Expression.Equal(propertyAccess, Expression.Constant(entityId));
-
-            // Create a lambda expression (x => x.Property EQUALS entityId)
-            var whereExpression = Expression.Lambda<Func<TEntity, bool>>(equals, parameter);
-
-            // Compile the lambda expression into a delegate
-            //var predicate = lambda.Compile(); //+		System.Linq.Expressions.Expression<TDelegate>.Compile devuelto	{Method = <Internal Error evaluating expression>}	System.Func<CompanyPMO_.NET.Models.Task, bool>
-
-            // Count the total entities that the employee belongs to
-            var totalEntitiesCount = _context.Set<TEntity>()
-                .Where(whereExpression)
-                .Select(x => (int)entityProperty.GetValue(x))
-                .Count();
-
-            // If the pageSize is null, return all the entities
-            int pageValue = page ?? 1;
-            int pageValueSize = pageSize ?? totalEntitiesCount;
-
-            int totalPages = (int)Math.Ceiling((double)totalEntitiesCount / pageValueSize);
-
-            int toSkip = (pageValue - 1) * pageValueSize;
-
-            // Get a list of the entity Ids
-            List<int> entityIds = await _context.Set<TEntity>()
-                .Where(whereExpression)
-                .Select(x => (int)primaryKey.GetValue(x)) // Select the primary key of the entity and return a list of those primary keys
-                .Skip(toSkip)
-                .Take(pageValueSize)
-                .ToListAsync();
-
-            return (entityIds, totalEntitiesCount, totalPages);
-        }
-
         public int MinutesUntilTimeArrival(DateTimeOffset? time)
         {
             DateTimeOffset currentTime = DateTimeOffset.Now;

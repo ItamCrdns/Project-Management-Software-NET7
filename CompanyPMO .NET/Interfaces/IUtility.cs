@@ -41,18 +41,6 @@ namespace CompanyPMO_.NET.Interfaces
             int? pageSize)
             where TEntity : class, IEmployeeEntity;
 
-        // Very similar to the method above. But I wanted to have a different logic when trying to retrieve by an entity Id
-        // Example: Retrieve all tasks based on the projectId, or retrieve all the issues based on the taskId.
-        // * They can both use the same generic method because they are very similar
-        Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEntityId<TEntity>(
-            int entityId, // The entityId that we are looking for. For example: we want to find tasks by projectId 4, entityId will refer to projectId
-            string entityName, // The name of the entity we are looking for. For example: we want to find tasks by projectId 4, entityName will refer to "ProjectId",
-            string primaryKeyName, // Refers to the name of the primary key of the table we will be looking for. For example: TaskId, ProjectId, IssueId
-            int? page,
-            int? pageSize
-            )
-            where TEntity : class;
-
         Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesEmployeeCreatedOrParticipates<TEntity, UEntity>(
             string username,
             string entityNameForEntityCreatorId, // EntityId of the creator id. Example: EmployeeProject table, entityNameForEntityCreatorId will be "ProjectCreatorId"
@@ -78,8 +66,8 @@ namespace CompanyPMO_.NET.Interfaces
             string? constantString, // Do not pass both constantId and constantStringIncludes at the same time
                                     // ! Just pass null, null if you dont want to use the whereIds and whereId parameters. This will disable the extra .Where (x => x.whereIds.Contains(x.whereId) expression
                                     // TODO: Might deprecate whereIds
-            IEnumerable<int>? whereIds, // * Pass a list of ids here: example: new List<int> { 1, 2, 3 }. This will be used to filter the data and will only return the data that matches the given ids
-            string? whereId, // * Used to build the where expression along with the whereIds list. Example: x => whereIds.Contains(x.whereId)
+            //IEnumerable<int>? whereIds, // * Pass a list of ids here: example: new List<int> { 1, 2, 3 }. This will be used to filter the data and will only return the data that matches the given ids
+            //string? whereId, // * Used to build the where expression along with the whereIds list. Example: x => whereIds.Contains(x.whereId)
             string defaultWhere, // * Pass it here: example:  filterParams.FilterWhere ?? "CompanyId"
             string defaultOrderBy, // * Pass it here: example: filterParams.OrderBy ?? "Created");
             FilterParams filterParams

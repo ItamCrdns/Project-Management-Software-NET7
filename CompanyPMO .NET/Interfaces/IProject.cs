@@ -1,6 +1,7 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Models;
+using System.Linq.Expressions;
 
 namespace CompanyPMO_.NET.Interfaces
 {
@@ -18,8 +19,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images);
         Task<DataCountPages<ProjectDto>> GetAllProjects(FilterParams filterParams);
         Task<DataCountPages<CompanyProjectGroup>> GetProjectsGroupedByCompany(FilterParams filterParams, int projectsPage, int projectsPageSize, int employeeId);
-        ICollection<Image> SelectImages(ICollection<Image> images);
-        ICollection<ProjectDto> ProjectSelectQuery(ICollection<Project> projects);
+        Expression<Func<Project, ProjectDto>> GetProjectPredicate();
         Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToProject(int projectId, List<int> employees);
         Task<bool> IsEmployeeAlreadyInProject(int employeeId, int projectId);
         Task<DataCountPages<ProjectDto>> GetProjectsByEmployeeUsername(string username, FilterParams filterParams);

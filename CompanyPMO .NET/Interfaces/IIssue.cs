@@ -1,6 +1,7 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Models;
+using System.Linq.Expressions;
 
 namespace CompanyPMO_.NET.Interfaces
 {
@@ -9,7 +10,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<DataCountPages<IssueShowcaseDto>> GetIssuesShowcaseByEmployeeUsername(string username, int page, int pageSize);
         Task<DataCountPages<IssueShowcaseDto>> GetAllIssuesShowcase(int page, int pageSize);
         Task<DataCountPages<IssueDto>> GetAllIssues(FilterParams filterParams);
-        ICollection<IssueDto> IssueSelectQuery(ICollection<Issue> issues); 
+        Expression<Func<Issue, IssueDto>> GetIssuePredicate();
         Task<DataCountPages<IssueDto>> GetIssuesByTaskId(int taskId, FilterParams filterParams);
         Task<OperationResult<int>> CreateIssue(IssueDto issue, int employeeId, int taskId, bool shouldStartNow);
         Task<EntityParticipantOrOwnerDTO<IssueDto>> GetIssueById(int issueId, int taskId, int projectId, int userId);

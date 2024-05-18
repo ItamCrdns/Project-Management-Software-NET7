@@ -73,6 +73,44 @@ namespace Tests.Repository
                 }
             }
 
+            if (!await dbContext.Projects.AnyAsync())
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    dbContext.Projects.Add(
+                        new Project
+                        {
+                            Name = $"Project {i}",
+                            Description = $"Project {i} Description",
+                            Created = DateTime.UtcNow,
+                            Finished = DateTime.UtcNow,
+                            ProjectCreatorId = (i % 2) + 1,
+                            CompanyId = (i % 2) + 1, // Only company Ids one and two
+                            Priority = i,
+                            ExpectedDeliveryDate = DateTime.UtcNow.AddMinutes(5),
+                            Lifecycle = $"Lifecycle {i}"
+                        });
+                }
+            }
+
+            if (!await dbContext.Companies.AnyAsync())
+            {
+                for (int i = 1; i < 3; i++)
+                {
+                    dbContext.Companies.Add(
+                        new Company
+                        {
+                            Name = $"Company {i}",
+                            CeoUserId = i,
+                            AddressId = i,
+                            ContactEmail = $"Company {i} Email",
+                            ContactPhoneNumber = $"Company {i} Phone Number",
+                            AddedById = i,
+                            Logo = $"Company {i} Logo"
+                        });
+                }
+            }
+
             if (!await dbContext.Employees.AnyAsync())
             {
                 for (int i = 0; i < 10; i++)
@@ -239,15 +277,15 @@ namespace Tests.Repository
 
             int[] issuesIds = [1, 2, 3];
 
-            var tupleResult = (issuesIds, 3, 1);
+            //var tupleResult = (issuesIds, 3, 1);
 
-            A.CallTo(() => _utility.GetEntitiesByEntityId<Issue>(
-                A<int>._,
-                A<string>._,
-                A<string>._,
-                A<int>._,
-                A<int>._))
-                .Returns(tupleResult);
+            //A.CallTo(() => _utility.GetEntitiesByEntityId<Issue>(
+            //    A<int>._,
+            //    A<string>._,
+            //    A<string>._,
+            //    A<int>._,
+            //    A<int>._))
+            //    .Returns(tupleResult);
 
             Expression<Func<Issue, bool>> fakeBoolExpression = x => true; // Just evaluate to true
             Expression<Func<Issue, object>> fakeObjectExpression = x => x.Name;
@@ -255,7 +293,7 @@ namespace Tests.Repository
             var tupleExpressionsResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Issue>(
-                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                A<int>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleExpressionsResult);
 
             var result = await issueRepository.GetIssuesByTaskId(taskId, fakeFilterParams);
@@ -281,15 +319,15 @@ namespace Tests.Repository
 
             int[] issuesIds = [];
 
-            var tupleResult = (issuesIds, 0, 0);
+            //var tupleResult = (issuesIds, 0, 0);
 
-            A.CallTo(() => _utility.GetEntitiesByEntityId<Issue>(
-                A<int>._,
-                A<string>._,
-                A<string>._,
-                A<int>._,
-                A<int>._))
-                .Returns(tupleResult);
+            //A.CallTo(() => _utility.GetEntitiesByEntityId<Issue>(
+            //    A<int>._,
+            //    A<string>._,
+            //    A<string>._,
+            //    A<int>._,
+            //    A<int>._))
+            //    .Returns(tupleResult);
 
             Expression<Func<Issue, bool>> fakeBoolExpression = x => x.Name == "DOES NOT EXIST"; // Just evaluate to true
             Expression<Func<Issue, object>> fakeObjectExpression = x => x.Name;
@@ -297,7 +335,7 @@ namespace Tests.Repository
             var tupleExpressionsResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Issue>(
-                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                A<int>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleExpressionsResult);
 
             var result = await issueRepository.GetIssuesByTaskId(taskId, fakeFilterParams);

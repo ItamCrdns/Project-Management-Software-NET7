@@ -394,7 +394,7 @@ namespace Tests.Repository
             var tupleResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Project>(
-                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                A<int>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleResult);
 
             var result = await projectRepository.GetProjectsByCompanyName(companyId, filterParams);
@@ -423,7 +423,7 @@ namespace Tests.Repository
             var tupleResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Project>(
-                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                A<int>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleResult);
 
             var result = await projectRepository.GetProjectsByCompanyName(companyId, filterParams);
@@ -564,22 +564,6 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void ProjectRepository_ProjectSelectQuery_ReturnsProjectDtoCollection()
-        {
-            var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload);
-
-            var fakeProjects = dbContext.Projects.ToList();
-
-            var result = projectRepository.ProjectSelectQuery(fakeProjects);
-
-            result.Should().HaveCountGreaterThanOrEqualTo(1);
-            result.Should().NotBeNull();
-            result.Should().NotBeEmpty();
-            result.Should().BeOfType(typeof(List<ProjectDto>));
-        }
-
-        [Fact]
         public async void ProjectRepository_SelectImages_ReturnsImageCollection()
         {
             var dbContext = await GetDatabaseContext();
@@ -648,7 +632,7 @@ namespace Tests.Repository
             var tupleExpressionsResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Project>(
-                null, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                null, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleExpressionsResult);
 
             var result = await projectRepository.GetProjectsByEmployeeUsername(username, filterParams);
@@ -681,7 +665,7 @@ namespace Tests.Repository
             var tupleExpressionsResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Project>(
-                null, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                null, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleExpressionsResult);
 
             var result = await projectRepository.GetProjectsByEmployeeUsername(username, filterParams);

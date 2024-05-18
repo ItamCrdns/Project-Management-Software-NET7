@@ -185,7 +185,7 @@ namespace tests.Repository
             var tupleResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Employee>(
-                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                A<int>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleResult);
 
             var result = await employeeRepository.GetEmployeesBySupervisorId(id, filterParams);
@@ -217,7 +217,7 @@ namespace tests.Repository
             var tupleResult = (fakeBoolExpression, fakeObjectExpression);
 
             A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Employee>(
-                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+                A<int>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleResult);
 
             var result = await employeeRepository.GetEmployeesBySupervisorId(id, filterParams);
@@ -330,10 +330,10 @@ namespace tests.Repository
             var dbContext = await GetDatabaseContext();
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 
-            IEnumerable<int> fakeEmployeeIds = new List<int> { 1, 2, 3, 4, 5, 6, 7 };
+            //IEnumerable<int> fakeEmployeeIds = new List<int> { 1, 2, 3, 4, 5, 6, 7 };
 
-            A.CallTo(() => _utility.GetEntitiesByEntityId<Employee>(A<int>._, A<string>._, A<string>._, null, null))
-                .Returns(System.Threading.Tasks.Task.FromResult((fakeEmployeeIds, 0, 0)));
+            //A.CallTo(() => _utility.GetEntitiesByEntityId<Employee>(A<int>._, A<string>._, A<string>._, null, null))
+            //    .Returns(System.Threading.Tasks.Task.FromResult((fakeEmployeeIds, 0, 0)));
 
             var result = await employeeRepository.GetEmployeesWorkingInTheSameCompany(username, page, pageSize);
 
@@ -545,11 +545,6 @@ namespace tests.Repository
             int pageSize = 10;
             var dbContext = await GetDatabaseContext();
 
-            IEnumerable<int> fakeEmployeeIds = new List<int> { 1, 2, 3, 4, 5, 6, 7 };
-
-            A.CallTo(() => _utility.GetEntitiesByEntityId<Employee>(A<int>._, A<string>._, A<string>._, null, null))
-                .Returns(System.Threading.Tasks.Task.FromResult((fakeEmployeeIds, 7, 1)));
-
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 
             var result = await employeeRepository.SearchEmployeesWorkingInTheSameCompany(search, username, page, pageSize);
@@ -570,11 +565,6 @@ namespace tests.Repository
             int page = 1;
             int pageSize = 10;
             var dbContext = await GetDatabaseContext();
-
-            IEnumerable<int> fakeEmployeeIds = Enumerable.Empty<int>();
-
-            A.CallTo(() => _utility.GetEntitiesByEntityId<Employee>(A<int>._, A<string>._, A<string>._, null, null))
-                .Returns(System.Threading.Tasks.Task.FromResult((fakeEmployeeIds, 0, 0)));
 
             var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
 

@@ -70,33 +70,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountPages<IssueDto>> GetAllIssues(FilterParams filterParams)
         {
-           Expression<Func<Issue, IssueDto>> predicate = x => new IssueDto
-           {
-                IssueId = x.IssueId,
-                Name = x.Name,
-                Created = x.Created,
-                Employees = x.Employees.Select(e => new EmployeeShowcaseDto
-                {
-                    EmployeeId = e.EmployeeId,
-                    Username = e.Username,
-                    ProfilePicture = e.ProfilePicture
-                }).ToList(),
-                IssueCreator = new EmployeeShowcaseDto
-                {
-                    EmployeeId = x.IssueCreator.EmployeeId,
-                    Username = x.IssueCreator.Username,
-                    ProfilePicture = x.IssueCreator.ProfilePicture
-                },
-                Task = new TaskShowcaseDto
-                {
-                    TaskId = x.Task.TaskId,
-                    ProjectId = x.Task.ProjectId,
-                    Name = x.Task.Name,
-                    ClientId = x.Task.Project.Company.CompanyId
-                }
-            };
-
-            var (issues, totalIssuesCount, totalPages) = await _utilityService.GetAllEntities(filterParams, predicate);
+            var (issues, totalIssuesCount, totalPages) = await _utilityService.GetAllEntities(filterParams, GetIssuePredicate());
 
             return new DataCountPages<IssueDto>
             {
@@ -175,46 +149,60 @@ namespace CompanyPMO_.NET.Repository
                 .FirstOrDefaultAsync();
         }
 
+        public Expression<Func<Issue, IssueDto>> GetIssuePredicate()
+        {
+            return x => new IssueDto
+            {
+                IssueId = x.IssueId,
+                Name = x.Name,
+                Created = x.Created,
+                Employees = x.Employees.Select(e => new EmployeeShowcaseDto
+                {
+                    EmployeeId = e.EmployeeId,
+                    Username = e.Username,
+                    ProfilePicture = e.ProfilePicture
+                }).OrderByDescending(x => x.Username).Take(5).ToList(),
+                IssueCreator = new EmployeeShowcaseDto
+                {
+                    EmployeeId = x.IssueCreator.EmployeeId,
+                    Username = x.IssueCreator.Username,
+                    ProfilePicture = x.IssueCreator.ProfilePicture
+                },
+                Task = new TaskShowcaseDto
+                {
+                    TaskId = x.Task.TaskId,
+                    ProjectId = x.Task.ProjectId,
+                    Name = x.Task.Name,
+                    ClientId = x.Task.Project.Company.CompanyId
+                }
+            };
+        }
+
         public async Task<DataCountPages<IssueDto>> GetIssuesByTaskId(int taskId, FilterParams filterParams)
         {
-            var (issueIds, totalIssuesCount, totalPages) = await _utilityService.GetEntitiesByEntityId<Issue>(taskId, "TaskId", "IssueId", filterParams.Page, filterParams.PageSize);
-
-            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Issue>(taskId, null, issueIds, "IssueId", "TaskId", "Created", filterParams);
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Issue>(taskId, null, "TaskId", "Created", filterParams);
 
             bool shallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool shallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
 
+            int totalIssuesCount = await _context.Issues
+                .Where(whereExpression)
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalIssuesCount / filterParams.PageSize);
+
             List<IssueDto> issues = new();
+
+            int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
 
             if (shallOrderAscending)
             {
                 issues = await _context.Issues
                     .Where(whereExpression)
                     .OrderBy(orderByExpression)
-                    .Select(x => new IssueDto
-                    {
-                        IssueId = x.IssueId,
-                        Name = x.Name,
-                        Created = x.Created,
-                        Employees = x.Employees.Select(e => new EmployeeShowcaseDto
-                        {
-                            EmployeeId = e.EmployeeId,
-                            Username = e.Username,
-                            ProfilePicture = e.ProfilePicture
-                        }).ToList(),
-                        IssueCreator = new EmployeeShowcaseDto
-                        {
-                            EmployeeId = x.IssueCreator.EmployeeId,
-                            Username = x.IssueCreator.Username,
-                            ProfilePicture = x.IssueCreator.ProfilePicture
-                        },
-                        Task = new TaskShowcaseDto
-                        {
-                            TaskId = x.Task.TaskId,
-                            Name = x.Task.Name,
-                            ProjectId = x.Task.ProjectId
-                        }
-                    })
+                    .Select(GetIssuePredicate())
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
                     .ToListAsync();
             }
             else if (shallOrderDescending || (!shallOrderAscending && !shallOrderDescending))
@@ -222,30 +210,9 @@ namespace CompanyPMO_.NET.Repository
                 issues = await _context.Issues
                     .Where(whereExpression)
                     .OrderByDescending(orderByExpression)
-                    .Select(x => new IssueDto
-                    {
-                        IssueId = x.IssueId,
-                        Name = x.Name,
-                        Created = x.Created,
-                        Employees = x.Employees.Select(e => new EmployeeShowcaseDto
-                        {
-                            EmployeeId = e.EmployeeId,
-                            Username = e.Username,
-                            ProfilePicture = e.ProfilePicture
-                        }).ToList(),
-                        IssueCreator = new EmployeeShowcaseDto
-                        {
-                            EmployeeId = x.IssueCreator.EmployeeId,
-                            Username = x.IssueCreator.Username,
-                            ProfilePicture = x.IssueCreator.ProfilePicture
-                        },
-                        Task = new TaskShowcaseDto
-                        {
-                            TaskId = x.Task.TaskId,
-                            Name = x.Task.Name,
-                            ProjectId = x.Task.ProjectId
-                        }
-                    })
+                    .Select(GetIssuePredicate())
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
                     .ToListAsync();
             }
 
@@ -276,36 +243,6 @@ namespace CompanyPMO_.NET.Repository
                 Count = totalIssuesCount,
                 Pages = totalPages
             };
-        }
-
-        public ICollection<IssueDto> IssueSelectQuery(ICollection<Issue> issues)
-        {
-            var issueDtos = issues.Select(issue => new IssueDto
-            {
-                IssueId = issue.IssueId,
-                Name = issue.Name,
-                Created = issue.Created,
-                Employees = issue.Employees.Select(employee => new EmployeeShowcaseDto
-                {
-                    EmployeeId = employee.EmployeeId,
-                    Username = employee.Username,
-                    ProfilePicture = employee.ProfilePicture
-                }).ToList(),
-                IssueCreator = new EmployeeShowcaseDto
-                {
-                    EmployeeId = issue.IssueCreator.EmployeeId,
-                    Username = issue.IssueCreator.Username,
-                    ProfilePicture = issue.IssueCreator.ProfilePicture
-                },
-                Task = new TaskShowcaseDto
-                {
-                    TaskId = issue.Task.TaskId,
-                    Name = issue.Task.Name,
-                    ClientId = issue.Task.Project.Company.CompanyId
-                }
-            }).ToList();
-
-            return issueDtos;
         }
     }
 }

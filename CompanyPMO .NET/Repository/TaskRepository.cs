@@ -196,7 +196,7 @@ namespace CompanyPMO_.NET.Repository
                  .FirstOrDefaultAsync();
         }
 
-        public async Task<List<Models.Task>> GetTasks(int page, int pageSize)
+        public async Task<List<Task>> GetTasks(int page, int pageSize)
         {
             int postsToSkip = (page - 1) * pageSize;
 
@@ -239,23 +239,31 @@ namespace CompanyPMO_.NET.Repository
         public async Task<DataCountPages<TaskDto>> GetTasksByProjectId(int projectId, FilterParams filterParams)
         {
             // ATM We are just ordering the entities so this count and pages are actually good i think
-            var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEntityId<Models.Task>(projectId, "ProjectId", "TaskId", filterParams.Page, filterParams.PageSize);
+            //var (taskIds, totalTasksCount, totalPages) = await _utilityService.GetEntitiesByEntityId<Task>(projectId, "ProjectId", "TaskId", filterParams.Page, filterParams.PageSize);
 
-            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Models.Task>(projectId, null, taskIds, "TaskId", "ProjectId", "Created", filterParams);
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Task>(projectId, null, "ProjectId", "Created", filterParams);
 
             bool shallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool shallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
 
-            List<Models.Task> tasks = new();
+            int totalTasksCount = await _context.Tasks
+                .Where(whereExpression)
+                .CountAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalTasksCount / filterParams.PageSize);
+
+            List<TaskDto> tasks = new();
+
+            int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
 
             if (shallOrderAscending)
             {
                 tasks = await _context.Tasks
                     .Where(whereExpression)
                     .OrderBy(orderByExpression)
-                    .Include(t => t.TaskCreator)
-                    .Include(e => e.Employees)
-                    .Include(p => p.Project)
+                    .Select(GetTaskPredicate())
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
                     .ToListAsync();
             }
             else if (shallOrderDescending || (!shallOrderAscending && !shallOrderDescending))
@@ -263,17 +271,15 @@ namespace CompanyPMO_.NET.Repository
                 tasks = await _context.Tasks
                     .Where(whereExpression)
                     .OrderByDescending(orderByExpression)
-                    .Include(t => t.TaskCreator)
-                    .Include(e => e.Employees)
-                    .Include(p => p.Project)
+                    .Select(GetTaskPredicate())
+                    .Skip(toSkip)
+                    .Take(filterParams.PageSize)
                     .ToListAsync();
             }
 
-            var taskDtos = TaskDtoSelectQuery(tasks);
-
             return new DataCountPages<TaskDto>
             {
-                Data = taskDtos,
+                Data = tasks,
                 Count = totalTasksCount,
                 Pages = totalPages
             };
@@ -421,36 +427,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountPages<TaskDto>> GetAllTasks(FilterParams filterParams)
         {
-            Expression<Func<Task, TaskDto>> predicate = t => new TaskDto
-            {
-                TaskId = t.TaskId,
-                Name = t.Name,
-                Description = t.Description,
-                Created = t.Created,
-                StartedWorking = t.StartedWorking,
-                Finished = t.Finished,
-                TaskCreator = new EmployeeShowcaseDto
-                {
-                    EmployeeId = t.TaskCreator.EmployeeId,
-                    Username = t.TaskCreator.Username,
-                    ProfilePicture = t.TaskCreator.ProfilePicture
-                },
-                Employees = t.Employees.Select(employee => new EmployeeShowcaseDto
-                {
-                    EmployeeId = employee.EmployeeId,
-                    Username = employee.Username,
-                    ProfilePicture = employee.ProfilePicture,
-                }).ToList(),
-                Project = new ProjectShowcaseDto
-                {
-                    ProjectId = t.Project.ProjectId,
-                    Name = t.Project.Name,
-                    Priority = t.Project.Priority,
-                    ClientId = t.Project.CompanyId
-                }
-            };
-
-            var (tasks, totalTasksCount, totalPages) = await _utilityService.GetAllEntities(filterParams, predicate);
+            var (tasks, totalTasksCount, totalPages) = await _utilityService.GetAllEntities(filterParams, GetTaskPredicate());
 
             return new DataCountPages<TaskDto>
             {
@@ -458,40 +435,6 @@ namespace CompanyPMO_.NET.Repository
                 Count = totalTasksCount,
                 Pages = totalPages
             };
-        }
-
-        public IEnumerable<TaskDto> TaskDtoSelectQuery(ICollection<Models.Task> tasks)
-        {
-            var taskDtos = tasks.Select(task => new TaskDto
-            {
-                TaskId = task.TaskId,
-                Name = task.Name,
-                Description = task.Description,
-                Created = task.Created,
-                StartedWorking = task.StartedWorking,
-                Finished = task.Finished,
-                TaskCreator = new EmployeeShowcaseDto
-                {
-                    EmployeeId = task.TaskCreator.EmployeeId,
-                    Username = task.TaskCreator.Username,
-                    ProfilePicture = task.TaskCreator.ProfilePicture
-                },
-                Employees = task?.Employees?.Select(employee => new EmployeeShowcaseDto
-                {
-                    EmployeeId = employee.EmployeeId,
-                    Username = employee.Username,
-                    ProfilePicture = employee.ProfilePicture,
-                }).ToList(),
-                Project = new ProjectShowcaseDto
-                {
-                    ProjectId = task.Project.ProjectId,
-                    Name = task.Project.Name,
-                    Priority = task.Project.Priority,
-                    ClientId = task.Project.CompanyId
-                }
-            }).ToList();
-
-            return taskDtos;
         }
 
         public async Task<DataCountPages<ProjectTaskGroup>> GetTasksGroupedByProject(FilterParams filterParams, int tasksPage, int tasksPageSize, int employeeId)
@@ -555,5 +498,37 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<bool> IsOwner(int taskId, int employeeId) => await _context.Tasks
             .AnyAsync(t => t.TaskId.Equals(taskId) && t.TaskCreatorId.Equals(employeeId));
+
+        public Expression<Func<Task, TaskDto>> GetTaskPredicate()
+        {
+            return t => new TaskDto
+            {
+                TaskId = t.TaskId,
+                Name = t.Name,
+                Description = t.Description,
+                Created = t.Created,
+                StartedWorking = t.StartedWorking,
+                Finished = t.Finished,
+                TaskCreator = new EmployeeShowcaseDto
+                {
+                    EmployeeId = t.TaskCreator.EmployeeId,
+                    Username = t.TaskCreator.Username,
+                    ProfilePicture = t.TaskCreator.ProfilePicture
+                },
+                Employees = t.Employees.Select(employee => new EmployeeShowcaseDto
+                {
+                    EmployeeId = employee.EmployeeId,
+                    Username = employee.Username,
+                    ProfilePicture = employee.ProfilePicture,
+                }).OrderByDescending(x => x.Username).Take(5).ToList(),
+                Project = new ProjectShowcaseDto
+                {
+                    ProjectId = t.Project.ProjectId,
+                    Name = t.Project.Name,
+                    Priority = t.Project.Priority,
+                    ClientId = t.Project.CompanyId
+                }
+            };
+        }
     }
 }

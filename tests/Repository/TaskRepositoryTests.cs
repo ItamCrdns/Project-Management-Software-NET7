@@ -406,7 +406,7 @@ namespace Tests.Repository
 
             var result = await taskRepository.GetTasks(page, pageSize);
 
-            result.Should().BeOfType<List<CompanyPMO_.NET.Models.Task>>();
+            result.Should().BeOfType<List<Task>>();
             result.Should().NotBeEmpty();
             result.Should().HaveCountGreaterThanOrEqualTo(1);
             result.Should().HaveCountGreaterThanOrEqualTo(1);
@@ -446,7 +446,7 @@ namespace Tests.Repository
 
             var tupleResult = (tasksIds, 10, 1);
 
-            A.CallTo(() => _utility.GetEntitiesEmployeeCreatedOrParticipates<EmployeeTask, CompanyPMO_.NET.Models.Task>(
+            A.CallTo(() => _utility.GetEntitiesEmployeeCreatedOrParticipates<EmployeeTask, Task>(
                 A<string>._,
                 A<string>._,
                 A<string>._,
@@ -479,7 +479,7 @@ namespace Tests.Repository
 
             var tupleResult = (tasksIds, 0, 0);
 
-            A.CallTo(() => _utility.GetEntitiesEmployeeCreatedOrParticipates<EmployeeTask, CompanyPMO_.NET.Models.Task>(
+            A.CallTo(() => _utility.GetEntitiesEmployeeCreatedOrParticipates<EmployeeTask, Task>(
                 A<string>._,
                 A<string>._,
                 A<string>._,
@@ -505,25 +505,13 @@ namespace Tests.Repository
 
             var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
 
-            int[] tasksIds = [1, 2, 3];
-
-            var tupleResult = (tasksIds, 10, 1);
-
-            A.CallTo(() => _utility.GetEntitiesByEntityId<CompanyPMO_.NET.Models.Task>(
-                A<int>._,
-                A<string>._,
-                A<string>._,
-                A<int>._,
-                A<int>._))
-                .Returns(tupleResult);
-
-            Expression<Func<CompanyPMO_.NET.Models.Task, bool>> fakeBoolExpression = x => true; // Just evaluate to true
-            Expression<Func<CompanyPMO_.NET.Models.Task, object>> fakeObjectExpression = x => x.Name;
+            Expression<Func<Task, bool>> fakeBoolExpression = x => true; // Just evaluate to true
+            Expression<Func<Task, object>> fakeObjectExpression = x => x.Name;
 
             var tupleExpressionsResult = (fakeBoolExpression, fakeObjectExpression);
 
-            A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<CompanyPMO_.NET.Models.Task>(
-                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+            A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Task>(
+                A<int>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleExpressionsResult);
 
             var result = await taskRepository.GetTasksByProjectId(projectId, fakeFilterParams);
@@ -547,25 +535,13 @@ namespace Tests.Repository
 
             var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
 
-            int[] tasksIds = [];
-
-            var tupleResult = (tasksIds, 0, 0);
-
-            A.CallTo(() => _utility.GetEntitiesByEntityId<CompanyPMO_.NET.Models.Task>(
-                A<int>._,
-                A<string>._,
-                A<string>._,
-                A<int>._,
-                A<int>._))
-                .Returns(tupleResult);
-
-            Expression<Func<CompanyPMO_.NET.Models.Task, bool>> fakeBoolExpression = x => x.Name == "DOES NOT EXIST"; // Just evaluate to true
-            Expression<Func<CompanyPMO_.NET.Models.Task, object>> fakeObjectExpression = x => x.Name;
+            Expression<Func<Task, bool>> fakeBoolExpression = x => x.Name == "DOES NOT EXIST"; // Just evaluate to true
+            Expression<Func<Task, object>> fakeObjectExpression = x => x.Name;
 
             var tupleExpressionsResult = (fakeBoolExpression, fakeObjectExpression);
 
-            A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<CompanyPMO_.NET.Models.Task>(
-                A<int>._, A<string>._, A<IEnumerable<int>>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
+            A.CallTo(() => _utility.BuildWhereAndOrderByExpressions<Task>(
+                A<int>._, A<string>._, A<string>._, A<string>._, A<FilterParams>._))
                 .Returns(tupleExpressionsResult);
 
             var result = await taskRepository.GetTasksByProjectId(projectId, fakeFilterParams);
@@ -820,20 +796,6 @@ namespace Tests.Repository
             result.Pages.Should().Be(0);
             result.Count.Should().Be(0);
             result.Data.Should().BeOfType<List<TaskDto>>();
-        }
-
-        [Fact]
-        public async void TaskRepository_TaskDtoSelectQuery_ReturnsTaskDto()
-        {
-            var dbContext = await GetDatabaseContext();
-
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
-
-            var result = taskRepository.TaskDtoSelectQuery(dbContext.Tasks.ToList());
-
-            result.Should().BeOfType<List<TaskDto>>();
-            result.Should().NotBeEmpty();
-            result.Should().HaveCountGreaterThanOrEqualTo(1);
         }
 
         [Fact]

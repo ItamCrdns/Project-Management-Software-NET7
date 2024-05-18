@@ -141,35 +141,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountPages<ProjectDto>> GetAllProjects(FilterParams filterParams)
         {
-            Expression<Func<Project, ProjectDto>> predicate = p => new ProjectDto
-            {
-                ProjectId = p.ProjectId,
-                Name = p.Name,
-                Description = p.Description,
-                Created = p.Created,
-                Finished = p.Finished,
-                Priority = p.Priority,
-                Company = new CompanyShowcaseDto
-                {
-                    CompanyId = p.Company.CompanyId,
-                    Name = p.Company.Name,
-                    Logo = p.Company.Logo
-                },
-                Team = p.Employees.Select(p => new EmployeeShowcaseDto
-                {
-                    EmployeeId = p.EmployeeId,
-                    Username = p.Username,
-                    ProfilePicture = p.ProfilePicture
-                }).ToList(),
-                Creator = new EmployeeShowcaseDto
-                {
-                    EmployeeId = p.ProjectCreator.EmployeeId,
-                    Username = p.ProjectCreator.Username,
-                    ProfilePicture = p.ProjectCreator.ProfilePicture
-                }
-            };
-
-            var (projects, totalProjectsCount, totalPages) = await _utilityService.GetAllEntities(filterParams, predicate);
+            var (projects, totalProjectsCount, totalPages) = await _utilityService.GetAllEntities(filterParams, GetProjectPredicate());
 
             return new DataCountPages<ProjectDto>
             {
@@ -181,12 +153,10 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountPages<ProjectDto>> GetProjectsByCompanyName(int companyId, FilterParams filterParams)
         {
-            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Project>(companyId, null, null, null, "CompanyId", "Created", filterParams);
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Project>(companyId, null, "CompanyId", "Created", filterParams);
 
             bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
-
-            List<Project> projects = new();
 
             int totalProjectsCount = await _context.Projects
                 .Where(whereExpression)
@@ -206,14 +176,14 @@ namespace CompanyPMO_.NET.Repository
 
             int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
 
+            List<ProjectDto> projects = new();
+
             if (ShallOrderAscending)
             {
                 projects = await _context.Projects
                     .Where(whereExpression)
                     .OrderBy(orderByExpression)
-                    .Include(c => c.Company)
-                    .Include(e => e.Employees)
-                    .Include(p => p.ProjectCreator)
+                    .Select(GetProjectPredicate())
                     .Skip(toSkip)
                     .Take(filterParams.PageSize)
                     .ToListAsync();
@@ -223,19 +193,15 @@ namespace CompanyPMO_.NET.Repository
                 projects = await _context.Projects
                     .Where(whereExpression)
                     .OrderByDescending(orderByExpression)
-                    .Include(c => c.Company)
-                    .Include(e => e.Employees)
-                    .Include(p => p.ProjectCreator)
+                    .Select(GetProjectPredicate())
                     .Skip(toSkip)
                     .Take(filterParams.PageSize)
                     .ToListAsync();
             }
 
-            var projectDtos = ProjectSelectQuery(projects);
-
             return new DataCountPages<ProjectDto>
             {
-                Data = projectDtos,
+                Data = projects,
                 Count = totalProjectsCount,
                 Pages = totalPages
             };
@@ -325,7 +291,8 @@ namespace CompanyPMO_.NET.Repository
                             Username = project.ProjectCreator.Username,
                             ProfilePicture = project.ProjectCreator.ProfilePicture
                         }
-                    }).OrderBy(x => x.Created).Skip((projectsPage - 1) * projectsPageSize).Take(projectsPageSize),
+                    })
+                    .OrderBy(x => x.Created).Skip((projectsPage - 1) * projectsPageSize).Take(projectsPageSize),
                     Count = x.Count(),
                     Pages = (int)Math.Ceiling((double)x.Count() / projectsPageSize),
                     LatestProjectCreation = x.Key.LatestProjectCreation
@@ -353,39 +320,6 @@ namespace CompanyPMO_.NET.Repository
         {
             return await _context.EmployeeProjects
                 .AnyAsync(ep => ep.EmployeeId.Equals(employeeId) && ep.ProjectId.Equals(projectId));
-        }
-
-        public ICollection<ProjectDto> ProjectSelectQuery(ICollection<Project> projects)
-        {
-            var projectDtos = projects.Select(project => new ProjectDto
-            {
-                ProjectId = project.ProjectId,
-                Name = project.Name,
-                Description = project.Description,
-                Created = project.Created,
-                Finished = project.Finished,
-                Priority = project.Priority,
-                Company = new CompanyShowcaseDto
-                {
-                    CompanyId = project.Company.CompanyId,
-                    Name = project.Company.Name,
-                    Logo = project.Company.Logo
-                },
-                Team = project.Employees.Select(p => new EmployeeShowcaseDto
-                {
-                    EmployeeId = p.EmployeeId,
-                    Username = p.Username,
-                    ProfilePicture = p.ProfilePicture
-                }).ToList(),
-                Creator = new EmployeeShowcaseDto
-                {
-                    EmployeeId = project.ProjectCreator.EmployeeId,
-                    Username = project.ProjectCreator.Username,
-                    ProfilePicture = project.ProjectCreator.ProfilePicture
-                }
-            }).ToList();
-
-            return projectDtos;
         }
 
         public ICollection<Image> SelectImages(ICollection<Image> images)
@@ -429,7 +363,7 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<DataCountPages<ProjectDto>> GetProjectsByEmployeeUsername(string username, FilterParams filterParams)
         {
-            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Project>(null, username, null, "ProjectId", "ProjectCreatorUsername", "Created", filterParams);
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Project>(null, username, "ProjectCreatorUsername", "Created", filterParams);
 
             bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
@@ -440,7 +374,7 @@ namespace CompanyPMO_.NET.Repository
 
             int totalPages = (int)Math.Ceiling((double)totalProjectsCount / filterParams.PageSize);
 
-            List<Project> projects = new();
+            List<ProjectDto> projects = new();
 
             int toSkip = (filterParams.Page - 1) * filterParams.PageSize;
 
@@ -449,9 +383,7 @@ namespace CompanyPMO_.NET.Repository
                 projects = await _context.Projects
                     .Where(whereExpression)
                     .OrderBy(orderByExpression)
-                    .Include(c => c.Company)
-                    .Include(e => e.Employees)
-                    .Include(p => p.ProjectCreator)
+                    .Select(GetProjectPredicate())
                     .Skip(toSkip)
                     .Take(filterParams.PageSize)
                     .ToListAsync();
@@ -461,18 +393,15 @@ namespace CompanyPMO_.NET.Repository
                 projects = await _context.Projects
                     .Where(whereExpression)
                     .OrderByDescending(orderByExpression)
-                    .Include(c => c.Company)
-                    .Include(e => e.Employees)
-                    .Include(p => p.ProjectCreator)
+                    .Select(GetProjectPredicate())
                     .Skip(toSkip)
                     .Take(filterParams.PageSize)
                     .ToListAsync();
             }
-            var projectDtos = ProjectSelectQuery(projects);
 
             return new DataCountPages<ProjectDto>
             {
-                Data = projectDtos,
+                Data = projects,
                 Count = totalProjectsCount,
                 Pages = totalPages
             };
@@ -631,6 +560,39 @@ namespace CompanyPMO_.NET.Repository
                 Message = "Projects finished successfully",
                 Data = projectIds,
                 Errors = errors
+            };
+        }
+
+        public Expression<Func<Project, ProjectDto>> GetProjectPredicate()
+        {
+            return project => new ProjectDto
+            {
+                ProjectId = project.ProjectId,
+                Name = project.Name,
+                Created = project.Created,
+                StartedWorking = project.StartedWorking,
+                Finished = project.Finished,
+                ExpectedDeliveryDate = project.ExpectedDeliveryDate,
+                Lifecycle = project.Lifecycle,
+                Priority = project.Priority,
+                Company = new CompanyShowcaseDto
+                {
+                    CompanyId = project.Company.CompanyId,
+                    Name = project.Company.Name,
+                    Logo = project.Company.Logo
+                },
+                Team = project.Employees.Select(p => new EmployeeShowcaseDto
+                {
+                    EmployeeId = p.EmployeeId,
+                    Username = p.Username,
+                    ProfilePicture = p.ProfilePicture
+                }).OrderByDescending(x => x.Username).Take(5).ToList(),
+                Creator = new EmployeeShowcaseDto
+                {
+                    EmployeeId = project.ProjectCreator.EmployeeId,
+                    Username = project.ProjectCreator.Username,
+                    ProfilePicture = project.ProjectCreator.ProfilePicture
+                }
             };
         }
     }

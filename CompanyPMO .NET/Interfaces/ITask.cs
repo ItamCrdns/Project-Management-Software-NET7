@@ -1,6 +1,8 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Models;
+using System.Linq.Expressions;
+using Task = CompanyPMO_.NET.Models.Task;
 
 namespace CompanyPMO_.NET.Interfaces
 {
@@ -13,7 +15,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<EntityParticipantOrOwnerDTO<TaskDto>> GetTaskById(int taskId, int projectId, int userId);
         Task<List<Employee>> GetEmployeesWorkingOnTask(int taskId); // Get employees working in a certain task
         Task<DataCountPages<TaskShowcaseDto>> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize);
-        Task<List<Models.Task>> GetTasks(int page, int pageSize);
+        Task<List<Task>> GetTasks(int page, int pageSize);
         Task<DataCountPages<TaskDto>> GetAllTasks(FilterParams filterParams);
         ICollection<Image> SelectImages(ICollection<Image> images);
         Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds);
@@ -24,7 +26,7 @@ namespace CompanyPMO_.NET.Interfaces
         Task<DataCountPages<TaskDto>> GetTasksByProjectId(int projectId, FilterParams filterParams);
         Task<DataCountPages<TaskShowcaseDto>> GetAllTasksShowcase(int page, int pageSize);
         Task<DataCountPages<ProjectTaskGroup>> GetTasksGroupedByProject(FilterParams filterParams, int tasksPage, int tasksPageSize, int employeeId);
-        IEnumerable<TaskDto> TaskDtoSelectQuery(ICollection<Models.Task> tasks);
+        Expression<Func<Task, TaskDto>> GetTaskPredicate();
         Task<bool> IsParticipant(int taskId, int employeeId);
         Task<bool> IsOwner(int taskId, int employeeId);
     }

@@ -80,7 +80,7 @@ namespace CompanyPMO_.NET.Repository
         public async Task<DataCountPages<EmployeeShowcaseDto>> GetEmployeesBySupervisorId(int supervisorId, FilterParams filterParams)
         {
             // TODO: FIX WORKLOAD ORDER BY. NOT WORKING
-            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Employee>(supervisorId, null, null, null, "SupervisorId", "Created", filterParams);
+            var (whereExpression, orderByExpression) = _utilityService.BuildWhereAndOrderByExpressions<Employee>(supervisorId, null, "SupervisorId", "Created", filterParams);
 
             bool ShallOrderAscending = filterParams.Sort is not null && filterParams.Sort.Equals("ascending");
             bool ShallOrderDescending = filterParams.Sort is not null && filterParams.Sort.Equals("descending");
@@ -254,25 +254,15 @@ namespace CompanyPMO_.NET.Repository
         {
             int toSkip = (page - 1) * pageSize;
 
-            int companyId = await _context.Employees
-                .Where(u => u.Username.Equals(username))
-                .Select(c => c.CompanyId)
-                .FirstOrDefaultAsync();
-
             int totalEmployeesCount = await _context.Employees
-                .Where(c => c.CompanyId.Equals(companyId) && !c.Username.Equals(username)) // Filter by only company and exclude the employee that is making the request
+                .Where(x => x.CompanyId == _context.Employees.FirstOrDefault(x => x.Username == username).CompanyId && x.Username != username)
                 .CountAsync();
 
             int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
 
-            // page and pageSize we pass are null because we want to retrieve all the employees and then do some client side filtering to remove the employee its making the query
-            // discarding the totalEntitiesCount and totalPages because the values coming from them are invalid since they include the employee its making the request (and we should exclude it)
-            var (employeeIds, _, _) = await _utilityService.GetEntitiesByEntityId<Employee>(companyId, "CompanyId", "EmployeeId", null, null);
-
             IEnumerable<EmployeeShowcaseDto> employees = await _context.Employees
                 .OrderByDescending(p => p.Username)
-                // * Used the employeeIds that we got from our generic method to filter the employees
-                .Where(i => employeeIds.Contains(i.EmployeeId) && !i.Username.Equals(username)) // Exclude the employee that is making the request
+                .Where(x => x.CompanyId == _context.Employees.FirstOrDefault(x => x.Username == username).CompanyId && x.Username != username)
                 .Select(employee => new EmployeeShowcaseDto
                 {
                     EmployeeId = employee.EmployeeId,
@@ -501,21 +491,15 @@ namespace CompanyPMO_.NET.Repository
         {
             int toSkip = (page - 1) * pageSize;
 
-            int companyId = await _context.Employees
-                .Where(u => u.Username.Equals(username))
-                .Select(c => c.CompanyId)
-                .FirstOrDefaultAsync();
-
             int totalEmployeesCount = await _context.Employees
-                .Where(c => c.CompanyId.Equals(companyId) && c.Username.Contains(search))
+                .Where(x => x.CompanyId == _context.Employees.FirstOrDefault(x => x.Username == username).CompanyId && x.Username.Contains(search) && x.Username != username)
                 .CountAsync();
 
             int totalPages = (int)Math.Ceiling((double)totalEmployeesCount / pageSize);
-            var (employeeIds, _, _) = await _utilityService.GetEntitiesByEntityId<Employee>(companyId, "CompanyId", "EmployeeId", null, null);
 
             IEnumerable<EmployeeShowcaseDto> employees = await _context.Employees
                 .OrderByDescending(p => p.Username)
-                .Where(x => employeeIds.Contains(x.EmployeeId) && x.Username.Contains(search) && !x.Username.Equals(username)) // Exclude the employee that is making the request
+                .Where(x => x.CompanyId == _context.Employees.FirstOrDefault(x => x.Username == username).CompanyId && x.Username.Contains(search) && x.Username != username)
                 .Select(employeeIds => new EmployeeShowcaseDto
                 {
                     EmployeeId = employeeIds.EmployeeId,
