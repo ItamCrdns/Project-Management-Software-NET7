@@ -147,15 +147,9 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{username}/colleagues")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
-        [ProducesResponseType(404)]
         public async Task<IActionResult> GetEmployeesWorkingInTheSameCompany(string username, int page, int pageSize)
         {
             var employees = await _employeeService.GetEmployeesWorkingInTheSameCompany(username, page, pageSize);
-
-            if (employees == null || employees.Data == null || !employees.Data.Any())
-            {
-                return NotFound();
-            }
 
             return Ok(employees);
         }
@@ -163,15 +157,9 @@ namespace CompanyPMO_.NET.Controllers
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{username}/colleagues/search/{employeeToSearch}")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
-        [ProducesResponseType(404)]
         public async Task<IActionResult> SearchEmployeesWorkingInTheSameCompany(string username, string employeeToSearch, int page, int pageSize)
         {
             var employees = await _employeeService.SearchEmployeesWorkingInTheSameCompany(employeeToSearch, username, page, pageSize);
-
-            if (employees == null || employees.Data == null || !employees.Data.Any())
-            {
-                return NotFound();
-            }
 
             return Ok(employees);
         }
