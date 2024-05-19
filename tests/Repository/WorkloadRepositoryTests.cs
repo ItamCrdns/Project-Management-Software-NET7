@@ -212,5 +212,41 @@ namespace Tests.Repository
             result.Success.Should().BeFalse();
             result.Message.Should().Be("No workloads to update");
         }
+
+        [Fact]
+        public async void WorkloadRepository_CreateWorkloadEntityForEmployee_ReturnsCreated()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.CreateWorkloadEntityForEmployee(4);
+
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Workload entity created successfully.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_CreateWorkloadEntityForEmployee_ReturnsErrorAlreadyExists()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.CreateWorkloadEntityForEmployee(1);
+
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Workload entity already exists for this employee.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_CreateWorkloadEntityForEmployee_ReturnsErrorEmployeeNotFound()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.CreateWorkloadEntityForEmployee(11);
+
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Employee not found.");
+        }
     }
 }

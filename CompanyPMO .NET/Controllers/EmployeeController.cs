@@ -44,15 +44,6 @@ namespace CompanyPMO_.NET.Controllers
 
                 var token = _jwtService.JwtTokenGenerator(loggedEmployee);
 
-                //HttpContext.Response.Cookies.Append("JwtToken", token, new CookieOptions
-                //{
-                //    Expires = DateTime.Now.AddDays(7),
-                //    HttpOnly = true,
-                //    SameSite = SameSiteMode.Strict,
-                //    Secure = true, // No HTTPS
-                //    IsEssential = true
-                //});
-
                 var loginResponse = new LoginResponseDto
                 {
                     Result = employeeAuthentication.result,

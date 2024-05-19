@@ -8,6 +8,7 @@ using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using System.Linq.Expressions;
 using Tests;
 
@@ -17,10 +18,12 @@ namespace tests.Repository
     {
         private readonly IImage _image;
         private readonly IUtility _utility;
+        private readonly IWorkload _workload;
         public EmployeeRepositoryTests()
         {
             _image = A.Fake<IImage>();
             _utility = A.Fake<IUtility>();
+            _workload = A.Fake<IWorkload>();
         }
 
         private static DbContextOptions<ApplicationDbContext> CreateNewContextOptions
@@ -145,7 +148,7 @@ namespace tests.Repository
         {
             int id = 7;
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.GetEmployeeById(id);
 
@@ -158,7 +161,7 @@ namespace tests.Repository
         {
             int id = 100;
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.GetEmployeeById(id);
 
@@ -176,7 +179,7 @@ namespace tests.Repository
             };
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
 
             Expression<Func<Employee, bool>> fakeBoolExpression = employee => true;
@@ -209,7 +212,7 @@ namespace tests.Repository
             };
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             Expression<Func<Employee, bool>> fakeBoolExpression = employee => employee.EmployeeId == 888;
             Expression<Func<Employee, object>> fakeObjectExpression = employee => employee.FirstName;
@@ -234,7 +237,7 @@ namespace tests.Repository
         {
             string username = "test1";
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.GetEmployeeByUsername(username);
 
@@ -247,7 +250,7 @@ namespace tests.Repository
         {
             string username = "Test100";
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.GetEmployeeByUsername(username);
 
@@ -259,7 +262,7 @@ namespace tests.Repository
         {
             string username = "test1";
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.GetEmployeeForClaims(username);
 
@@ -272,7 +275,7 @@ namespace tests.Repository
         {
             string username = "Test100";
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.GetEmployeeForClaims(username);
 
@@ -285,7 +288,7 @@ namespace tests.Repository
             int page = 1;
             int pageSize = 10;
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.GetEmployeesShowcasePaginated(1, page, pageSize);
 
@@ -305,7 +308,7 @@ namespace tests.Repository
             int page = 1;
             int pageSize = 10;
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.GetProjectEmployees(projectId, page, pageSize);
 
@@ -328,7 +331,7 @@ namespace tests.Repository
             int page = 1;
             int pageSize = 10;
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             //IEnumerable<int> fakeEmployeeIds = new List<int> { 1, 2, 3, 4, 5, 6, 7 };
 
@@ -350,7 +353,7 @@ namespace tests.Repository
         {
             string username = "test1";
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.IsAccountLocked(username);
 
@@ -363,7 +366,7 @@ namespace tests.Repository
         {
             string username = "test9";
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.IsAccountLocked(username);
 
@@ -376,7 +379,7 @@ namespace tests.Repository
         {
             string username = "Test100";
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.IsAccountLocked(username);
 
@@ -394,17 +397,50 @@ namespace tests.Repository
             fakeEmployee.Gender = "FakeGender";
             fakeEmployee.LastName = "FakeLastName";
             fakeEmployee.PhoneNumber = "FakePhoneNumber";
-            fakeEmployee.Role = "FakeRole";
 
             var fakeImage = A.Fake<IFormFile>();
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
+
+            var fakeOperationResultReturn = new OperationResult { Success = true, Message = "Workload entity created successfully." };
+
+            A.CallTo(() => _workload.CreateWorkloadEntityForEmployee(A<int>._))
+                .Returns(fakeOperationResultReturn);
 
             var result = await employeeRepository.RegisterEmployee(fakeEmployee, fakeImage);
 
             result.Should().NotBeNull();
             result.result.Should().Be("Employee created");
+            result.status.Should().BeTrue();
+        }
+
+        [Fact]
+        public async void EmployeeRepository_RegisterEmployee_ReturnsCreatedTrueButProblemWithWorkloadEntity()
+        {
+            var fakeEmployee = A.Fake<EmployeeRegisterDto>();
+            fakeEmployee.Username = "notExistingUsername";
+            fakeEmployee.Password = "FakePassword";
+            fakeEmployee.Email = "FakeEmail";
+            fakeEmployee.FirstName = "FakeFirstName";
+            fakeEmployee.Gender = "FakeGender";
+            fakeEmployee.LastName = "FakeLastName";
+            fakeEmployee.PhoneNumber = "FakePhoneNumber";
+
+            var fakeImage = A.Fake<IFormFile>();
+
+            var dbContext = await GetDatabaseContext();
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
+
+            var fakeOperationResultReturn = new OperationResult { Success = false, Message = "Something went wrong" };
+
+            A.CallTo(() => _workload.CreateWorkloadEntityForEmployee(A<int>._))
+                .Returns(fakeOperationResultReturn);
+
+            var result = await employeeRepository.RegisterEmployee(fakeEmployee, fakeImage);
+
+            result.Should().NotBeNull();
+            result.result.Should().Be("Employee was created, but something went wrong when creating their Workload entity");
             result.status.Should().BeTrue();
         }
 
@@ -418,7 +454,7 @@ namespace tests.Repository
             var fakeImage = A.Fake<IFormFile>();
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.RegisterEmployee(fakeEmployee, fakeImage);
 
@@ -437,7 +473,7 @@ namespace tests.Repository
             var fakeImage = A.Fake<IFormFile>();
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.RegisterEmployee(fakeEmployee, fakeImage);
 
@@ -453,7 +489,7 @@ namespace tests.Repository
             int page = 1;
             int pageSize = 10;
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result1 = await employeeRepository.GetEmployeesByCompanyPaginated(companyId, page, pageSize);
 
@@ -466,7 +502,7 @@ namespace tests.Repository
         {
             string search = "test";
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.SearchProjectEmployees(search, 1, 1, 10);
 
@@ -488,7 +524,7 @@ namespace tests.Repository
             var fakeEmployees = A.Fake<IEnumerable<Employee>>();
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result1 = employeeRepository.EmployeeShowcaseQuery(fakeEmployees);
 
@@ -504,7 +540,7 @@ namespace tests.Repository
             int page = 1;
             int pageSize = 10;
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.SearchEmployeesByCompanyPaginated(search, companyId, page, pageSize);
 
@@ -524,7 +560,7 @@ namespace tests.Repository
             int page = 1;
             int pageSize = 10;
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.SearchEmployeesByCompanyPaginated(search, companyId, page, pageSize);
 
@@ -545,7 +581,7 @@ namespace tests.Repository
             int pageSize = 10;
             var dbContext = await GetDatabaseContext();
 
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.SearchEmployeesWorkingInTheSameCompany(search, username, page, pageSize);
 
@@ -566,7 +602,7 @@ namespace tests.Repository
             int pageSize = 10;
             var dbContext = await GetDatabaseContext();
 
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.SearchEmployeesWorkingInTheSameCompany(search, username, page, pageSize);
 
@@ -583,7 +619,7 @@ namespace tests.Repository
         {
             int employeeId = 1;
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.GetEmployeeTier(employeeId);
 
@@ -596,7 +632,7 @@ namespace tests.Repository
         {
             int employeeId = 100;
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.GetEmployeeTier(employeeId);
 
@@ -609,7 +645,7 @@ namespace tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result1 = await employeeRepository.GetEmployeeUsernameById(employeeId);
 
@@ -623,7 +659,7 @@ namespace tests.Repository
             int employeeId = 100;
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result1 = await employeeRepository.GetEmployeeUsernameById(employeeId);
 
@@ -638,7 +674,7 @@ namespace tests.Repository
             int pageSize = 10;
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             string employeeIds = "1-2-3-4-5-6-7";
 
@@ -669,7 +705,7 @@ namespace tests.Repository
             int pageSize = 10;
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             string employeeIds = "100-200-300-400-500-600-700";
 
@@ -697,7 +733,7 @@ namespace tests.Repository
             string employeeIds = "1-2-3-4-5-6-7";
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.GetEmployeesFromAListOfEmployeeIds(employeeIds);
 
@@ -712,7 +748,7 @@ namespace tests.Repository
             string employeeIds = "100-200-300-400-500-600-700";
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.GetEmployeesFromAListOfEmployeeIds(employeeIds);
 
@@ -729,7 +765,7 @@ namespace tests.Repository
             int pageSize = 10;
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.SearchEmployeesShowcasePaginated(1, search, page, pageSize);
 
@@ -750,7 +786,7 @@ namespace tests.Repository
             int pageSize = 10;
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.SearchEmployeesShowcasePaginated(1, search, page, pageSize);
 
@@ -772,7 +808,7 @@ namespace tests.Repository
             string currentPassword = "test0";
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.UpdateEmployee(employeeId, fakeEmployee, fakeImage, currentPassword);
 
@@ -793,7 +829,7 @@ namespace tests.Repository
             string currentPassword = "test99999999999999";
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.UpdateEmployee(employeeId, fakeEmployee, fakeImage, currentPassword);
 
@@ -813,7 +849,7 @@ namespace tests.Repository
             var fakeImage = A.Fake<IFormFile>();
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.UpdateEmployee(employeeId, fakeEmployee, fakeImage, null);
 
@@ -831,7 +867,7 @@ namespace tests.Repository
             string password = "test0";
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.ConfirmPassword(employeeId, password);
 
@@ -847,7 +883,7 @@ namespace tests.Repository
             string password = "test99999999999999";
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.ConfirmPassword(employeeId, password);
 
@@ -862,7 +898,7 @@ namespace tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.PasswordLastVerification(employeeId);
 
@@ -878,7 +914,7 @@ namespace tests.Repository
             int employeeId = 7;
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.PasswordLastVerification(employeeId);
 
@@ -894,7 +930,7 @@ namespace tests.Repository
             int employeeId = 9;
 
             var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility);
+            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
 
             var result = await employeeRepository.PasswordLastVerification(employeeId);
 

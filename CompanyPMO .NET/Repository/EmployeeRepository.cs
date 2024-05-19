@@ -12,12 +12,14 @@ namespace CompanyPMO_.NET.Repository
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
         private readonly IUtility _utilityService;
+        private readonly IWorkload _workloadService;
 
-        public EmployeeRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService)
+        public EmployeeRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkload workloadService)
         {
             _context = context;
             _imageService = imageService;
             _utilityService = utilityService;
+            _workloadService = workloadService;
         }
 
         public async Task<(AuthenticationResult result, string message, EmployeeDto employee)> AuthenticateEmployee(string username, string password)
@@ -343,7 +345,7 @@ namespace CompanyPMO_.NET.Repository
 
             var (imageUrl, _) = await _imageService.UploadToCloudinary(image, 300, 300);
 
-            if (employee.Email is null || employee.PhoneNumber is null || employee.FirstName is null || employee.Gender is null || employee.LastName is null || employee.Role is null)
+            if (employee.Email is null || employee.PhoneNumber is null || employee.FirstName is null || employee.Gender is null || employee.LastName is null)
             {
                 return ("Email, first name, last name, gender, phone number and role cannot be null", false);
             }
@@ -369,14 +371,20 @@ namespace CompanyPMO_.NET.Repository
 
             int rowsAffected = await _context.SaveChangesAsync();
 
-            if (rowsAffected > 0)
-            {
-                return ("Employee created", true);
-            }
-            else
+            if (rowsAffected == 0)
             {
                 return ("Something went wrong", false);
             }
+            
+            // Create corresponding employees workload
+            var workloadCreationRes = await _workloadService.CreateWorkloadEntityForEmployee(newEmployee.EmployeeId);
+
+            if (!workloadCreationRes.Success)
+            {
+                return ("Employee was created, but something went wrong when creating their Workload entity", true);
+            }
+
+            return ("Employee created", true);
         }
 
         public async Task<Dictionary<string, object>> GetEmployeesByCompanyPaginated(int companyId, int page, int pageSize)

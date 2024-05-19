@@ -15,6 +15,42 @@ namespace CompanyPMO_.NET.Repository
             _context = context;
         }
 
+        public async Task<OperationResult> CreateWorkloadEntityForEmployee(int employeeId)
+        {
+            bool employeeExists = await _context.Employees.AnyAsync(x => x.EmployeeId == employeeId);
+
+            if (!employeeExists)
+            {
+                return new OperationResult { Success = false, Message = "Employee not found." };
+            }
+
+            bool workloadExists = await _context.Workload.AnyAsync(x => x.WorkloadId == employeeId);
+
+            if (workloadExists)
+            {
+                return new OperationResult { Success = false, Message = "Workload entity already exists for this employee." };
+            }
+
+            var workload = new Workload
+            {
+                WorkloadId = employeeId,
+                WorkloadSum = "None"
+            };
+
+            _context.Add(workload);
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                return new OperationResult { Success = true, Message = "Workload entity created successfully." };
+            }
+            else
+            {
+                return new OperationResult { Success = false, Message = "Something went wrong" };
+            }
+        }
+
         public async Task<OperationResult> UpdateEmployeeAssignedProjectsCount(int[] employees)
         {
             List<Workload> workloadsToUpdate = new();
