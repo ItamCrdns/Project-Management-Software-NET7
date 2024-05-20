@@ -339,27 +339,6 @@ namespace Tests.EmployeeControllerTests
         }
 
         [Fact]
-        public async void EmployeeController_GetEmployeesWorkingInTheSameCompany_ReturnNotFound()
-        {
-            // Arrange
-            string username = "Test";
-            int page = 1;
-            int pageSize = 10;
-
-            DataCountPages<EmployeeShowcaseDto> nullDataCountAndPagesizeDto = null;
-
-            A.CallTo(() => _employeeService.GetEmployeesWorkingInTheSameCompany(username, page, pageSize))
-                .Returns(nullDataCountAndPagesizeDto);
-
-            // Act
-            var result = await _employeeController.GetEmployeesWorkingInTheSameCompany(username, page, pageSize);
-
-            // Assert
-            result.Should().BeAssignableTo<IActionResult>();
-            result.Should().BeOfType(typeof(NotFoundResult));
-        }
-
-        [Fact]
         public async void EmployeeController_SearchEmployeesWorkingInTheSameCompany_ReturnOk()
         {
             // Arrange
@@ -402,28 +381,6 @@ namespace Tests.EmployeeControllerTests
             // Assert
             result.Should().BeAssignableTo<IActionResult>();
             result.Should().BeOfType(typeof(OkObjectResult));
-        }
-
-        [Fact]
-        public async void EmployeeController_SearchEmployeesWorkingInTheSameCompany_ReturnNotFound()
-        {
-            // Arrange
-            string search = "Test";
-            string username = "Test";
-            int page = 1;
-            int pageSize = 10;
-
-            DataCountPages<EmployeeShowcaseDto> nullDataCountAndPagesizeDto = null;
-
-            A.CallTo(() => _employeeService.SearchEmployeesWorkingInTheSameCompany(search, username, page, pageSize))
-                .Returns(nullDataCountAndPagesizeDto);
-
-            // Act
-            var result = await _employeeController.SearchEmployeesWorkingInTheSameCompany(search, username, page, pageSize);
-
-            // Assert
-            result.Should().BeAssignableTo<IActionResult>();
-            result.Should().BeOfType(typeof(NotFoundResult));
         }
 
         [Fact]

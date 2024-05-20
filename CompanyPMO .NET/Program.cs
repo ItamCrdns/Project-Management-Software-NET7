@@ -21,6 +21,7 @@ builder.Services.AddScoped<IJwt, JwtService>();
 builder.Services.AddScoped<ILatestStuff, LatestStuffRepository>();
 builder.Services.AddScoped<IResetPasswordRequest, ResetPasswordRequestRepository>();
 builder.Services.AddScoped<IWorkload, WorkloadRepository>();
+builder.Services.AddScoped<ITimeline, TimelineRepository>();
 
 builder.Services.AddScoped<IImage, ImageService>();
 builder.Services.AddScoped<IUtility, UtilityService>();

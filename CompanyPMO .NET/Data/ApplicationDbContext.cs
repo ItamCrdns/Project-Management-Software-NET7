@@ -26,7 +26,8 @@ namespace CompanyPMO_.NET.Data
         public DbSet<Changelog> Changelog { get; set; }
         public DbSet<ResetPasswordRequest> ResetPasswordRequests { get; set; }
         public DbSet<Workload> Workload { get; set; }
-
+        public DbSet<Timeline> Timelines { get; set; }
+  
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Primary key definition
@@ -74,6 +75,11 @@ namespace CompanyPMO_.NET.Data
                 .HasOne(w => w.Workload)
                 .WithOne(e => e.Employee)
                 .HasForeignKey<Workload>(w => w.WorkloadId);
+
+            modelBuilder.Entity<Timeline>()
+                .HasOne(x => x.Employee)
+                .WithMany()
+                .HasForeignKey(x => x.EmployeeId);
 
             // Junction table for many to many
 

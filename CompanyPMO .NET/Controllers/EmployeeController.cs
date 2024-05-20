@@ -17,7 +17,6 @@ namespace CompanyPMO_.NET.Controllers
         private readonly ITask _taskService;
         private readonly IIssue _issueService;
         private readonly IUserIdentity _userIdentityService;
-        //private readonly Lazy<Task<int>> _lazyUserId;
 
         public EmployeeController(IEmployee employeeService, IJwt jwtService, IProject projectService, ITask taskService, IIssue issueService, IUserIdentity userIdentityService)
         {
