@@ -536,34 +536,6 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void ProjectRepository_IsEmployeeAlreadyInProject_ReturnsTrue()
-        {
-            int employeeId = 7;
-            int projectId = 7;
-
-            var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload);
-
-            var result = await projectRepository.IsEmployeeAlreadyInProject(employeeId, projectId);
-
-            result.Should().BeTrue();
-        }
-
-        [Fact]
-        public async void ProjectRepository_IsEmployeeAlreadyInProject_ReturnsFalse()
-        {
-            int employeeId = 2;
-            int projectId = 1;
-
-            var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload);
-
-            var result = await projectRepository.IsEmployeeAlreadyInProject(employeeId, projectId);
-
-            result.Should().BeFalse();
-        }
-
-        [Fact]
         public async void ProjectRepository_SelectImages_ReturnsImageCollection()
         {
             var dbContext = await GetDatabaseContext();

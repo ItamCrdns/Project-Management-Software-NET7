@@ -2,13 +2,14 @@
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Project_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace CompanyPMO_.NET.Repository
 {
-    public class ProjectRepository : IProject
+    public class ProjectRepository : IProjectCompanyQueries, IProjectEmployeeQueries, IProjectManagement, IProjectQueries
     {
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
@@ -29,8 +30,8 @@ namespace CompanyPMO_.NET.Repository
 
             // * employees = list of integers with employee ids
             // * "ProjectId", projectId = identifier of what entity we are updating
-            // * IsEmployeeAlreadyInProject return whether or not the employee its already in the project
-            return await _utilityService.AddEmployeesToEntity<EmployeeProject, Project>(employees, "ProjectId", projectId, IsEmployeeAlreadyInProject);
+            // * IsParticipant return whether or not the employee its already in the project
+            return await _utilityService.AddEmployeesToEntity<EmployeeProject, Project>(employees, "ProjectId", projectId, IsParticipant);
         }
 
         public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images)
@@ -316,12 +317,6 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<bool> IsEmployeeAlreadyInProject(int employeeId, int projectId)
-        {
-            return await _context.EmployeeProjects
-                .AnyAsync(ep => ep.EmployeeId.Equals(employeeId) && ep.ProjectId.Equals(projectId));
-        }
-
         public ICollection<Image> SelectImages(ICollection<Image> images)
         {
             var projectImages = images
@@ -357,6 +352,13 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images)
         {
+            bool projectExists = await DoesProjectExist(projectId);
+
+            if (!projectExists)
+            {
+                return (false, null);
+            }
+
             // TODO: Test it
             return await _utilityService.UpdateEntity(employeeId, projectId, projectDto, images, AddImagesToExistingProject, GetProjectEntityById);
         }

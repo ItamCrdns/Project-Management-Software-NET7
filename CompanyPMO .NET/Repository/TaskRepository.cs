@@ -2,6 +2,7 @@
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Task_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -9,7 +10,7 @@ using Task = CompanyPMO_.NET.Models.Task;
 
 namespace CompanyPMO_.NET.Repository
 {
-    public class TaskRepository : ITask
+    public class TaskRepository : ITask, ITaskEmployeeQueries, ITaskProjectQueries, ITaskManagement
     {
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
@@ -27,7 +28,7 @@ namespace CompanyPMO_.NET.Repository
         public async Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds)
         {
             // Later: check if employee its working in the project & company the task is in
-            return await _utilityService.AddEmployeesToEntity<EmployeeTask, Models.Task>(employeeIds, "TaskId", taskId, IsEmployeeAlreadyInTask);
+            return await _utilityService.AddEmployeesToEntity<EmployeeTask, Models.Task>(employeeIds, "TaskId", taskId, IsParticipant);
         }
 
         public async Task<OperationResult<int>> CreateTask(TaskDto task, int employeeId, int projectId, List<IFormFile>? images, List<int>? employeeIds, bool shouldStartNow)
@@ -285,8 +286,6 @@ namespace CompanyPMO_.NET.Repository
                 Pages = totalPages
             };
         }
-
-        public async Task<bool> IsEmployeeAlreadyInTask(int employeeId, int taskId) => await _context.EmployeeTasks.AnyAsync(x => x.EmployeeId.Equals(employeeId) && x.TaskId.Equals(taskId));
 
         public ICollection<Image> SelectImages(ICollection<Image> images)
         {

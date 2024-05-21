@@ -553,36 +553,6 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void TaskRepository_IsEmployeeAlreadyInTask_ReturnsTrue()
-        {
-            int taskId = 1;
-            int employeeId = 4;
-
-            var dbContext = await GetDatabaseContext();
-
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
-
-            var result = await taskRepository.IsEmployeeAlreadyInTask(employeeId, taskId);
-
-            result.Should().BeTrue();
-        }
-
-        [Fact]
-        public async void TaskRepository_IsEmployeeAlreadyInTask_ReturnsFalse()
-        {
-            int taskId = 1;
-            int employeeId = 77777;
-
-            var dbContext = await GetDatabaseContext();
-
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
-
-            var result = await taskRepository.IsEmployeeAlreadyInTask(employeeId, taskId);
-
-            result.Should().BeFalse();
-        }
-
-        [Fact]
         public async void TaskRepository_SelectImages_ReturnsImages()
         {
             ICollection<Image> images = new List<Image>

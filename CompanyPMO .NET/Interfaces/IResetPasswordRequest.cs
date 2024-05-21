@@ -4,11 +4,11 @@ namespace CompanyPMO_.NET.Interfaces
 {
     public interface IResetPasswordRequest
     {
-        int GenerateResetPasswordToken();
+        // Fully implemented in Reset Password Controller
         Task<OperationResult<Guid>> RequestPasswordReset(string email);
         Task<OperationResult<string>> ResetPasswordWithToken(string email, int token, string newPassword);
         Task<OperationResult<bool>> ResetPasswordWithCurrentPassword(int employeeId, string currentPassword, string newPassword);
-        public Task<OperationResult<string>> RequestExists(Guid requestGuid);
+        Task<OperationResult<string>> RequestExists(Guid requestGuid); // 
         Task<OperationResult<bool>> IsTokenValid(int token, Guid requestGuid);
     }
 }

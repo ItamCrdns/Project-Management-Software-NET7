@@ -1,9 +1,11 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Issue_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CompanyPMO_.NET.Controllers
 {
@@ -13,86 +15,12 @@ namespace CompanyPMO_.NET.Controllers
     public class TaskController : ControllerBase
     {
         private readonly ITask _taskService;
-        private readonly IUserIdentity _userIdentityService;
-        private readonly Lazy<int> _lazyUserId;
-        private readonly IIssue _issueService;
+        private readonly IIssueTaskQueries _issueTaskQueries;
 
-        public TaskController(ITask taskService, IUserIdentity userIdentityService, IIssue issueService)
+        public TaskController(ITask taskService, IIssueTaskQueries issueTaskQueries)
         {
             _taskService = taskService;
-            _userIdentityService = userIdentityService;
-            _lazyUserId = new Lazy<int>(InitializeUserId); // Load the userId until we actually need it
-            _issueService = issueService;
-        }
-
-        private int InitializeUserId()
-        {
-            return _userIdentityService.GetUserIdFromClaims(HttpContext.User);
-        }
-
-        private int GetUserId()
-        {
-            return _lazyUserId.Value;
-        }
-
-        [HttpPost("new")]
-        [ProducesResponseType(200, Type = typeof(OperationResult<int>))]
-        [ProducesResponseType(400, Type = typeof(OperationResult<int>))]
-        public async Task<IActionResult> NewTask([FromForm] TaskDto task, [FromForm] int projectId, [FromForm] List<IFormFile>? images, [FromForm] List<int> employees, [FromForm] bool shouldStartNow)
-        {
-            var result = await _taskService.CreateTask(task, GetUserId(), projectId, images, employees, shouldStartNow);
-
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-
-            return Ok(result);
-        }
-
-        [HttpGet("{taskId}")]
-        [ProducesResponseType(200, Type = typeof(EntityParticipantOrOwnerDTO<TaskDto>))]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> GetTaskById(int taskId, int projectId)
-        {
-            var task = await _taskService.GetTaskById(taskId, projectId, GetUserId());
-
-            if (task is null)
-            {
-                return NotFound();
-            }
-
-            return Ok(task);
-        }
-
-        [HttpPost("{taskId}/start")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        public async Task<IActionResult> StartTask(int taskId)
-        {
-            bool taskStarted = await _taskService.StartingWorkingOnTask(GetUserId(), taskId);
-
-            if(!taskStarted)
-            {
-                return BadRequest();
-            }
-
-            return NoContent();
-        }
-
-        [HttpPost("{taskId}/finish")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        public async Task<IActionResult> FinishTask(int taskId)
-        {
-            bool taskFinished = await _taskService.FinishedWorkingOnTask(GetUserId(), taskId);
-
-            if (!taskFinished)
-            {
-                return BadRequest();
-            }
-
-            return NoContent();
+            _issueTaskQueries = issueTaskQueries;
         }
 
         [HttpGet("{taskId}/employees")]
@@ -124,31 +52,19 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(tasks);
         }
 
-        [Authorize(Policy = "SupervisorOnly")]
-        [HttpPost("{taskId}/employees/add")]
-        [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
-        public async Task<IActionResult> AddEmployeesToTask(int taskId, [FromForm] List<int> employees)
-        {
-            var (response, employeesAdded) = await _taskService.AddEmployeesToTask(taskId, employees);
-
-            if (response is null)
-            {
-                return BadRequest();
-            }
-
-            var toReturn = new
-            {
-                Status = response,
-                EmployeesAdded = employeesAdded
-            };
-
-            return Ok(toReturn);
-        }
-
         [HttpGet("grouped")]
         public async Task<IActionResult> GetTasksGroupedByProject([FromQuery] FilterParams filterParams, [FromQuery] int tasksPage = 1, [FromQuery] int tasksPageSize = 5)
         {
-            var tasks = await _taskService.GetTasksGroupedByProject(filterParams, tasksPage, tasksPageSize, GetUserId());
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+
+            if (claim == null)
+            {
+                return Unauthorized("User ID claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
+
+            var tasks = await _taskService.GetTasksGroupedByProject(filterParams, tasksPage, tasksPageSize, employeeId);
 
             return Ok(tasks);
         }
@@ -157,11 +73,20 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
         public async Task<IActionResult> GetIssuesByTaskId(int taskId, [FromQuery] FilterParams filterParams)
         {
-            var issues = await _issueService.GetIssuesByTaskId(taskId, filterParams);
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
 
-            bool isTaskParticipant = await _taskService.IsParticipant(taskId, GetUserId());
+            if (claim == null)
+            {
+                return Unauthorized("User ID claim is missing");
+            }
 
-            bool isOwner = await _taskService.IsOwner(taskId, GetUserId());
+            int employeeId = int.Parse(claim.Value);
+
+            var issues = await _issueTaskQueries.GetIssuesByTaskId(taskId, filterParams);
+
+            bool isTaskParticipant = await _taskService.IsParticipant(taskId, employeeId);
+
+            bool isOwner = await _taskService.IsOwner(taskId, employeeId);
 
             var result = new Dictionary<string, object>
             {

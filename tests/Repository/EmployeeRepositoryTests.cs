@@ -518,20 +518,6 @@ namespace tests.Repository
         }
 
         [Fact]
-        public async void EmployeeRepository_EmployeeShowcaseQuery_ReturnsEmployeeShowcaseDto()
-        {
-            var fakeEmployees = A.Fake<IEnumerable<Employee>>();
-
-            var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
-
-            var result1 = employeeRepository.EmployeeShowcaseQuery(fakeEmployees);
-
-            result1.Should().NotBeNull();
-            result1.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
-        }
-
-        [Fact]
         public async void EmployeeRepository_SearchEmployeesByCompanyPaginated_ReturnsEmployeesData()
         {
             string search = "test";
@@ -639,33 +625,6 @@ namespace tests.Repository
         }
 
         [Fact]
-        public async void EmployeeRepository_GetEmployeeUsernameById_ReturnsUsernameString()
-        {
-            int employeeId = 1;
-
-            var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
-
-            var result1 = await employeeRepository.GetEmployeeUsernameById(employeeId);
-
-            result1.Should().NotBeNull();
-            result1.Should().BeOfType(typeof(string));
-        }
-
-        [Fact]
-        public async void EmployeeRepository_GetEmployeeUsernameById_ReturnsNull()
-        {
-            int employeeId = 100;
-
-            var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
-
-            var result1 = await employeeRepository.GetEmployeeUsernameById(employeeId);
-
-            result1.Should().BeNull();
-        }
-
-        [Fact]
         public async void EmployeeRepository_GetAndSearchEmployeesByProjectsCreatedInClient_ReturnsListOfEmployees()
         {
             int clientId = 1;
@@ -724,36 +683,6 @@ namespace tests.Repository
             allEmployees?.Data.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
             allEmployees?.Data.Should().HaveCount(0);
 
-        }
-
-        [Fact]
-        public async void EmployeeRepository_GetEmployeesFromAListOfEmployeeIds_ReturnsListOfEmployees()
-        {
-            string employeeIds = "1-2-3-4-5-6-7";
-
-            var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
-
-            var result = await employeeRepository.GetEmployeesFromAListOfEmployeeIds(employeeIds);
-
-            result.Should().NotBeNull();
-            result.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
-            result.Should().HaveCountGreaterThanOrEqualTo(1);
-        }
-
-        [Fact]
-        public async void EmployeeRepository_GetEmployeesFromAListOfEmployeeIds_ReturnsEmptyListOfEmployees()
-        {
-            string employeeIds = "100-200-300-400-500-600-700";
-
-            var dbContext = await GetDatabaseContext();
-            var employeeRepository = new EmployeeRepository(dbContext, _image, _utility, _workload);
-
-            var result = await employeeRepository.GetEmployeesFromAListOfEmployeeIds(employeeIds);
-
-            result.Should().NotBeNull();
-            result.Should().BeOfType(typeof(List<EmployeeShowcaseDto>));
-            result.Should().HaveCount(0);
         }
 
         [Fact]

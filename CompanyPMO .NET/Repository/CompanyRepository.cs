@@ -2,12 +2,13 @@
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Company_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CompanyPMO_.NET.Repository
 {
-    public class CompanyRepository : ICompany
+    public class CompanyRepository : ICompany, ICompanyManagement
     {
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
@@ -182,6 +183,13 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<(bool updated, CompanyDto)> UpdateCompany(int employeeId, int companyId, CompanyDto companyDto, List<IFormFile>? images)
         {
+            bool companyExists = await DoesCompanyExist(companyId);
+
+            if (!companyExists)
+            {
+                return (false, null);
+            }
+
             return await _utilityService.UpdateEntity(employeeId, companyId, companyDto, images, AddImagesToExistingCompany, GetCompanyById);
         }
     }

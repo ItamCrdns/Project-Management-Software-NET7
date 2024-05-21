@@ -1,9 +1,12 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
-using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Employee_interfaces;
+using CompanyPMO_.NET.Interfaces.Project_interfaces;
+using CompanyPMO_.NET.Interfaces.Task_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CompanyPMO_.NET.Controllers
 {
@@ -11,29 +14,15 @@ namespace CompanyPMO_.NET.Controllers
     [ApiController]
     public class ProjectController : ControllerBase
     {
-        private readonly IProject _projectService;
-        private readonly IUserIdentity _userIdentityService;
-        private readonly IEmployee _employeeService;
-        private readonly ITask _taskService;
-        private readonly Lazy<int> _lazyUserId;
+        private readonly IProjectQueries _projectQueries;
+        private readonly ITaskProjectQueries _taskProjectQueries;
+        private readonly IEmployeeProjectQueries _employeeProjectQueriesService;
 
-        public ProjectController(IProject projectService, IUserIdentity userIdentityService, IEmployee employeeService, ITask taskService)
+        public ProjectController(IProjectQueries projectQueries, ITaskProjectQueries taskProjectQueries, IEmployeeProjectQueries employeeProjectQueriesService)
         {
-            _projectService = projectService;
-            _userIdentityService = userIdentityService;
-            _employeeService = employeeService;
-            _taskService = taskService;
-            _lazyUserId = new Lazy<int>(InitializeUserId);
-        }
-
-        private int InitializeUserId()
-        {
-            return _userIdentityService.GetUserIdFromClaims(HttpContext.User);
-        }
-
-        private int GetUserId()
-        {
-            return _lazyUserId.Value;
+            _projectQueries = projectQueries;
+            _taskProjectQueries = taskProjectQueries;
+            _employeeProjectQueriesService = employeeProjectQueriesService;
         }
 
         [Authorize(Policy = "SupervisorOnly")]
@@ -41,7 +30,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<ProjectDto>))]
         public async Task<IActionResult> GetAllProjects([FromQuery] FilterParams filterParams)
         {
-            var projects = await _projectService.GetAllProjects(filterParams);
+            var projects = await _projectQueries.GetAllProjects(filterParams);
 
             return Ok(projects);
         }
@@ -51,7 +40,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<ProjectShowcaseDto>))]
         public async Task<IActionResult> GetAllProjectsShowcase(int page, int pageSize)
         {
-            var projects = await _projectService.GetAllProjectsShowcase(page, pageSize);
+            var projects = await _projectQueries.GetAllProjectsShowcase(page, pageSize);
 
             return Ok(projects);
         }
@@ -61,49 +50,18 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(DataCountPages<CompanyProjectGroup>))]
         public async Task<IActionResult> GetProjectsGroupedByCompany([FromQuery] FilterParams filterParams, [FromQuery] int projectsPage = 1, [FromQuery] int projectsPageSize = 5)
         {
-            var projects = await _projectService.GetProjectsGroupedByCompany(filterParams, projectsPage, projectsPageSize, GetUserId());
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+
+            if (claim == null)
+            {
+                return Unauthorized("User ID claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
+
+            var projects = await _projectQueries.GetProjectsGroupedByCompany(filterParams, projectsPage, projectsPageSize, employeeId);
 
             return Ok(projects);
-        }
-
-        [Authorize(Policy = "SupervisorOnly")]
-        [HttpPost("new")]
-        [ProducesResponseType(200, Type = typeof(OperationResult<int>))]
-        [ProducesResponseType(400, Type = typeof(OperationResult<int>))]
-        public async Task<IActionResult> NewProject([FromForm] Project project, [FromForm] List<IFormFile>? images, [FromForm] int companyId, [FromForm] List<int> employees, [FromForm] bool shouldStartNow)
-        {
-            var result = await _projectService.CreateProject(project, GetUserId(), images, companyId, employees, shouldStartNow);
-
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-
-            return Ok(result);
-        }
-
-        [Authorize(Policy = "SupervisorOnly")]
-        [HttpPatch("{projectId}/update")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Project>))]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> UpdateProject(int projectId, [FromForm] ProjectDto projectDto, [FromForm] List<IFormFile>? images)
-        {
-            bool projectExists = await _projectService.DoesProjectExist(projectId);
-
-            if(!projectExists)
-            {
-                return NotFound();
-            }
-
-            var (updated, project) = await _projectService.UpdateProject(GetUserId(), projectId, projectDto, images);
-
-            if (!updated)
-            {
-                return BadRequest();
-            }
-
-            return Ok(project);
         }
 
         [Authorize(Policy = "EmployeesAllowed")]
@@ -112,7 +70,16 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetProjectById(int projectId)
         {
-            var project = await _projectService.GetProjectById(projectId, GetUserId());
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+
+            if (claim == null)
+            {
+                return Unauthorized("User ID claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
+
+            var project = await _projectQueries.GetProjectById(projectId, employeeId);
 
             if (project is null)
             {
@@ -128,7 +95,16 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetTaskById(int projectId, int taskId)
         {
-            var task = await _taskService.GetTaskById(taskId, projectId, GetUserId());
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+
+            if (claim == null)
+            {
+                return Unauthorized("User ID claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
+
+            var task = await _taskProjectQueries.GetTaskById(taskId, projectId, employeeId);
 
             if (task is null)
             {
@@ -144,19 +120,28 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetProjectNameCreatorAndTeam(int projectId)
         {
-            var project = await _projectService.GetProjectNameCreatorLifecyclePriorityAndTeam(projectId);
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+
+            if (claim == null)
+            {
+                return Unauthorized("User ID claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
+
+            var project = await _projectQueries.GetProjectNameCreatorLifecyclePriorityAndTeam(projectId);
 
             if (project is null)
             {
                 return NotFound();
             }
 
-            bool isParticipantOfProject = await _projectService.IsParticipant(projectId, GetUserId());
+            bool isParticipantOfProject = await _projectQueries.IsParticipant(projectId, employeeId);
 
             bool isOwner = false;
             if (!isParticipantOfProject)
             {
-                isOwner = await _projectService.IsOwner(projectId, GetUserId());
+                isOwner = await _projectQueries.IsOwner(projectId, employeeId);
             }
 
             var result = new EntityParticipantOrOwnerDTO<ProjectSomeInfoDto>
@@ -169,60 +154,12 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(result);
         }
 
-        [Authorize(Policy = "SupervisorOnly")]
-        [HttpPost("{projectId}/set/ended")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        public async Task<IActionResult> SetProjectFinalized(int projectId)
-        {
-            bool updated = await _projectService.SetProjectFinalized(projectId);
-
-            if(!updated)
-            {
-                return BadRequest();
-            }
-
-            return NoContent();
-        }
-
-        [Authorize(Policy = "SupervisorOnly")]
-        [HttpPost("{projectId}/add/employees")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
-        public async Task<IActionResult> AddEmployeesToProject(int projectId, [FromForm] List<int> employees)
-        {
-            var (response, employeesAdded) = await _projectService.AddEmployeesToProject(projectId, employees);
-
-            if(response is null)
-            {
-                return BadRequest();
-            }
-
-            var toReturn = new
-            {
-                Status = response,
-                EmployeesAdded = employeesAdded
-            };
-
-            return Ok(toReturn);
-        }
-
-        [Authorize(Policy = "EmployeesAllowed")]
-        [HttpGet("company/{companyId}")]
-        [ProducesResponseType(200, Type = typeof(DataCountPages<ProjectDto>))]
-        public async Task<IActionResult> GetProjectsByCompanyName(int companyId, [FromQuery] FilterParams filterParams)
-        {
-            var projects = await _projectService.GetProjectsByCompanyName(companyId, filterParams);
-
-            return Ok(projects);
-        }
-
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("{projectId}/employees")]
         [ProducesResponseType(200, Type = typeof(DataCountPages<EmployeeShowcaseDto>))]
         public async Task<IActionResult> GetProjectEmployees(int projectId, int page, int pageSize)
         {
-            var employees = await _employeeService.GetProjectEmployees(projectId, page, pageSize);
+            var employees = await _employeeProjectQueriesService.GetProjectEmployees(projectId, page, pageSize);
 
             return Ok(employees);
         }
@@ -232,7 +169,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(DataCountPages<EmployeeShowcaseDto>))]
         public async Task<IActionResult> SearchProjectEmployees(int projectId, string employeeToSearch, int page, int pageSize)
         {
-            var employees = await _employeeService.SearchProjectEmployees(employeeToSearch, projectId, page, pageSize);
+            var employees = await _employeeProjectQueriesService.SearchProjectEmployees(employeeToSearch, projectId, page, pageSize);
 
             return Ok(employees);
         }
@@ -242,14 +179,23 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
         public async Task<IActionResult> GetTasksByProjectId(int projectId, [FromQuery] FilterParams filterParams)
         {
-            var tasks = await _taskService.GetTasksByProjectId(projectId, filterParams);
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
 
-            bool isParticipantOfProject = await _projectService.IsParticipant(projectId, GetUserId());
+            if (claim == null)
+            {
+                return Unauthorized("User ID claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
+
+            var tasks = await _taskProjectQueries.GetTasksByProjectId(projectId, filterParams);
+
+            bool isParticipantOfProject = await _projectQueries.IsParticipant(projectId, employeeId);
 
             bool isOwner = false;
             if (!isParticipantOfProject)
             {
-                isOwner = await _projectService.IsOwner(projectId, GetUserId());
+                isOwner = await _projectQueries.IsOwner(projectId, employeeId);
             }
 
             var result = new Dictionary<string, object>
@@ -267,7 +213,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(DataCountPages<TaskShowcaseDto>))]
         public async Task<IActionResult> GetTasksShowcaseByProjectId(int projectId, int page, int pageSize)
         {
-            var tasks = await _taskService.GetTasksShowcaseByProjectId(projectId, page, pageSize);
+            var tasks = await _taskProjectQueries.GetTasksShowcaseByProjectId(projectId, page, pageSize);
 
             return Ok(tasks);
         }
@@ -277,19 +223,9 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(ProjectShowcaseDto))]
         public async Task<IActionResult> GetProjectShowcase(int projectId)
         {
-            var project = await _projectService.GetProjectShowcase(projectId);
+            var project = await _projectQueries.GetProjectShowcase(projectId);
 
             return Ok(project);
-        }
-
-        [Authorize(Policy = "SupervisorOnly")]
-        [HttpPost("set/finished/bulk")]
-        [ProducesResponseType(200, Type = typeof(OperationResult<int[]>))]
-        public async Task<IActionResult> SetProjectsFininishedBulk([FromBody] int[] projectIds)
-        {
-            var result = await _projectService.SetProjectsFininishedBulk(projectIds);
-
-            return Ok(result);
         }
     }
 }

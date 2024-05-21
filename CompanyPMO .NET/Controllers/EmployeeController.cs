@@ -1,9 +1,13 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
-using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Employee_interfaces;
+using CompanyPMO_.NET.Interfaces.Issue_interfaces;
+using CompanyPMO_.NET.Interfaces.Project_interfaces;
+using CompanyPMO_.NET.Interfaces.Task_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CompanyPMO_.NET.Controllers
 {
@@ -11,77 +15,16 @@ namespace CompanyPMO_.NET.Controllers
     [ApiController]
     public class EmployeeController : ControllerBase
     {
-        private readonly IEmployee _employeeService;
-        private readonly IJwt _jwtService;
-        private readonly IProject _projectService;
-        private readonly ITask _taskService;
-        private readonly IIssue _issueService;
-        private readonly IUserIdentity _userIdentityService;
-
-        public EmployeeController(IEmployee employeeService, IJwt jwtService, IProject projectService, ITask taskService, IIssue issueService, IUserIdentity userIdentityService)
+        private readonly IEmployeeQueries _employeeQueries;
+        private readonly IProjectEmployeeQueries _projectEmployeeQueries;
+        private readonly ITaskEmployeeQueries _taskEmployeeQueries;
+        private readonly IIssueEmployeeQueries _issueEmployeeQueries;
+        public EmployeeController(IEmployeeQueries employeeQueries, IProjectEmployeeQueries projectEmployeeQueries, ITaskEmployeeQueries taskEmployeeQueries, IIssueEmployeeQueries issueEmployeeQueries)
         {
-            _employeeService = employeeService;
-            _jwtService = jwtService;
-            _projectService = projectService;
-            _taskService = taskService;
-            _issueService = issueService;
-            _userIdentityService = userIdentityService;
-        }
-
-        [AllowAnonymous]
-        [HttpPost("login")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(200, Type = typeof(LoginResponseDto))]
-        public async Task<IActionResult> Login(EmployeeLoginDto employee)
-        {
-            var employeeAuthentication = await _employeeService.AuthenticateEmployee(employee.Username, employee.Password);
-
-            if(employeeAuthentication.result.Authenticated)
-            {
-                var loggedEmployee = await _employeeService.GetEmployeeForClaims(employee.Username);
-
-                var token = _jwtService.JwtTokenGenerator(loggedEmployee);
-
-                var loginResponse = new LoginResponseDto
-                {
-                    Result = employeeAuthentication.result,
-                    Message = employeeAuthentication.message,
-                    Employee = employeeAuthentication.employee,
-                    Token = token
-                };
-
-                return Ok(loginResponse);
-            }
-            else if(!employeeAuthentication.result.Authenticated)
-            {
-                var loginResponse = new LoginResponseDto
-                {
-                    Result = employeeAuthentication.result,
-                    Message = employeeAuthentication.message,
-                    Employee = employeeAuthentication.employee
-                };
-
-                return Unauthorized(loginResponse);
-            }
-
-            return NoContent();
-        }
-
-        [AllowAnonymous]
-        [HttpPost("register")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
-        public async Task<IActionResult> RegisterEmployee([FromForm] EmployeeRegisterDto employee, [FromForm] IFormFile? profilePicture)
-        {
-            var (result, status) = await _employeeService.RegisterEmployee(employee, profilePicture);
-
-            if (!status)
-            {
-                return BadRequest(new { Created = status, Message = "Employee could not be created" });
-            }
-
-            return Ok(new { Created = status, Message = result });
+            _taskEmployeeQueries = taskEmployeeQueries;
+            _employeeQueries = employeeQueries;
+            _projectEmployeeQueries = projectEmployeeQueries;
+            _issueEmployeeQueries = issueEmployeeQueries;
         }
 
         [Authorize(Policy = "SupervisorOnly")]
@@ -90,7 +33,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetEmployeeById(int employeeId)
         {
-            Employee employee = await _employeeService.GetEmployeeById(employeeId);
+            Employee employee = await _employeeQueries.GetEmployeeById(employeeId);
 
             if (employee == null)
             {
@@ -106,9 +49,16 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetEmployeesBySupervisorId([FromQuery] FilterParams filterParams)
         {
-            int supervisorId = _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
 
-            var employees = await _employeeService.GetEmployeesBySupervisorId(supervisorId, filterParams);
+            if (claim == null)
+            {
+                return Unauthorized("User ID claim is missing");
+            }
+
+            int supervisorId = int.Parse(claim.Value);
+
+            var employees = await _employeeQueries.GetEmployeesBySupervisorId(supervisorId, filterParams);
 
             if (employees == null || employees.Count == 0)
             {
@@ -118,22 +68,13 @@ namespace CompanyPMO_.NET.Controllers
             return Ok(employees);
         }
 
-        [HttpPost("logout")]
-        [ProducesResponseType(204)]
-        public IActionResult EmployeeLogout()
-        {
-            Response.Cookies.Delete("JwtToken");
-
-            return NoContent();
-        }
-
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("username/{username}")]
         [ProducesResponseType(200, Type = typeof(Employee))]
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetEmployeeByUsername(string username)
         {
-            EmployeeDto employee = await _employeeService.GetEmployeeByUsername(username);
+            EmployeeDto employee = await _employeeQueries.GetEmployeeByUsername(username);
 
             if (employee == null)
             {
@@ -148,7 +89,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
         public async Task<IActionResult> GetEmployeesWorkingInTheSameCompany(string username, int page, int pageSize)
         {
-            var employees = await _employeeService.GetEmployeesWorkingInTheSameCompany(username, page, pageSize);
+            var employees = await _employeeQueries.GetEmployeesWorkingInTheSameCompany(username, page, pageSize);
 
             return Ok(employees);
         }
@@ -158,7 +99,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
         public async Task<IActionResult> SearchEmployeesWorkingInTheSameCompany(string username, string employeeToSearch, int page, int pageSize)
         {
-            var employees = await _employeeService.SearchEmployeesWorkingInTheSameCompany(employeeToSearch, username, page, pageSize);
+            var employees = await _employeeQueries.SearchEmployeesWorkingInTheSameCompany(employeeToSearch, username, page, pageSize);
 
             return Ok(employees);
         }
@@ -169,9 +110,16 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetEmployeesShowcasePaginated(int page, int pageSize)
         {
-            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
 
-            var employees = await _employeeService.GetEmployeesShowcasePaginated(employeeId, page, pageSize);
+            if (claim == null)
+            {
+                return Unauthorized("User ID claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
+
+            var employees = await _employeeQueries.GetEmployeesShowcasePaginated(employeeId, page, pageSize);
 
             if (employees.Count == 0)
             {
@@ -187,9 +135,16 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> SearchEmployeesShowcasePaginated(string employee, int page, int pageSize)
         {
-            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
 
-            var employees = await _employeeService.SearchEmployeesShowcasePaginated(employeeId, employee, page, pageSize);
+            if (claim == null)
+            {
+                return Unauthorized("User ID claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
+
+            var employees = await _employeeQueries.SearchEmployeesShowcasePaginated(employeeId, employee, page, pageSize);
 
             if (employees.Count == 0)
             {
@@ -205,7 +160,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetProjectsByEmployeeUsername(string username, [FromQuery] FilterParams filterParams)
         {
-            var projects = await _projectService.GetProjectsByEmployeeUsername(username, filterParams);
+            var projects = await _projectEmployeeQueries.GetProjectsByEmployeeUsername(username, filterParams);
 
             if (projects == null || projects.Data == null || !projects.Data.Any())
             {
@@ -221,7 +176,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetProjectsShowcaseByEmployeeUsername(string username, int page, int pageSize)
         {
-            var projects = await _projectService.GetProjectsShowcaseByEmployeeUsername(username, page, pageSize);
+            var projects = await _projectEmployeeQueries.GetProjectsShowcaseByEmployeeUsername(username, page, pageSize);
 
             if (projects == null || projects.Data == null || !projects.Data.Any())
             {
@@ -237,7 +192,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetTasksShowcaseByEmployeeUsername(string username, int page, int pageSize)
         {
-            var tasks = await _taskService.GetTasksShowcaseByEmployeeUsername(username, page, pageSize);
+            var tasks = await _taskEmployeeQueries.GetTasksShowcaseByEmployeeUsername(username, page, pageSize);
 
             if (tasks == null || tasks.Data == null || !tasks.Data.Any())
             {
@@ -253,7 +208,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetTasksByEmployeeUsername(string username, int page, int pageSize)
         {
-            var tasks = await _taskService.GetTasksByEmployeeUsername(username, page, pageSize);
+            var tasks = await _taskEmployeeQueries.GetTasksByEmployeeUsername(username, page, pageSize);
 
             if (tasks == null || tasks.Data == null || !tasks.Data.Any())
             {
@@ -269,7 +224,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetIssuesByEmployeeUsername(string username, int page, int pageSize)
         {
-            var issues = await _issueService.GetIssuesShowcaseByEmployeeUsername(username, page, pageSize);
+            var issues = await _issueEmployeeQueries.GetIssuesShowcaseByEmployeeUsername(username, page, pageSize);
 
             if (issues == null || issues.Data == null || !issues.Data.Any())
             {
@@ -284,9 +239,16 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(Employee))]
         public async Task<IActionResult> GetEmployeeByIdForClaims()
         {
-            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
 
-            TierDto tier = await _employeeService.GetEmployeeTier(employeeId);
+            if (claim == null)
+            {
+                return Unauthorized("User ID claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
+
+            TierDto tier = await _employeeQueries.GetEmployeeTier(employeeId);
 
             return Ok(tier);
         }
@@ -296,85 +258,18 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(EmployeeDto))]
         public async Task<IActionResult> GetMyEmployee()
         {
-            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
 
-            var employee = await _employeeService.GetEmployeeById(employeeId);
+            if (claim == null)
+            {
+                return Unauthorized("User ID claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
+
+            var employee = await _employeeQueries.GetEmployeeById(employeeId);
 
             return Ok(employee);
-        }
-
-        [Authorize(Policy = "EmployeesAllowed")]
-        [HttpPatch("me/update")]
-        [ProducesResponseType(200, Type = typeof(OperationResult<EmployeeShowcaseDto>))]
-        [ProducesErrorResponseType(typeof(OperationResult<EmployeeShowcaseDto>))]
-        public async Task<IActionResult> UpdateMyEmployee([FromForm] UpdateEmployeeDto employee, [FromForm] IFormFile? profilePicture, [FromForm] string? currentPassword)
-        {
-            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
-
-            var result = await _employeeService.UpdateEmployee(employeeId, employee, profilePicture, currentPassword);
-
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-
-            return Ok(result);
-        }
-
-        //[Authorize(Policy = "EmployeesAllowed")]
-        //[HttpGet("{clientId}/projects/created")]
-        //[ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
-        //public async Task<IActionResult> GetAndSearchEmployeesByProjectsCreatedInClient(string? employeeIds, int clientId, int page, int pageSize)
-        //{
-        //    var employees = await _employeeService.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize);
-
-        //    return Ok(employees);
-        //}
-
-        [Authorize(Policy = "EmployeesAllowed")]
-        [HttpGet("employees/by-employee-ids")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> GetEmployeesFromAListOfEmployeeIds([FromQuery] string? employeeIds)
-        {
-            // Make sure that the string you pass its in the following format: 1-2-3-4-5.
-            var employees = await _employeeService.GetEmployeesFromAListOfEmployeeIds(employeeIds);
-
-            if (!employees.Any())
-            {
-                return NotFound();
-            }
-
-            return Ok(employees);
-        }
-
-        [Authorize(Policy = "EmployeesAllowed")]
-        [HttpPost("me/confirm-password")]
-        [ProducesResponseType(200, Type = typeof(OperationResult<bool>))]
-        public async Task<IActionResult> ConfirmPassword([FromBody] EmployeePasswordDto employee)
-        {
-            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
-
-            var isPasswordCorrect = await _employeeService.ConfirmPassword(employeeId, employee.Password);
-
-            if (isPasswordCorrect == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(isPasswordCorrect);
-        }
-
-        [Authorize(Policy = "EmployeesAllowed")]
-        [HttpGet("me/password-last-verification")]
-        [ProducesResponseType(200, Type = typeof(OperationResult<DateTime>))]
-        public async Task<IActionResult> PasswordLastVerification()
-        {
-            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User); // * Get the employee Id from the cookie
-
-            var lastVerification = await _employeeService.PasswordLastVerification(employeeId);
-
-            return Ok(lastVerification);
         }
     }
 }

@@ -1,6 +1,11 @@
 using CloudinaryDotNet;
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Company_interfaces;
+using CompanyPMO_.NET.Interfaces.Employee_interfaces;
+using CompanyPMO_.NET.Interfaces.Issue_interfaces;
+using CompanyPMO_.NET.Interfaces.Project_interfaces;
+using CompanyPMO_.NET.Interfaces.Task_interfaces;
 using CompanyPMO_.NET.Repository;
 using CompanyPMO_.NET.Services;
 using dotenv.net;
@@ -13,19 +18,40 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<ICompany, CompanyRepository>();
-builder.Services.AddScoped<IEmployee, EmployeeRepository>();
-builder.Services.AddScoped<IProject, ProjectRepository>();
-builder.Services.AddScoped<ITask, TaskRepository>();
+builder.Services.AddScoped<ICompanyManagement, CompanyRepository>();
+
+builder.Services.AddScoped<IEmployeeAuthentication, EmployeeRepository>();
+builder.Services.AddScoped<IEmployeeCompanyQueries, EmployeeRepository>();
+builder.Services.AddScoped<IEmployeeManagement, EmployeeRepository>();
+builder.Services.AddScoped<IEmployeeProjectQueries, EmployeeRepository>();
+builder.Services.AddScoped<IEmployeeQueries, EmployeeRepository>();
+
 builder.Services.AddScoped<IIssue, IssueRepository>();
+builder.Services.AddScoped<IIssueEmployeeQueries, IssueRepository>();
+builder.Services.AddScoped<IIssueManagement, IssueRepository>();
+builder.Services.AddScoped<IIssueTaskQueries, IssueRepository>();
+
+builder.Services.AddScoped<IProjectCompanyQueries, ProjectRepository>();
+builder.Services.AddScoped<IProjectEmployeeQueries, ProjectRepository>();
+builder.Services.AddScoped<IProjectManagement, ProjectRepository>();
+builder.Services.AddScoped<IProjectQueries, ProjectRepository>();
+
+builder.Services.AddScoped<ITask, TaskRepository>();
+builder.Services.AddScoped<ITaskEmployeeQueries, TaskRepository>();
+builder.Services.AddScoped<ITaskProjectQueries, TaskRepository>();
+builder.Services.AddScoped<ITaskManagement, TaskRepository>();
+
 builder.Services.AddScoped<IJwt, JwtService>();
+
 builder.Services.AddScoped<ILatestStuff, LatestStuffRepository>();
+
 builder.Services.AddScoped<IResetPasswordRequest, ResetPasswordRequestRepository>();
+
 builder.Services.AddScoped<IWorkload, WorkloadRepository>();
 builder.Services.AddScoped<ITimeline, TimelineRepository>();
 
 builder.Services.AddScoped<IImage, ImageService>();
 builder.Services.AddScoped<IUtility, UtilityService>();
-builder.Services.AddScoped<IUserIdentity, GetUserIdService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 // Add services to the container.

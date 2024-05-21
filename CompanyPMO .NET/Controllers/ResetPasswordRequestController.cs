@@ -2,6 +2,7 @@
 using CompanyPMO_.NET.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CompanyPMO_.NET.Controllers
 {
@@ -10,11 +11,9 @@ namespace CompanyPMO_.NET.Controllers
     public class ResetPasswordRequestController : ControllerBase
     {
         private readonly IResetPasswordRequest _resetPasswordRequestService;
-        private readonly IUserIdentity _userIdentityService;
-        public ResetPasswordRequestController(IResetPasswordRequest resetPasswordRequestService, IUserIdentity userIdentityService)
+        public ResetPasswordRequestController(IResetPasswordRequest resetPasswordRequestService)
         {
             _resetPasswordRequestService = resetPasswordRequestService;
-            _userIdentityService = userIdentityService;
         }
 
         [HttpGet("exists/{requestGuid}")]
@@ -46,7 +45,14 @@ namespace CompanyPMO_.NET.Controllers
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword)
         {
-            int employeeId = _userIdentityService.GetUserIdFromClaims(HttpContext.User);
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+
+            if (claim == null)
+            {
+                return Unauthorized("User ID claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
 
             var result = await _resetPasswordRequestService.ResetPasswordWithCurrentPassword(employeeId, currentPassword, newPassword);
 

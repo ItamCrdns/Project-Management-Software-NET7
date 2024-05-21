@@ -1,6 +1,8 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Employee_interfaces;
+using CompanyPMO_.NET.Interfaces.Project_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,71 +14,14 @@ namespace CompanyPMO_.NET.Controllers
     public class CompanyController : ControllerBase
     {
         private readonly ICompany _companyService;
-        private readonly IUserIdentity _userIdentityService;
-        private readonly IEmployee _employeeService;
-        private readonly IProject _projectService;
-        private readonly Lazy<int> _lazyUserId;
+        private readonly IEmployeeCompanyQueries _employeeCompanyQueriesService;
+        private readonly IProjectCompanyQueries _projectCompanyQueries;
 
-        public CompanyController(ICompany companyService, IUserIdentity userIdentityService, IEmployee employeeService, IProject projectService)
+        public CompanyController(ICompany companyService, IEmployeeCompanyQueries employeeCompanyQueriesService, IProjectCompanyQueries projectCompanyQueries)
         {
             _companyService = companyService;
-            _userIdentityService = userIdentityService;
-            _employeeService = employeeService;
-            _projectService = projectService;
-            _lazyUserId = new Lazy<int>(InitializeUserId);
-        }
-
-        private int InitializeUserId()
-        {
-            return _userIdentityService.GetUserIdFromClaims(HttpContext.User);
-        }
-
-        private int GetUserId()
-        {
-            return _lazyUserId.Value;
-        }
-
-        [Authorize(Policy = "SupervisorOnly")]
-        [HttpPost("new")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Company>))]
-        [ProducesResponseType(400)]
-        public async Task<IActionResult> NewCompany([FromForm] CompanyDto newCompany, [FromForm] List<IFormFile>? images, IFormFile? logoFile)
-        {
-            if (images is not null && images.Count > 10)
-            {
-                ModelState.AddModelError("Images", "The request contains too many images (maximum allowed is 10).");
-                return StatusCode(400, ModelState);
-            }
-
-            var (created, returnedCompany) = await _companyService.AddCompany(GetUserId(), newCompany, images, logoFile);
-
-            if (!created)
-            {
-                return StatusCode(500, "Something went wrong");
-            }
-
-            return Ok(returnedCompany);
-        }
-
-        [Authorize(Policy = "SupervisorOnly")]
-        [HttpPost("new/nameonly")]
-        [ProducesResponseType(200)]
-        public async Task<IActionResult> CreateNewClientWithNameOnly([FromBody] CompanyDto newCompany)
-        {
-            if (newCompany.Name is null)
-            {
-                ModelState.AddModelError("Name", "The name of the company is required.");
-                return StatusCode(400, ModelState);
-            }
-
-            int companyId = await _companyService.CreateNewCompany(GetUserId(), newCompany.Name);
-
-            if (companyId.Equals(0))
-            {
-                return StatusCode(500, "Something went wrong");
-            }
-
-            return Ok(companyId);
+            _employeeCompanyQueriesService = employeeCompanyQueriesService;
+            _projectCompanyQueries = projectCompanyQueries;
         }
 
         [Authorize(Policy = "EmployeesAllowed")]
@@ -90,37 +35,6 @@ namespace CompanyPMO_.NET.Controllers
             if (company is null)
             {
                 return NotFound();
-            }
-
-            return Ok(company);
-        }
-
-        [Authorize(Policy = "SupervisorOnly")]
-        [HttpPatch("{companyId}/update")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Company>))]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> UpdateCompany(int companyId, [FromForm] CompanyDto companyDto, [FromForm] List<IFormFile>? images)
-        {
-            bool companyExists = await _companyService.DoesCompanyExist(companyId);
-
-            if (!companyExists)
-            {
-                return NotFound();
-            }
-
-            // To do: handle the case when the entity has for example 7 values and you pass 5, only the first 3 will be uploaded and the other 2 will not, no error will be given (and it should be an error!)
-            if (images is not null && images.Count > 10)
-            {
-                ModelState.AddModelError("Images", "The request contains too many images (maximum allowed is 10).");
-                return StatusCode(400, ModelState);
-            }
-
-            var (updated, company) = await _companyService.UpdateCompany(GetUserId(), companyId, companyDto, images);
-
-            if (!updated)
-            {
-                return BadRequest();
             }
 
             return Ok(company);
@@ -151,7 +65,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
         public async Task<IActionResult> GetEmployeesByCompanyId(int companyId, int page, int pageSize)
         {
-            var employees = await _employeeService.GetEmployeesByCompanyPaginated(companyId, page, pageSize);
+            var employees = await _employeeCompanyQueriesService.GetEmployeesByCompanyPaginated(companyId, page, pageSize);
 
             return Ok(employees);
         }
@@ -161,7 +75,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
         public async Task<IActionResult> SearchEmployeesByCompany(int companyId, string employeeToSearch, int page, int pageSize)
         {
-            var employees = await _employeeService.SearchEmployeesByCompanyPaginated(employeeToSearch, companyId, page, pageSize);
+            var employees = await _employeeCompanyQueriesService.SearchEmployeesByCompanyPaginated(employeeToSearch, companyId, page, pageSize);
 
             return Ok(employees);
         }
@@ -170,7 +84,7 @@ namespace CompanyPMO_.NET.Controllers
         [HttpGet("{clientId}/employees/by-projects-created")] // Returns all employees that have created projects in {clientId}
         public async Task<IActionResult> GetAndSearchEmployeesByProjectsCreatedInClient(string? employeeIds, int clientId, int page, int pageSize)
         {
-            var employees = await _employeeService.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize);
+            var employees = await _employeeCompanyQueriesService.GetAndSearchEmployeesByProjectsCreatedInClient(employeeIds, clientId, page, pageSize);
 
             return Ok(employees);
         }
@@ -198,7 +112,7 @@ namespace CompanyPMO_.NET.Controllers
                 FilterWhereValue = filterParams.FilterWhereValue
             };
 
-            var projects = await _projectService.GetProjectsByCompanyName(clientId, interalFilterParams);
+            var projects = await _projectCompanyQueries.GetProjectsByCompanyName(clientId, interalFilterParams);
 
             return Ok(projects);
         }
@@ -226,7 +140,7 @@ namespace CompanyPMO_.NET.Controllers
                 FilterWhereValue = filterParams.FilterWhereValue
             };
 
-            var projects = await _projectService.GetProjectsByCompanyName(clientId, interalFilterParams);
+            var projects = await _projectCompanyQueries.GetProjectsByCompanyName(clientId, interalFilterParams);
 
             return Ok(projects);
         }
@@ -254,7 +168,7 @@ namespace CompanyPMO_.NET.Controllers
                 FilterWhereValue = filterParams.FilterWhereValue
             };
 
-            var projects = await _projectService.GetProjectsByCompanyName(clientId, interalFilterParams);
+            var projects = await _projectCompanyQueries.GetProjectsByCompanyName(clientId, interalFilterParams);
 
             return Ok(projects);
         }
@@ -281,7 +195,7 @@ namespace CompanyPMO_.NET.Controllers
                 FilterWhereValue = filterParams.FilterWhereValue
             };
 
-            var projects = await _projectService.GetProjectsByCompanyName(clientId, interalFilterParams);
+            var projects = await _projectCompanyQueries.GetProjectsByCompanyName(clientId, interalFilterParams);
 
             return Ok(projects);
         }

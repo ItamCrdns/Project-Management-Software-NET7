@@ -2,12 +2,13 @@
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Employee_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CompanyPMO_.NET.Repository
 {
-    public class EmployeeRepository : IEmployee
+    public class EmployeeRepository : IEmployeeAuthentication, IEmployeeCompanyQueries, IEmployeeManagement, IEmployeeProjectQueries, IEmployeeQueries
     {
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
@@ -375,7 +376,7 @@ namespace CompanyPMO_.NET.Repository
             {
                 return ("Something went wrong", false);
             }
-            
+
             // Create corresponding employees workload
             var workloadCreationRes = await _workloadService.CreateWorkloadEntityForEmployee(newEmployee.EmployeeId);
 
@@ -449,18 +450,6 @@ namespace CompanyPMO_.NET.Repository
                 Count = count,
                 Pages = totalPages
             };
-        }
-
-        public IEnumerable<EmployeeShowcaseDto> EmployeeShowcaseQuery(IEnumerable<Employee> employees)
-        {
-            IEnumerable<EmployeeShowcaseDto> employeeDtos = employees.Select(employee => new EmployeeShowcaseDto
-            {
-                EmployeeId = employee.EmployeeId,
-                Username = employee.Username,
-                ProfilePicture = employee.ProfilePicture
-            }).ToList();
-
-            return employeeDtos;
         }
 
         public async Task<DataCountPages<EmployeeShowcaseDto>> SearchEmployeesByCompanyPaginated(string search, int companyId, int page, int pageSize)
@@ -541,16 +530,6 @@ namespace CompanyPMO_.NET.Repository
             return tier;
         }
 
-        public Task<string> GetEmployeeUsernameById(int employeeId)
-        {
-            var username = _context.Employees
-                .Where(e => e.EmployeeId.Equals(employeeId))
-                .Select(u => u.Username)
-                .FirstOrDefaultAsync();
-
-            return username;
-        }
-
         public async Task<Dictionary<string, object>> GetAndSearchEmployeesByProjectsCreatedInClient(string? employeeIds, int clientId, int page, int pageSize)
         {
             // Returns selectedEmployees: employeeIds, allEmployees: all employees that created projects in the requested client
@@ -607,29 +586,6 @@ namespace CompanyPMO_.NET.Repository
 
             return result;
 
-        }
-
-        public async Task<IEnumerable<EmployeeShowcaseDto>> GetEmployeesFromAListOfEmployeeIds(string employeeIds)
-        {
-            if (string.IsNullOrEmpty(employeeIds))
-            {
-                // Return an empty array if the employeeIds string are not provided
-                return Enumerable.Empty<EmployeeShowcaseDto>();
-            }
-
-            int[] employeeIdsArray = employeeIds.Split('-').Select(int.Parse).ToArray();
-
-            IEnumerable<EmployeeShowcaseDto> employees = await _context.Employees
-                .Where(e => employeeIdsArray.Contains(e.EmployeeId))
-                .Select(employee => new EmployeeShowcaseDto
-                {
-                    EmployeeId = employee.EmployeeId,
-                    Username = employee.Username,
-                    ProfilePicture = employee.ProfilePicture
-                })
-                .ToListAsync();
-
-            return employees;
         }
 
         public async Task<DataCountPages<EmployeeShowcaseDto>> SearchEmployeesShowcasePaginated(int userId, string search, int page, int pageSize)

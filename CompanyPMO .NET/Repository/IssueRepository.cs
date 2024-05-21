@@ -2,13 +2,14 @@
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Issue_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace CompanyPMO_.NET.Repository
 {
-    public class IssueRepository : IIssue
+    public class IssueRepository : IIssue, IIssueEmployeeQueries, IIssueManagement, IIssueTaskQueries
     {
         private readonly ApplicationDbContext _context;
         private readonly IUtility _utilityService;
