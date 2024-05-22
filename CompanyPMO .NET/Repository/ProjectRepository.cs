@@ -334,22 +334,6 @@ namespace CompanyPMO_.NET.Repository
             return projectImages;
         }
 
-        public async Task<bool> SetProjectFinalized(int projectId)
-        {
-            var project = await _context.Projects.FindAsync(projectId);
-
-            bool isProjectNullOrNotFinalized = project?.Finished is null || project?.ExpectedDeliveryDate > DateTime.UtcNow;
-
-            if (project is not null && isProjectNullOrNotFinalized)
-            {
-                project.Finished = DateTime.UtcNow;
-                _context.Update(project);
-                return await _context.SaveChangesAsync() > 0;
-            }
-
-            return false;
-        }
-
         public async Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images)
         {
             bool projectExists = await DoesProjectExist(projectId);
@@ -509,63 +493,6 @@ namespace CompanyPMO_.NET.Repository
                 })
                 .FirstOrDefaultAsync();
         }
-
-        public async Task<OperationResult<int[]>> SetProjectsFininishedBulk(int[] projectIds)
-        {
-            var projects = await _context.Projects
-                .Include(x => x.Employees)
-                .Where(p => projectIds.Contains(p.ProjectId))
-                .ToListAsync();
-
-            if (projects == null || !projects.Any())
-            {
-                return new OperationResult<int[]>
-                {
-                    Success = false,
-                    Message = "No projects found",
-                    Data = projectIds
-                };
-            }
-
-            projects.ForEach(p => p.Finished = DateTime.UtcNow);
-
-            _context.UpdateRange(projects);
-
-            int rowsAffected = await _context.SaveChangesAsync();
-
-            if (rowsAffected is 0)
-            {
-                return new OperationResult<int[]>
-                {
-                    Success = false,
-                    Message = "Failed to finish the projects",
-                    Data = projectIds
-                };
-            }
-
-            int[] employeeIdsWorkingInProjects = projects.SelectMany(p => p.Employees.Select(e => e.EmployeeId)).ToArray();
-
-            List<string> errors = new();
-
-            if (employeeIdsWorkingInProjects.Length > 0)
-            {
-                var workloadUpdateResult = await _workloadService.UpdateEmployeeCompletedProjects(employeeIdsWorkingInProjects);
-
-                if (!workloadUpdateResult.Success)
-                {
-                    errors.Add($"Failed to update the workload of the employees. Error = {workloadUpdateResult.Message}");
-                }
-            }
-
-            return new OperationResult<int[]>
-            {
-                Success = true,
-                Message = "Projects finished successfully",
-                Data = projectIds,
-                Errors = errors
-            };
-        }
-
         public Expression<Func<Project, ProjectDto>> GetProjectPredicate()
         {
             return project => new ProjectDto
@@ -596,6 +523,216 @@ namespace CompanyPMO_.NET.Repository
                     Username = project.ProjectCreator.Username,
                     ProfilePicture = project.ProjectCreator.ProfilePicture
                 }
+            };
+        }
+
+        public async Task<OperationResult> SetProjectsFininishedBulk(int[] projectIds)
+        {
+            var projects = await _context.Projects
+                .Include(x => x.Employees)
+                .Where(p => projectIds.Contains(p.ProjectId))
+                .ToListAsync();
+
+            if (projects == null || !projects.Any())
+            {
+                return new OperationResult
+                {
+                    Success = false,
+                    Message = "No projects found"
+                };
+            }
+
+            var alreadyFinishedProjects = projects.Where(x => x.Finished is not null).ToList();
+
+            bool allProjectsAlreadyFinished = projectIds.All(x => alreadyFinishedProjects.Any(p => p.ProjectId == x));
+
+            if (allProjectsAlreadyFinished)
+            {
+                return new OperationResult
+                {
+                    Success = false,
+                    Message = "All projects are already finished"
+                };
+            }
+
+            projects.ForEach(p => p.Finished = DateTime.UtcNow);
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected is 0)
+            {
+                return new OperationResult
+                {
+                    Success = false,
+                    Message = "Failed to finish the projects",
+                };
+            }
+
+            int[] employeeIdsWorkingInProjects = projects.SelectMany(p => p.Employees.Select(e => e.EmployeeId)).ToArray();
+
+            if (employeeIdsWorkingInProjects.Length > 0)
+            {
+                _ = await _workloadService.UpdateEmployeeCompletedProjects(employeeIdsWorkingInProjects);
+            }
+
+            return new OperationResult
+            {
+                Success = true,
+                Message = "Projects finished successfully"
+            };
+        }
+
+        public async Task<OperationResult> SetProjectsStartBulk(int[] projectIds)
+        {
+            var projects = await _context.Projects
+                .Where(p => projectIds.Contains(p.ProjectId))
+                .ToListAsync();
+
+            if (projects == null || !projects.Any())
+            {
+                return new OperationResult
+                {
+                    Message = "No projects found",
+                    Success = false
+                };
+            }
+
+            var alreadyStartedProjects = projects.Where(p => p.StartedWorking is not null).ToList();
+
+            bool allProjectsStarted = projectIds.All(x => alreadyStartedProjects.Any(p => p.ProjectId == x));
+
+            if (allProjectsStarted)
+            {
+                return new OperationResult
+                {
+                    Message = "All projects are already started",
+                    Success = false
+                };
+            }
+
+            projects.Where(p => p.StartedWorking is null).ToList().ForEach(p => p.StartedWorking = DateTime.UtcNow);
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected is 0)
+            {
+                return new OperationResult
+                {
+                    Message = "Failed to start the projects",
+                    Success = false
+                };
+            }
+
+            List<string> errors = new();
+            alreadyStartedProjects.ForEach(p => errors.Add($"Project {p.ProjectId} is already started"));
+
+            if (errors.Any())
+            {
+                return new OperationResult
+                {
+                    Message = "Projects started successfully, however some projects were already started",
+                    Success = true,
+                    Errors = errors
+                };
+            }
+
+            return new OperationResult
+            {
+                Message = "Projects started successfully",
+                Success = true
+            };
+        }
+
+        public async Task<OperationResult> SetProjectStart(int projectId)
+        {
+            var project = await _context.Projects.FindAsync(projectId);
+
+            if (project is null)
+            {
+                return new OperationResult
+                {
+                    Message = "Project not found",
+                    Success = false
+                };
+            }
+
+            if (project.StartedWorking is not null)
+            {
+                return new OperationResult
+                {
+                    Message = "Project is already started",
+                    Success = false
+                };
+            }
+
+            project.StartedWorking = DateTime.UtcNow;
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected is 0)
+            {
+                return new OperationResult
+                {
+                    Message = "Failed to start the project",
+                    Success = false
+                };
+            }
+
+            return new OperationResult
+            {
+                Message = "Project started successfully",
+                Success = true
+            };
+        }
+
+        public async Task<OperationResult> SetProjectFinished(int projectId)
+        {
+            var project = await _context.Projects
+                .Include(x => x.Employees)
+                .FirstOrDefaultAsync(x => x.ProjectId == projectId);
+
+            if (project is null)
+            {
+                return new OperationResult
+                {
+                    Message = "Project not found",
+                    Success = false
+                };
+            }
+
+            if (project.Finished is not null)
+            {
+                return new OperationResult
+                {
+                    Message = "Project is already finished",
+                    Success = false
+                };
+            }
+
+            project.Finished = DateTime.UtcNow;
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected is 0)
+            {
+                return new OperationResult
+                {
+                    Message = "Failed to finish the project",
+                    Success = false
+                };
+            }
+
+            int[] employeeIdsWorkingInProject = project.Employees.Select(e => e.EmployeeId).ToArray();
+
+            if (employeeIdsWorkingInProject.Length > 0)
+            {
+                _ = await _workloadService.UpdateEmployeeCompletedProjects(employeeIdsWorkingInProject);
+            }
+
+            return new OperationResult
+            {
+                Message = "Project finished successfully",
+                Success = true
             };
         }
     }

@@ -6,6 +6,8 @@ using CompanyPMO_.NET.Interfaces.Employee_interfaces;
 using CompanyPMO_.NET.Interfaces.Issue_interfaces;
 using CompanyPMO_.NET.Interfaces.Project_interfaces;
 using CompanyPMO_.NET.Interfaces.Task_interfaces;
+using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
+using CompanyPMO_.NET.Interfaces.Workload_interfaces;
 using CompanyPMO_.NET.Repository;
 using CompanyPMO_.NET.Services;
 using dotenv.net;
@@ -48,7 +50,10 @@ builder.Services.AddScoped<ILatestStuff, LatestStuffRepository>();
 builder.Services.AddScoped<IResetPasswordRequest, ResetPasswordRequestRepository>();
 
 builder.Services.AddScoped<IWorkload, WorkloadRepository>();
+builder.Services.AddScoped<IWorkloadTask, WorkloadRepository>();
+
 builder.Services.AddScoped<ITimeline, TimelineRepository>();
+builder.Services.AddScoped<ITimelineManagement, TimelineRepository>();   
 
 builder.Services.AddScoped<IImage, ImageService>();
 builder.Services.AddScoped<IUtility, UtilityService>();

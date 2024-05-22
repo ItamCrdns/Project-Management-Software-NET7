@@ -3,6 +3,7 @@ using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Interfaces.Task_interfaces;
+using CompanyPMO_.NET.Interfaces.Workload_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -15,9 +16,9 @@ namespace CompanyPMO_.NET.Repository
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
         private readonly IUtility _utilityService;
-        private readonly IWorkload _workloadService;
+        private readonly IWorkloadTask _workloadService;
 
-        public TaskRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkload workloadService)
+        public TaskRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkloadTask workloadService)
         {
             _context = context;
             _imageService = imageService;
@@ -132,26 +133,6 @@ namespace CompanyPMO_.NET.Repository
         public async Task<bool> DoesTaskExist(int taskId)
         {
             return await _context.Tasks.AnyAsync(t => t.TaskId.Equals(taskId));
-        }
-
-        public async Task<bool> FinishedWorkingOnTask(int userId, int taskId)
-        {
-            var employeesWorkingOnTask = await GetEmployeesWorkingOnTask(taskId);
-
-            bool isUserIdAnEmployeeWorkingOnTheTask = employeesWorkingOnTask.Any(e => e.EmployeeId.Equals(userId));
-
-            if (isUserIdAnEmployeeWorkingOnTheTask)
-            {
-                var taskToUpdate = await _context.Tasks.FindAsync(taskId);
-
-                if (taskToUpdate is not null && taskToUpdate.StartedWorking is not null) // If tasks does not have a startedWorking date do not change
-                {
-                    taskToUpdate.Finished = DateTime.UtcNow;
-                    _context.Update(taskToUpdate);
-                    return await _context.SaveChangesAsync() > 0;
-                }
-            }
-            return false;
         }
 
         public async Task<List<Employee>> GetEmployeesWorkingOnTask(int taskId) => await _context.Tasks.Where(t => t.TaskId.Equals(taskId)).Include(e => e.Employees).SelectMany(e => e.Employees).ToListAsync();
@@ -303,27 +284,6 @@ namespace CompanyPMO_.NET.Repository
                 }).ToList();
 
             return projectImages;
-        }
-
-        public async Task<bool> StartingWorkingOnTask(int userId, int taskId)
-        {
-            var employeesWorkingOnTask = await GetEmployeesWorkingOnTask(taskId);
-
-            bool isUserIdAnEmployeeWorkingOnTheTask = employeesWorkingOnTask.Any(e => e.EmployeeId.Equals(userId));
-
-            if (isUserIdAnEmployeeWorkingOnTheTask)
-            {
-                var taskToUpdate = await _context.Tasks.FindAsync(taskId);
-
-                if (taskToUpdate is not null)
-                {
-                    taskToUpdate.StartedWorking = DateTime.UtcNow;
-                    _context.Update(taskToUpdate);
-                    return await _context.SaveChangesAsync() > 0;
-                }
-            }
-
-            return false; // Task to update was null
         }
 
         public async Task<DataCountPages<TaskDto>> GetTasksByEmployeeUsername(string username, int page, int pageSize)
@@ -529,6 +489,230 @@ namespace CompanyPMO_.NET.Repository
                     Priority = t.Project.Priority,
                     ClientId = t.Project.CompanyId
                 }
+            };
+        }
+
+        public async Task<OperationResult> SetTasksStartBulk(int[] taskIds)
+        {
+            var tasks = await _context.Tasks
+                .Where(x => taskIds.Contains(x.TaskId))
+                .ToListAsync();
+
+            if (tasks == null || !tasks.Any())
+            {
+                return new OperationResult
+                {
+                    Message = "No tasks found",
+                    Success = false
+                };
+            }
+
+            var alreadyStartedTasks = tasks.Where(x => x.StartedWorking is not null).ToList();
+
+            bool allTasksAlreadyStarted = taskIds.All(x => alreadyStartedTasks.Any(t => t.TaskId == x));
+
+            if (allTasksAlreadyStarted)
+            {
+                return new OperationResult
+                {
+                    Message = "All tasks are already started",
+                    Success = false
+                };
+            }
+
+            tasks.Where(x => x.StartedWorking is null).ToList().ForEach(x => x.StartedWorking = DateTime.UtcNow);
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected is 0)
+            {
+                return new OperationResult
+                {
+                    Message = "Failed to start the tasks",
+                    Success = false
+                };
+            }
+
+            List<string> errors = new();
+            alreadyStartedTasks.ForEach(x => errors.Add($"Task {x.TaskId} is already started"));
+
+            if (errors.Any())
+            {
+                return new OperationResult
+                {
+                    Message = "Tasks started successfully, however some tasks were already started",
+                    Success = true,
+                    Errors = errors
+                };
+            }
+
+            return new OperationResult
+            {
+                Message = "Tasks started successfully",
+                Success = true
+            };
+        }
+
+        public async Task<OperationResult> SetTaskStart(int taskId)
+        {
+            var task = await _context.Tasks.FindAsync(taskId);
+
+            if (task is null)
+            {
+                return new OperationResult
+                {
+                    Message = "Task not found",
+                    Success = false
+                };
+            }
+
+            if (task.StartedWorking is not null)
+            {
+                return new OperationResult
+                {
+                    Message = "Task is already started",
+                    Success = false
+                };
+            }
+
+            task.StartedWorking = DateTime.UtcNow;
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected is 0)
+            {
+                return new OperationResult
+                {
+                    Message = "Failed to start the task",
+                    Success = false
+                };
+            }
+
+            return new OperationResult
+            {
+                Message = "Task started successfully",
+                Success = true
+            };
+        }
+
+        public async Task<OperationResult> SetTasksFinishedBulk(int[] taskIds)
+        {
+            var tasks = await _context.Tasks
+                .Include(t => t.Employees)
+                .Where(x => taskIds.Contains(x.TaskId))
+                .ToListAsync();
+
+            if (tasks == null || !tasks.Any()) 
+            {
+                return new OperationResult
+                {
+                    Message = "No tasks found",
+                    Success = false
+                };
+            }
+
+            var alreadyFinishedTasks = tasks.Where(x => x.Finished is not null).ToList();
+
+            bool allTasksAlreadyFinished = taskIds.All(x => alreadyFinishedTasks.Any(t => t.TaskId == x));
+
+            if (allTasksAlreadyFinished)
+            {
+                return new OperationResult
+                {
+                    Message = "All tasks are already finished",
+                    Success = false
+                };
+            }
+
+            tasks.Where(x => x.Finished is null).ToList().ForEach(x => x.Finished = DateTime.UtcNow);
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected is 0)
+            {
+                return new OperationResult
+                {
+                    Message = "Failed to finish the tasks",
+                    Success = false
+                };
+            }
+
+            List<string> errors = new();
+            alreadyFinishedTasks.ForEach(x => errors.Add($"Task {x.TaskId} is already finished"));
+
+            int[] employeeIdsWorkingOnTask = tasks.SelectMany(x => x.Employees).Select(x => x.EmployeeId).ToArray();
+
+            if (employeeIdsWorkingOnTask.Length > 0)
+            {
+                _ = await _workloadService.UpdateEmployeeCompletedTasks(employeeIdsWorkingOnTask);
+            }
+            
+            if (errors.Any())
+            {
+                return new OperationResult
+                {
+                    Message = "Tasks finished successfully, however some tasks were already finished",
+                    Success = true,
+                    Errors = errors
+                };
+            }
+
+            return new OperationResult
+            {
+                Message = "Tasks finished successfully",
+                Success = true,
+                Errors = errors
+            };
+        }
+
+        public async Task<OperationResult> SetTaskFinished(int taskId)
+        {
+            var task = await _context.Tasks
+                .Include(t => t.Employees)
+                .FirstOrDefaultAsync(t => t.TaskId.Equals(taskId));
+
+            if (task is null)
+            {
+                return new OperationResult
+                {
+                    Message = "Task not found",
+                    Success = false
+                };
+            }
+
+            if (task.Finished is not null)
+            {
+                return new OperationResult
+                {
+                    Message = "Task is already finished",
+                    Success = false
+                };
+            }
+
+            task.Finished = DateTime.UtcNow;
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected is 0)
+            {
+                return new OperationResult
+                {
+                    Message = "Failed to finish the task",
+                    Success = false
+                };
+            }
+
+            int[] employeeIdsWorkingOnTask = task.Employees.Select(x => x.EmployeeId).ToArray();
+
+            if (employeeIdsWorkingOnTask.Length > 0)
+            {
+                _ = await _workloadService.UpdateEmployeeCompletedTasks(employeeIdsWorkingOnTask);
+            }
+
+            return new OperationResult
+            {
+                Message = "Task finished successfully",
+                Success = true
             };
         }
     }

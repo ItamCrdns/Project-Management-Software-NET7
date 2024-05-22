@@ -2,6 +2,7 @@
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Workload_interfaces;
 using CompanyPMO_.NET.Models;
 using CompanyPMO_.NET.Repository;
 using FakeItEasy;
@@ -18,12 +19,12 @@ namespace Tests.Repository
     {
         private readonly IImage _image;
         private readonly IUtility _utility;
-        private readonly IWorkload _workload;
+        private readonly IWorkloadTask _workload;
         public TaskRepositoryTests()
         {
             _image = A.Fake<IImage>();
             _utility = A.Fake<IUtility>();
-            _workload = A.Fake<IWorkload>();
+            _workload = A.Fake<IWorkloadTask>();
         }
 
         private static DbContextOptions<ApplicationDbContext> CreateNewContextOptions
@@ -50,13 +51,13 @@ namespace Tests.Repository
                 for (int i = 0; i < 10; i++)
                 {
                     dbContext.Tasks.Add(
-                        new CompanyPMO_.NET.Models.Task
+                        new Task
                         {
                             Name = $"Task {i}",
                             Description = $"Description {i}",
                             Created = DateTime.Now.AddMinutes(i), // Increment on iteration
-                            StartedWorking = DateTime.Now.AddMinutes(15),
-                            Finished = DateTime.Now.AddHours(1),
+                            StartedWorking = (i == 0 || i == 1) ? DateTime.UtcNow : null,
+                            Finished = (i == 6 || i == 7) ? DateTime.Now.AddHours(1) : null,
                             TaskCreatorId = 1,
                             ProjectId = (i % 3) + 1
                         });
@@ -280,36 +281,6 @@ namespace Tests.Repository
             var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
 
             var result = await taskRepository.DoesTaskExist(taskId);
-
-            result.Should().BeFalse();
-        }
-
-        [Fact]
-        public async void TaskRepository_FinishedWorkingOnTask_ReturnsTrue()
-        {
-            int taskId = 1;
-            int employeeId = 4;
-
-            var dbContext = await GetDatabaseContext();
-
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
-
-            var result = await taskRepository.FinishedWorkingOnTask(employeeId, taskId);
-
-            result.Should().BeTrue();
-        }
-
-        [Fact]
-        public async void TaskRepository_FinishedWorkingOnTask_ReturnsFalse()
-        {
-            int taskId = 1;
-            int employeeId = 300;
-
-            var dbContext = await GetDatabaseContext();
-
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
-
-            var result = await taskRepository.FinishedWorkingOnTask(employeeId, taskId);
 
             result.Should().BeFalse();
         }
@@ -603,36 +574,6 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void TaskRepository_StartingWorkingOnTask_ReturnsTrue()
-        {
-            int taskId = 1;
-            int employeeId = 4;
-
-            var dbContext = await GetDatabaseContext();
-
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
-
-            var result = await taskRepository.StartingWorkingOnTask(employeeId, taskId);
-
-            result.Should().BeTrue();
-        }
-
-        [Fact]
-        public async void TaskRepository_StartingWorkingOnTask_ReturnsFalse()
-        {
-            int taskId = 9999;
-            int employeeId = 1;
-
-            var dbContext = await GetDatabaseContext();
-
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
-
-            var result = await taskRepository.StartingWorkingOnTask(employeeId, taskId);
-
-            result.Should().BeFalse();
-        }
-
-        [Fact]
         public async void TaskRepository_GetTasksByEmployeeUsername_ReturnsTasks()
         {
             string username = "test1";
@@ -878,6 +819,250 @@ namespace Tests.Repository
             var result = await taskRepository.IsOwner(taskId, employeeId);
 
             result.Should().BeFalse();
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTasksStartBulk_ReturnsSuccess()
+        {
+            int[] taskIds = [7, 8, 9];
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var result = await taskRepository.SetTasksStartBulk(taskIds);
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Tasks started successfully");
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTasksStartBulk_ReturnsSucessButSomeTasksAlreadyStarted()
+        {
+            int[] taskIds = [1, 2, 3];
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var result = await taskRepository.SetTasksStartBulk(taskIds);
+
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Tasks started successfully, however some tasks were already started");
+            result.Success.Should().BeTrue();
+            result.Errors.Should().HaveCountGreaterThanOrEqualTo(1);
+            foreach (var error in result.Errors)
+            {
+                error.Should().NotBeNullOrEmpty();
+                error.Should().BeOfType(typeof(string));
+            }
+            result.Errors[0].Should().Be("Task 1 is already started");
+            result.Errors[1].Should().Be("Task 2 is already started");
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTasksStartBulk_ReturnsFailureTasksNotFound()
+        {
+            int[] taskIds = [100, 200, 300];
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var result = await taskRepository.SetTasksStartBulk(taskIds);
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("No tasks found");
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTasksStartBulk_ReturnsFailureAllTasksAlreadyStarted()
+        {
+            int[] taskIds = [1, 2, 3];
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            foreach (var taskId in taskIds)
+            {
+                var task = await dbContext.Tasks.FindAsync(taskId);
+                task.StartedWorking = DateTime.Now;
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            var result = await taskRepository.SetTasksStartBulk(taskIds);
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("All tasks are already started");
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTaskStart_ReturnsSuccess()
+        {
+            int taskId = 7;
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var result = await taskRepository.SetTaskStart(taskId);
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Task started successfully");
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTaskStart_ReturnsFailureTaskNotFound()
+        {
+            int taskId = 100;
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var result = await taskRepository.SetTaskStart(taskId);
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Task not found");
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTaskStart_ReturnsFailureTaskAlreadyStarted()
+        {
+            int taskId = 1;
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var task = await dbContext.Tasks.FindAsync(taskId);
+            task.StartedWorking = DateTime.Now;
+
+            await dbContext.SaveChangesAsync();
+
+            var result = await taskRepository.SetTaskStart(taskId);
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Task is already started");
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTasksFinishedBulk_ReturnsSuccess()
+        {
+            int[] taskIds = [1, 5, 9];
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var result = await taskRepository.SetTasksFinishedBulk(taskIds);
+
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Tasks finished successfully");
+            result.Success.Should().BeTrue();
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTasksFinishedBulk_ReturnsSucessButSomeTasksAlreadyFinished()
+        {
+            int[] taskIds = [5, 7, 8];
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var result = await taskRepository.SetTasksFinishedBulk(taskIds);
+
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Tasks finished successfully, however some tasks were already finished");
+            result.Success.Should().BeTrue();
+            result.Errors.Should().HaveCountGreaterThanOrEqualTo(1);
+            foreach (var error in result.Errors)
+            {
+                error.Should().NotBeNullOrEmpty();
+                error.Should().BeOfType(typeof(string));
+            }
+            result.Errors[0].Should().Be("Task 7 is already finished");
+            result.Errors[1].Should().Be("Task 8 is already finished");
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTasksFinishedBulk_ReturnsFailureTasksNotFound()
+        {
+            int[] taskIds = [100, 200, 300];
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var result = await taskRepository.SetTasksFinishedBulk(taskIds);
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("No tasks found");
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTasksFinishedBulk_ReturnsFailureAllTasksAlreadyFinished()
+        {
+            int[] taskIds = [7, 8];
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var result = await taskRepository.SetTasksFinishedBulk(taskIds);
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("All tasks are already finished");
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTaskFinished_ReturnsSuccess()
+        {
+            int taskId = 1;
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var result = await taskRepository.SetTaskFinished(taskId);
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Task finished successfully");
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTaskFinished_ReturnsFailureTaskNotFound()
+        {
+            int taskId = 100;
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var result = await taskRepository.SetTaskFinished(taskId);
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Task not found");
+        }
+
+        [Fact]
+        public async void TaskRepository_SetTaskFinished_ReturnsFailureTaskAlreadyStarted()
+        {
+            int taskId = 7;
+
+            var dbContext = await GetDatabaseContext();
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var task = await dbContext.Tasks.FindAsync(taskId);
+            task.StartedWorking = DateTime.Now;
+
+            await dbContext.SaveChangesAsync();
+
+            var result = await taskRepository.SetTaskFinished(taskId);
+
+            result.Should().NotBeNull();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Task is already finished");
         }
     }
 }

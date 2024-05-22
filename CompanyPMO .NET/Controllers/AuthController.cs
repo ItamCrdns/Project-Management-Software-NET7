@@ -2,6 +2,7 @@
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Interfaces.Employee_interfaces;
+using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -13,11 +14,13 @@ namespace CompanyPMO_.NET.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IEmployeeAuthentication _employeeAuthentication;
+        private readonly ITimelineManagement _timelineManagement;
         private readonly IJwt _jwt;
-        public AuthController(IEmployeeAuthentication employeeAuthentication, IJwt jwt)
+        public AuthController(IEmployeeAuthentication employeeAuthentication, IJwt jwt, ITimelineManagement timelineManagement)
         {
             _employeeAuthentication = employeeAuthentication;
             _jwt = jwt;
+            _timelineManagement = timelineManagement;
         }
 
         [AllowAnonymous]
@@ -42,6 +45,15 @@ namespace CompanyPMO_.NET.Controllers
                     Employee = employeeAuthentication.employee,
                     Token = token
                 };
+
+                var timelineEvent = new TimelineDto
+                {
+                    Event = $"{loggedEmployee.Username} logged in",
+                    EmployeeId = loggedEmployee.EmployeeId,
+                    Type = TimelineType.Login
+                };
+
+                await _timelineManagement.CreateTimelineEvent(timelineEvent);
 
                 return Ok(loginResponse);
             }

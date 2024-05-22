@@ -2,12 +2,13 @@
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CompanyPMO_.NET.Repository
 {
-    public class TimelineRepository : ITimeline
+    public class TimelineRepository : ITimeline, ITimelineManagement
     {
         private readonly ApplicationDbContext _context;
         public TimelineRepository(ApplicationDbContext context)
@@ -20,6 +21,9 @@ namespace CompanyPMO_.NET.Repository
             {
                 Event = timeline.Event,
                 EmployeeId = timeline.EmployeeId,
+                ProjectId = timeline.ProjectId,
+                TaskId = timeline.TaskId,
+                IssueId = timeline.IssueId,
                 Type = timeline.Type,
                 Created = DateTime.UtcNow
             };

@@ -183,6 +183,30 @@ namespace Tests.Repository
         }
 
         [Fact]
+        public async void WorkloadRepository_UpdateEmployeeCompletedTasks_ReturnsSuccess()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeCompletedTasks([1, 2, 3]);
+
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Employee completed tasks count updated successfully.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateEmployeeCompletedTasks_ReturnsErrorNoWorkloadsToUpdate()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeCompletedTasks([4, 5, 6]);
+
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("No workloads to update");
+        }
+
+        [Fact]
         public async void WorkloadRepository_UpdateEmployeeWorkloadAssignedTasksAndIssues_ReturnsSuccess()
         {
             var dbContext = await GetDatabaseContext();

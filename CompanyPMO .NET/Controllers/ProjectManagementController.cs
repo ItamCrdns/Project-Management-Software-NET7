@@ -1,6 +1,7 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces.Project_interfaces;
+using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,22 +14,25 @@ namespace CompanyPMO_.NET.Controllers
     public class ProjectManagementController : ControllerBase
     {
         private readonly IProjectManagement _projectManagement;
-        public ProjectManagementController(IProjectManagement projectManagement)
+        private readonly ITimelineManagement _timelineManagement;
+        public ProjectManagementController(IProjectManagement projectManagement, ITimelineManagement timelineManagement)
         {
             _projectManagement = projectManagement;
+            _timelineManagement = timelineManagement;
         }
 
         [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("create")]
         [ProducesResponseType(200, Type = typeof(OperationResult<int>))]
         [ProducesResponseType(400, Type = typeof(OperationResult<int>))]
-        public async Task<IActionResult> NewProject([FromForm] Project project, [FromForm] List<IFormFile>? images, [FromForm] int companyId, [FromForm] List<int> employees, [FromForm] bool shouldStartNow)
+        public async Task<IActionResult> CreateNewProject([FromForm] Project project, [FromForm] List<IFormFile>? images, [FromForm] int companyId, [FromForm] List<int> employees, [FromForm] bool shouldStartNow)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null)
+            if (claim == null || usernameClaim == null)
             {
-                return Unauthorized("User ID claim is missing");
+                return Unauthorized("User ID claim or Username claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -39,6 +43,16 @@ namespace CompanyPMO_.NET.Controllers
             {
                 return BadRequest(result);
             }
+
+            var timelineEvent = new TimelineDto
+            {
+                Event = $"{usernameClaim} created a project",
+                EmployeeId = employeeId,
+                Type = TimelineType.Create,
+                ProjectId = result.Data
+            };
+
+            await _timelineManagement.CreateTimelineEvent(timelineEvent);
 
             return Ok(result);
         }
@@ -51,10 +65,11 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> UpdateProject(int projectId, [FromForm] ProjectDto projectDto, [FromForm] List<IFormFile>? images)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null)
+            if (claim == null || usernameClaim == null)
             {
-                return Unauthorized("User ID claim is missing");
+                return Unauthorized("User ID claim or Username claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -65,6 +80,14 @@ namespace CompanyPMO_.NET.Controllers
             {
                 return BadRequest();
             }
+
+            var timelineEvent = new TimelineDto
+            {
+                Event = $"{usernameClaim} updated a project",
+                EmployeeId = employeeId,
+                Type = TimelineType.Update,
+                ProjectId = projectId
+            };
 
             return Ok(project);
         }
@@ -93,28 +116,137 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("set/finished/bulk")]
-        [ProducesResponseType(200, Type = typeof(OperationResult<int[]>))]
+        [ProducesResponseType(200, Type = typeof(OperationResult))]
         public async Task<IActionResult> SetProjectsFininishedBulk([FromBody] int[] projectIds)
         {
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
+
+            if (claim == null || usernameClaim == null)
+            {
+                return Unauthorized("User ID claim or Username claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
+
             var result = await _projectManagement.SetProjectsFininishedBulk(projectIds);
+
+            if (result.Success)
+            {
+                foreach (var projectId in projectIds)
+                {
+                    var timelineEvent = new TimelineDto
+                    {
+                        Event = $"{usernameClaim} has set a project as finished",
+                        EmployeeId = employeeId,
+                        Type = TimelineType.Finish,
+                        ProjectId = projectId
+                    };
+
+                    await _timelineManagement.CreateTimelineEvent(timelineEvent);
+                }
+            }
 
             return Ok(result);
         }
 
         [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("{projectId}/set/finished")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        public async Task<IActionResult> SetProjectFinalized(int projectId)
+        [ProducesResponseType(200, Type = typeof(OperationResult))]
+        public async Task<IActionResult> SetProjectFinished(int projectId)
         {
-            bool updated = await _projectManagement.SetProjectFinalized(projectId);
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (!updated)
+            if (claim == null || usernameClaim == null)
             {
-                return BadRequest();
+                return Unauthorized("User ID claim or Username claim is missing");
             }
 
-            return NoContent();
+            int employeeId = int.Parse(claim.Value);
+
+            var result = await _projectManagement.SetProjectFinished(projectId);
+
+            var timelineEvent = new TimelineDto
+            {
+                Event = $"{usernameClaim} has set a project as finished",
+                EmployeeId = employeeId,
+                Type = TimelineType.Finish,
+                ProjectId = projectId
+            };
+
+            await _timelineManagement.CreateTimelineEvent(timelineEvent);
+
+            return Ok(result);
+        }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpPost("set/start/bulk")]
+        [ProducesResponseType(200, Type = typeof(OperationResult))]
+        public async Task<IActionResult> SetProjectsStartBulk([FromBody] int[] projectIds)
+        {
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
+
+            if (claim == null || usernameClaim == null)
+            {
+                return Unauthorized("User ID claim or Username claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
+
+            var result = await _projectManagement.SetProjectsStartBulk(projectIds);
+
+            if (result.Success)
+            {
+                foreach (var projectId in projectIds)
+                {
+                    var timelineEvent = new TimelineDto
+                    {
+                        Event = $"{usernameClaim} has set a project as started",
+                        EmployeeId = employeeId,
+                        Type = TimelineType.Start,
+                        ProjectId = projectId
+                    };
+
+                    await _timelineManagement.CreateTimelineEvent(timelineEvent);
+                }
+            }
+
+            return Ok(result);
+        }
+
+        [Authorize(Policy = "SupervisorOnly")]
+        [HttpPost("{projectId}/set/start")]
+        [ProducesResponseType(200, Type = typeof(OperationResult))]
+        public async Task<IActionResult> SetProjectStart(int projectId)
+        {
+            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
+
+            if (claim == null || usernameClaim == null)
+            {
+                return Unauthorized("User ID claim or Username claim is missing");
+            }
+
+            int employeeId = int.Parse(claim.Value);
+
+            var result = await _projectManagement.SetProjectStart(projectId);
+
+            if (result.Success)
+            {
+                var timelineEvent = new TimelineDto
+                {
+                    Event = $"{usernameClaim} has set a project as started",
+                    EmployeeId = employeeId,
+                    Type = TimelineType.Start,
+                    ProjectId = projectId
+                };
+
+                await _timelineManagement.CreateTimelineEvent(timelineEvent);
+            }
+
+            return Ok(result);
         }
     }
 }

@@ -81,6 +81,21 @@ namespace CompanyPMO_.NET.Data
                 .WithMany()
                 .HasForeignKey(x => x.EmployeeId);
 
+            modelBuilder.Entity<Timeline>()
+                .HasOne(x => x.Project)
+                .WithMany()
+                .HasForeignKey(x => x.ProjectId);
+
+            modelBuilder.Entity<Timeline>()
+                .HasOne(x => x.Task)
+                .WithMany()
+                .HasForeignKey(x => x.TaskId);
+
+            modelBuilder.Entity<Timeline>()
+                .HasOne(x => x.Issue)
+                .WithMany()
+                .HasForeignKey(x => x.IssueId);
+
             // Junction table for many to many
 
             modelBuilder.Entity<Employee>()

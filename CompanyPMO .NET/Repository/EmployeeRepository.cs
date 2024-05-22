@@ -329,16 +329,18 @@ namespace CompanyPMO_.NET.Repository
             return employee.LockedEnabled;
         }
 
-        public async Task<(string result, bool status)> RegisterEmployee(EmployeeRegisterDto employee, IFormFile image)
+        public async Task<(string result, bool status, EmployeeShowcaseDto newEmployee)> RegisterEmployee(EmployeeRegisterDto employee, IFormFile image)
         {
             string username = employee.Username.ToLower();
 
             bool usernameExists = await _context.Employees
                 .AnyAsync(u => u.Username.Equals(username));
 
+            var emptyEmployee = new EmployeeShowcaseDto();
+
             if (usernameExists)
             {
-                return ("Username already registered", false);
+                return ("Username already registered", false, emptyEmployee);
             }
 
             string salt = BCrypt.Net.BCrypt.GenerateSalt();
@@ -348,7 +350,7 @@ namespace CompanyPMO_.NET.Repository
 
             if (employee.Email is null || employee.PhoneNumber is null || employee.FirstName is null || employee.Gender is null || employee.LastName is null)
             {
-                return ("Email, first name, last name, gender, phone number and role cannot be null", false);
+                return ("Email, first name, last name, gender, phone number and role cannot be null", false, emptyEmployee);
             }
 
             var newEmployee = new Employee
@@ -374,18 +376,25 @@ namespace CompanyPMO_.NET.Repository
 
             if (rowsAffected == 0)
             {
-                return ("Something went wrong", false);
+                return ("Something went wrong", false, emptyEmployee);
             }
 
             // Create corresponding employees workload
             var workloadCreationRes = await _workloadService.CreateWorkloadEntityForEmployee(newEmployee.EmployeeId);
 
+            var newlyCreatedEmployee = new EmployeeShowcaseDto
+            {
+                EmployeeId = newEmployee.EmployeeId,
+                Username = newEmployee.Username,
+                ProfilePicture = newEmployee.ProfilePicture
+            };
+
             if (!workloadCreationRes.Success)
             {
-                return ("Employee was created, but something went wrong when creating their Workload entity", true);
+                return ("Employee was created, but something went wrong when creating their Workload entity", true, newlyCreatedEmployee);
             }
 
-            return ("Employee created", true);
+            return ("Employee created", true, newlyCreatedEmployee);
         }
 
         public async Task<Dictionary<string, object>> GetEmployeesByCompanyPaginated(int companyId, int page, int pageSize)

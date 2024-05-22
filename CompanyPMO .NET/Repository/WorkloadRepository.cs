@@ -2,12 +2,13 @@
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Workload_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CompanyPMO_.NET.Repository
 {
-    public class WorkloadRepository : IWorkload
+    public class WorkloadRepository : IWorkload, IWorkloadTask
     {
         private readonly ApplicationDbContext _context;
         public WorkloadRepository(ApplicationDbContext context)
@@ -117,6 +118,44 @@ namespace CompanyPMO_.NET.Repository
                 if (rowsAffected > 0)
                 {
                     return new OperationResult { Success = true, Message = "Employee completed projects count updated successfully." };
+                }
+                else
+                {
+                    return new OperationResult { Success = false, Message = "Something went wrong" };
+                }
+            }
+
+            return new OperationResult { Success = false, Message = "No workloads to update" };
+        }
+
+        public async Task<OperationResult> UpdateEmployeeCompletedTasks(int[] employees)
+        {
+            List<Workload> workloadsToUpdate = new();
+
+            foreach (int employee in employees.Distinct())
+            {
+                int finishedTasksCount = await _context.Tasks
+                    .Where(x => x.Employees.Any(e => e.EmployeeId == employee) && x.Finished != null)
+                    .CountAsync();
+
+                var workload = await _context.Workload.FirstOrDefaultAsync(x => x.WorkloadId == employee);
+
+                if (workload != null)
+                {
+                    workload.CompletedTasks = finishedTasksCount;
+                    workloadsToUpdate.Add(workload);
+                }
+            }
+
+            if (workloadsToUpdate.Count > 0)
+            {
+                _context.Workload.UpdateRange(workloadsToUpdate);
+
+                int rowsAffected = await _context.SaveChangesAsync();
+
+                if (rowsAffected > 0)
+                {
+                    return new OperationResult { Success = true, Message = "Employee completed tasks count updated successfully." };
                 }
                 else
                 {

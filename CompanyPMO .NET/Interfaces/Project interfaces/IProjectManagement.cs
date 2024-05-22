@@ -11,7 +11,9 @@ namespace CompanyPMO_.NET.Interfaces.Project_interfaces
         Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images);
         Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images);
         Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToProject(int projectId, List<int> employees);
-        Task<OperationResult<int[]>> SetProjectsFininishedBulk(int[] projectIds);
-        Task<bool> SetProjectFinalized(int projectId);
+        Task<OperationResult> SetProjectsStartBulk(int[] projectIds);
+        Task<OperationResult> SetProjectStart(int projectId);
+        Task<OperationResult> SetProjectsFininishedBulk(int[] projectIds);
+        Task<OperationResult> SetProjectFinished(int projectId);
     }
 }

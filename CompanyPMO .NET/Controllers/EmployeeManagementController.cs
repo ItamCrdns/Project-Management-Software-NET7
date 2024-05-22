@@ -1,6 +1,7 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces.Employee_interfaces;
+using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -12,9 +13,11 @@ namespace CompanyPMO_.NET.Controllers
     public class EmployeeManagementController : ControllerBase
     {
         private readonly IEmployeeManagement _employeeManagement;
-        public EmployeeManagementController(IEmployeeManagement employeeManagement)
+        private readonly ITimelineManagement _timelineManagement;
+        public EmployeeManagementController(IEmployeeManagement employeeManagement, ITimelineManagement timelineManagement)
         {
             _employeeManagement = employeeManagement;
+            _timelineManagement = timelineManagement;
         }
 
         [AllowAnonymous]
@@ -23,14 +26,23 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(400)]
         public async Task<IActionResult> RegisterEmployee([FromForm] EmployeeRegisterDto employee, [FromForm] IFormFile? profilePicture)
         {
-            var (result, status) = await _employeeManagement.RegisterEmployee(employee, profilePicture);
+            var (result, status, newEmployee) = await _employeeManagement.RegisterEmployee(employee, profilePicture);
 
             if (!status)
             {
                 return BadRequest(new { Created = status, Message = "Employee could not be created" });
             }
 
-            return Ok(new { Created = status, Message = result });
+            var timelineEvent = new TimelineDto
+            {
+                Event = $"{newEmployee.Username} registered",
+                EmployeeId = newEmployee.EmployeeId,
+                Type = TimelineType.Register
+            };
+
+            await _timelineManagement.CreateTimelineEvent(timelineEvent);
+
+            return Ok(new { Created = status, Message = result, newEmployee });
         }
 
         [Authorize(Policy = "EmployeesAllowed")]
@@ -40,10 +52,11 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> UpdateMyEmployee([FromForm] UpdateEmployeeDto employee, [FromForm] IFormFile? profilePicture, [FromForm] string? currentPassword)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null)
+            if (claim == null || usernameClaim == null)
             {
-                return Unauthorized("User ID claim is missing");
+                return Unauthorized("User ID claim or Username claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -54,6 +67,15 @@ namespace CompanyPMO_.NET.Controllers
             {
                 return BadRequest(result);
             }
+
+            var timelineEvent = new TimelineDto
+            {
+                Event = $"{usernameClaim} updated",
+                EmployeeId = employeeId,
+                Type = TimelineType.Update
+            };
+
+            await _timelineManagement.CreateTimelineEvent(timelineEvent);
 
             return Ok(result);
         }
