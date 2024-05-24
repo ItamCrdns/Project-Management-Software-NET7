@@ -6,7 +6,8 @@ namespace CompanyPMO_.NET.Interfaces
 {
     public interface ITimeline
     {
-        Task<DataCountPages<TimelineDto>> GetTimelineEvents(FilterParams filterParams);
-        Task<DataCountPages<TimelineDto>> GetTimelineEventsByEmployee(int employeeId, FilterParams filterParams);
+        Task<DataCountPages<TimelineShowcaseDto>> GetTimelineEvents(FilterParams filterParams);
+        Task<DataCountPages<TimelineShowcaseDto>> GetTimelineEventsByEmployee(int employeeId, FilterParams filterParams);
+        Task<TimelineDto> GetTimelineEvent(int timelineId);
     }
 }

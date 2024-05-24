@@ -1,15 +1,24 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
+using CompanyPMO_.NET.Hubs;
+using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Models;
 using CompanyPMO_.NET.Repository;
 using FluentAssertions;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using FakeItEasy;
 
 namespace Tests.Repository
 {
     public class TimelineRepositoryTests
     {
+        private readonly IHubContext<TimelineHub, ITimelineClient> _hubContext;
+        public TimelineRepositoryTests()
+        {
+            _hubContext = A.Fake<IHubContext<TimelineHub, ITimelineClient>>();
+        }
         private static DbContextOptions<ApplicationDbContext> CreateNewContextOptions
         {
             get
@@ -115,7 +124,7 @@ namespace Tests.Repository
         {
             // Arrange
             var dbContext = await GetDatabaseContext();
-            var timelineRepository = new TimelineRepository(dbContext);
+            var timelineRepository = new TimelineRepository(dbContext, _hubContext);
 
             var timelineDto = new TimelineDto
             {
@@ -138,7 +147,7 @@ namespace Tests.Repository
         {
             // Arrange
             var dbContext = await GetDatabaseContext();
-            var timelineRepository = new TimelineRepository(dbContext);
+            var timelineRepository = new TimelineRepository(dbContext, _hubContext);
 
             var timelineIds = new int[] { 1, 2, 3 };
 
@@ -156,7 +165,7 @@ namespace Tests.Repository
         {
             // Arrange
             var dbContext = await GetDatabaseContext();
-            var timelineRepository = new TimelineRepository(dbContext);
+            var timelineRepository = new TimelineRepository(dbContext, _hubContext);
 
             var filterParams = new FilterParams
             {
@@ -168,7 +177,7 @@ namespace Tests.Repository
             var result = await timelineRepository.GetTimelineEvents(filterParams);
 
             // Assert
-            result.Should().BeOfType<DataCountPages<TimelineDto>>();
+            result.Should().BeOfType<DataCountPages<TimelineShowcaseDto>>();
             result.Data.Should().HaveCount(10);
         }
 
@@ -177,7 +186,7 @@ namespace Tests.Repository
         {
             // Arrange
             var dbContext = await GetDatabaseContext();
-            var timelineRepository = new TimelineRepository(dbContext);
+            var timelineRepository = new TimelineRepository(dbContext, _hubContext);
 
             var filterParams = new FilterParams
             {
@@ -189,8 +198,39 @@ namespace Tests.Repository
             var result = await timelineRepository.GetTimelineEventsByEmployee(1, filterParams);
 
             // Assert
-            result.Should().BeOfType<DataCountPages<TimelineDto>>();
+            result.Should().BeOfType<DataCountPages<TimelineShowcaseDto>>();
             result.Data.Should().HaveCount(5);
+        }
+
+        [Fact]
+        public async void GetTimelineEvent_ShouldReturnEvent()
+        {
+            // Arrange
+            var dbContext = await GetDatabaseContext();
+            var timelineRepository = new TimelineRepository(dbContext, _hubContext);
+
+            // Act
+            var result = await timelineRepository.GetTimelineEvent(1);
+
+            // Assert
+            result.Should().BeOfType<TimelineDto>();
+            result.Event.Should().Be("test0");
+            result.Employee.Should().NotBeNull();
+            result.Employee.Username.Should().Be("test0");
+        }
+
+        [Fact]
+        public async void GetTimelineEvent_ShouldReturnNull()
+        {
+            // Arrange
+            var dbContext = await GetDatabaseContext();
+            var timelineRepository = new TimelineRepository(dbContext, _hubContext);
+
+            // Act
+            var result = await timelineRepository.GetTimelineEvent(100);
+
+            // Assert
+            result.Should().BeNull();
         }
     }
 }

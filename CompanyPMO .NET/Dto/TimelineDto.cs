@@ -11,5 +11,8 @@
         public int? IssueId { get; set; }
         public string Type { get; set; }
         public EmployeeShowcaseDto Employee { get; set; }
+        public ProjectDto? Project { get; set; }
+        public TaskDto? Task { get; set; }
+        public IssueDto? Issue { get; set; }
     }
 }

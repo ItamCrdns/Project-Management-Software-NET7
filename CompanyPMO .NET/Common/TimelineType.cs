@@ -13,5 +13,6 @@
         public const string Start = "Start";
         public const string Finish = "Finish";
         public const string Cancel = "Cancel";
+        public const string Report = "Report";
     }
 }

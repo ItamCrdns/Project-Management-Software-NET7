@@ -27,11 +27,10 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> CreateIssue([FromBody] IssueDto issue, [FromQuery] int taskId, [FromQuery] bool shouldStartNow)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null || usernameClaim == null)
+            if (claim == null)
             {
-                return Unauthorized("User ID claim or Username claim is missing");
+                return Unauthorized("User ID claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -43,9 +42,9 @@ namespace CompanyPMO_.NET.Controllers
 
             var timelineEvent = new TimelineDto
             {
-                Event = $"{usernameClaim} created an issue",
+                Event = "reported the issue",
                 EmployeeId = employeeId,
-                Type = TimelineType.Create,
+                Type = TimelineType.Report,
                 IssueId = result.Data
             };
 

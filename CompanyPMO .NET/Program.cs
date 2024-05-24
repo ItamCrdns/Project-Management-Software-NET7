@@ -1,5 +1,6 @@
 using CloudinaryDotNet;
 using CompanyPMO_.NET.Data;
+using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Interfaces.Company_interfaces;
 using CompanyPMO_.NET.Interfaces.Employee_interfaces;
@@ -12,6 +13,7 @@ using CompanyPMO_.NET.Repository;
 using CompanyPMO_.NET.Services;
 using dotenv.net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
@@ -145,6 +147,11 @@ cloduinary.Api.Secure = true;
 
 builder.Services.AddSingleton(cloduinary);
 
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+});
+
 var app = builder.Build();
 
 if (args.Length == 1 && args[0].ToLower() == "seed")
@@ -153,6 +160,8 @@ if (args.Length == 1 && args[0].ToLower() == "seed")
 }
 
 app.UseCors(MyAllowSpecificOrigins);
+
+app.MapHub<TimelineHub>("/timeline-hub");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

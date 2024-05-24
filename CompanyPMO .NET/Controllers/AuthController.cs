@@ -48,7 +48,7 @@ namespace CompanyPMO_.NET.Controllers
 
                 var timelineEvent = new TimelineDto
                 {
-                    Event = $"{loggedEmployee.Username} logged in",
+                    Event = "logged in",
                     EmployeeId = loggedEmployee.EmployeeId,
                     Type = TimelineType.Login
                 };

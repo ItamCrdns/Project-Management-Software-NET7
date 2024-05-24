@@ -28,11 +28,10 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> CreateNewProject([FromForm] Project project, [FromForm] List<IFormFile>? images, [FromForm] int companyId, [FromForm] List<int> employees, [FromForm] bool shouldStartNow)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null || usernameClaim == null)
+            if (claim == null)
             {
-                return Unauthorized("User ID claim or Username claim is missing");
+                return Unauthorized("User ID claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -46,7 +45,7 @@ namespace CompanyPMO_.NET.Controllers
 
             var timelineEvent = new TimelineDto
             {
-                Event = $"{usernameClaim} created a project",
+                Event = "created the project",
                 EmployeeId = employeeId,
                 Type = TimelineType.Create,
                 ProjectId = result.Data
@@ -65,11 +64,10 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> UpdateProject(int projectId, [FromForm] ProjectDto projectDto, [FromForm] List<IFormFile>? images)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null || usernameClaim == null)
+            if (claim == null)
             {
-                return Unauthorized("User ID claim or Username claim is missing");
+                return Unauthorized("User ID claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -83,7 +81,7 @@ namespace CompanyPMO_.NET.Controllers
 
             var timelineEvent = new TimelineDto
             {
-                Event = $"{usernameClaim} updated a project",
+                Event = "updated the project #",
                 EmployeeId = employeeId,
                 Type = TimelineType.Update,
                 ProjectId = projectId
@@ -120,11 +118,10 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> SetProjectsFininishedBulk([FromBody] int[] projectIds)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null || usernameClaim == null)
+            if (claim == null)
             {
-                return Unauthorized("User ID claim or Username claim is missing");
+                return Unauthorized("User ID claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -137,7 +134,7 @@ namespace CompanyPMO_.NET.Controllers
                 {
                     var timelineEvent = new TimelineDto
                     {
-                        Event = $"{usernameClaim} has set a project as finished",
+                        Event = "has set the following project as finished:",
                         EmployeeId = employeeId,
                         Type = TimelineType.Finish,
                         ProjectId = projectId
@@ -156,11 +153,10 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> SetProjectFinished(int projectId)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null || usernameClaim == null)
+            if (claim == null)
             {
-                return Unauthorized("User ID claim or Username claim is missing");
+                return Unauthorized("User ID claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -169,7 +165,7 @@ namespace CompanyPMO_.NET.Controllers
 
             var timelineEvent = new TimelineDto
             {
-                Event = $"{usernameClaim} has set a project as finished",
+                Event = "has set the following project as finished:",
                 EmployeeId = employeeId,
                 Type = TimelineType.Finish,
                 ProjectId = projectId
@@ -186,11 +182,10 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> SetProjectsStartBulk([FromBody] int[] projectIds)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null || usernameClaim == null)
+            if (claim == null)
             {
-                return Unauthorized("User ID claim or Username claim is missing");
+                return Unauthorized("User ID claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -203,7 +198,7 @@ namespace CompanyPMO_.NET.Controllers
                 {
                     var timelineEvent = new TimelineDto
                     {
-                        Event = $"{usernameClaim} has set a project as started",
+                        Event = "has set the following project as started:",
                         EmployeeId = employeeId,
                         Type = TimelineType.Start,
                         ProjectId = projectId
@@ -222,11 +217,10 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> SetProjectStart(int projectId)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null || usernameClaim == null)
+            if (claim == null)
             {
-                return Unauthorized("User ID claim or Username claim is missing");
+                return Unauthorized("User ID claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -237,7 +231,7 @@ namespace CompanyPMO_.NET.Controllers
             {
                 var timelineEvent = new TimelineDto
                 {
-                    Event = $"{usernameClaim} has set a project as started",
+                    Event = "has set the following project as started:",
                     EmployeeId = employeeId,
                     Type = TimelineType.Start,
                     ProjectId = projectId

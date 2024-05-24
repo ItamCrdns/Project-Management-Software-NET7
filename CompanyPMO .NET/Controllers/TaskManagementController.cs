@@ -26,11 +26,10 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> CreateNewTask([FromForm] TaskDto task, [FromForm] int projectId, [FromForm] List<IFormFile>? images, [FromForm] List<int> employees, [FromForm] bool shouldStartNow)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null || usernameClaim == null)
+            if (claim == null)
             {
-                return Unauthorized("User ID claim or Username claim is missing");
+                return Unauthorized("User ID claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -44,7 +43,7 @@ namespace CompanyPMO_.NET.Controllers
 
             var timelineEvent = new TimelineDto
             {
-                Event = $"{usernameClaim} created a task",
+                Event = "created the task",
                 EmployeeId = employeeId,
                 Type = TimelineType.Create,
                 TaskId = result.Data
@@ -82,11 +81,10 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> SetTasksFinishedBulk([FromBody] int[] taskIds)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null || usernameClaim == null)
+            if (claim == null)
             {
-                return Unauthorized("User ID claim or Username claim is missing");
+                return Unauthorized("User ID claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -99,7 +97,7 @@ namespace CompanyPMO_.NET.Controllers
                 {
                     var timelineEvent = new TimelineDto
                     {
-                        Event = $"{usernameClaim} has set a task as finished",
+                        Event = "has set the following task as finished:",
                         EmployeeId = employeeId,
                         Type = TimelineType.Finish,
                         TaskId = taskId
@@ -118,11 +116,10 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> SetTaskFinished(int taskId)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null || usernameClaim == null)
+            if (claim == null)
             {
-                return Unauthorized("User ID claim or Username claim is missing");
+                return Unauthorized("User ID claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -133,7 +130,7 @@ namespace CompanyPMO_.NET.Controllers
             {
                 var timelineEvent = new TimelineDto
                 {
-                    Event = $"{usernameClaim} has set a task as finished",
+                    Event = "has set the following task as finished:",
                     EmployeeId = employeeId,
                     Type = TimelineType.Finish,
                     TaskId = taskId
@@ -151,11 +148,10 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> SetTasksStartBulk([FromBody] int[] taskIds)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null || usernameClaim == null)
+            if (claim == null)
             {
-                return Unauthorized("User ID claim or Username claim is missing");
+                return Unauthorized("User ID claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -168,7 +164,7 @@ namespace CompanyPMO_.NET.Controllers
                 {
                     var timelineEvent = new TimelineDto
                     {
-                        Event = $"{usernameClaim} has set a task as started",
+                        Event = "has set the following task as started:",
                         EmployeeId = employeeId,
                         Type = TimelineType.Start,
                         TaskId = taskId
@@ -187,11 +183,10 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> SetTaskStart(int taskId)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null || usernameClaim == null)
+            if (claim == null)
             {
-                return Unauthorized("User ID claim or Username claim is missing");
+                return Unauthorized("User ID claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -202,7 +197,7 @@ namespace CompanyPMO_.NET.Controllers
             {
                 var timelineEvent = new TimelineDto
                 {
-                    Event = $"{usernameClaim} has set a task as started",
+                    Event = "has set the following task as started:",
                     EmployeeId = employeeId,
                     Type = TimelineType.Start,
                     TaskId = taskId

@@ -35,7 +35,7 @@ namespace CompanyPMO_.NET.Controllers
 
             var timelineEvent = new TimelineDto
             {
-                Event = $"{newEmployee.Username} registered",
+                Event = "registered",
                 EmployeeId = newEmployee.EmployeeId,
                 Type = TimelineType.Register
             };
@@ -52,11 +52,10 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> UpdateMyEmployee([FromForm] UpdateEmployeeDto employee, [FromForm] IFormFile? profilePicture, [FromForm] string? currentPassword)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var usernameClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
 
-            if (claim == null || usernameClaim == null)
+            if (claim == null)
             {
-                return Unauthorized("User ID claim or Username claim is missing");
+                return Unauthorized("User ID claim is missing");
             }
 
             int employeeId = int.Parse(claim.Value);
@@ -70,7 +69,7 @@ namespace CompanyPMO_.NET.Controllers
 
             var timelineEvent = new TimelineDto
             {
-                Event = $"{usernameClaim} updated",
+                Event = "updated their profile",
                 EmployeeId = employeeId,
                 Type = TimelineType.Update
             };
