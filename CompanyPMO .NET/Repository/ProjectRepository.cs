@@ -3,6 +3,7 @@ using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Interfaces.Project_interfaces;
+using CompanyPMO_.NET.Interfaces.Workload_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -14,24 +15,14 @@ namespace CompanyPMO_.NET.Repository
         private readonly ApplicationDbContext _context;
         private readonly IImage _imageService;
         private readonly IUtility _utilityService;
-        private readonly IWorkload _workloadService;
+        private readonly IWorkloadProject _workloadService;
 
-        public ProjectRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkload workloadService)
+        public ProjectRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkloadProject workloadService)
         {
             _context = context;
             _imageService = imageService;
             _utilityService = utilityService;
             _workloadService = workloadService;
-        }
-
-        public async Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToProject(int projectId, List<int> employees)
-        {
-            // * Adds the employees to a certain project and returns a list of the added employees
-
-            // * employees = list of integers with employee ids
-            // * "ProjectId", projectId = identifier of what entity we are updating
-            // * IsParticipant return whether or not the employee its already in the project
-            return await _utilityService.AddEmployeesToEntity<EmployeeProject, Project>(employees, "ProjectId", projectId, IsParticipant);
         }
 
         public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images)
@@ -43,7 +34,7 @@ namespace CompanyPMO_.NET.Repository
             return await _imageService.AddImagesToExistingEntity(projectId, images, "Project", imageCountInProjectEntity);
         }
 
-        public async Task<OperationResult<int>> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employees, bool shouldStartNow)
+        public async Task<OperationResult<int>> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employeeIds, bool shouldStartNow)
         {
             if (string.IsNullOrWhiteSpace(project.Name) || string.IsNullOrWhiteSpace(project.Description))
             {
@@ -89,15 +80,22 @@ namespace CompanyPMO_.NET.Repository
 
             List<string> errors = new();
 
-            if (employees is not null && employees.Count > 0)
+            var workloadCreatedProjectsResult = await _workloadService.UpdateEmployeeCreatedProjects(employeeSupervisorId);
+
+            if (!workloadCreatedProjectsResult.Success)
             {
-                var employeesToAdd = employees.Where(employee => employee != employeeSupervisorId).Select(employee => new EmployeeProject
+                errors.Add($"Failed to update the workload of the project creator. Error = {workloadCreatedProjectsResult.Message}");
+            }
+
+            if (employeeIds is not null && employeeIds.Count > 0)
+            {
+                var employeesToAdd = employeeIds.Where(employee => employee != employeeSupervisorId).Select(employee => new EmployeeProject
                 {
                     EmployeeId = employee,
                     ProjectId = newProject.ProjectId
                 });
 
-                if (employees.Any(x => x == employeeSupervisorId))
+                if (employeeIds.Any(x => x == employeeSupervisorId))
                 {
                     errors.Add("You can't add yourself");
                 }
@@ -106,7 +104,7 @@ namespace CompanyPMO_.NET.Repository
                 int employeeRowsAffected = await _context.SaveChangesAsync(); // Returns the number of added employees
 
                 // Based on this we can execute the method to update assigned_projects on the workload table for the employee
-                var workloadUpdateResult = await _workloadService.UpdateEmployeeAssignedProjectsCount(employeesToAdd.Select(x => x.EmployeeId).ToArray());
+                var workloadUpdateResult = await _workloadService.UpdateEmployeeAssignedProjects(employeesToAdd.Select(x => x.EmployeeId).ToArray());
 
                 if (!workloadUpdateResult.Success)
                 {

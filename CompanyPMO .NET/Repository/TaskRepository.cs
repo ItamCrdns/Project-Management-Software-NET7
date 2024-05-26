@@ -26,13 +26,7 @@ namespace CompanyPMO_.NET.Repository
             _workloadService = workloadService;
         }
 
-        public async Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds)
-        {
-            // Later: check if employee its working in the project & company the task is in
-            return await _utilityService.AddEmployeesToEntity<EmployeeTask, Models.Task>(employeeIds, "TaskId", taskId, IsParticipant);
-        }
-
-        public async Task<OperationResult<int>> CreateTask(TaskDto task, int employeeId, int projectId, List<IFormFile>? images, List<int>? employeeIds, bool shouldStartNow)
+        public async Task<OperationResult<int>> CreateTask(TaskDto task, int employeeSupervisorId, int projectId, List<IFormFile>? images, List<int>? employeeIds, bool shouldStartNow)
         {
             if (string.IsNullOrWhiteSpace(task.Name) || string.IsNullOrWhiteSpace(task.Description))
             {
@@ -46,7 +40,7 @@ namespace CompanyPMO_.NET.Repository
 
             var project = await _context.Projects.FindAsync(projectId);
 
-            bool isUserOwner = await _context.Projects.AnyAsync(p => p.ProjectId.Equals(projectId) && p.ProjectCreatorId.Equals(employeeId));
+            bool isUserOwner = await _context.Projects.AnyAsync(p => p.ProjectId.Equals(projectId) && p.ProjectCreatorId.Equals(employeeSupervisorId));
 
             if (project is null || !isUserOwner)
             {
@@ -58,12 +52,12 @@ namespace CompanyPMO_.NET.Repository
                 };
             }
 
-            var newTask = new Models.Task
+            var newTask = new Task
             {
                 Name = task.Name,
                 Description = task.Description,
                 Created = DateTime.UtcNow,
-                TaskCreatorId = employeeId,
+                TaskCreatorId = employeeSupervisorId,
                 ProjectId = projectId,
                 ExpectedDeliveryDate = task.ExpectedDeliveryDate,
                 StartedWorking = shouldStartNow ? DateTime.UtcNow : null
@@ -95,29 +89,39 @@ namespace CompanyPMO_.NET.Repository
 
             List<string> errors = new();
 
+            var workloadCreatedTasksResult = await _workloadService.UpdateEmployeeCreatedTasks(employeeSupervisorId);
+
+            if (!workloadCreatedTasksResult.Success)
+            {
+                errors.Add($"Failed to update the workload of the task creator. Error = {workloadCreatedTasksResult.Message}");
+            }
+
             if (employeeIds is not null && employeeIds.Count > 0)
             {
-                if (employeeIds.Any(x => x == employeeId))
+                var employeesToAdd = employeeIds.Where(employee => employee != employeeSupervisorId).Select(employee => new EmployeeTask
+                {
+                    EmployeeId = employee,
+                    TaskId = newTask.TaskId
+                });
+
+                if (employeeIds.Any(x => x == employeeSupervisorId))
                 {
                     errors.Add("You can't add yourself");
                 }
 
-                var (status, addedEmployees) = await AddEmployeesToTask(newTask.TaskId, employeeIds);
+                await _context.EmployeeTasks.AddRangeAsync(employeesToAdd);
+                int employeeRowsAffected = await _context.SaveChangesAsync();
 
-                if (addedEmployees.Any())
+                var workloadUpdateResult = await _workloadService.UpdateEmployeeAssignedTasks(employeeIds.ToArray());
+
+                if (!workloadUpdateResult.Success)
                 {
-                    var workloadUpdateResult = await _workloadService.UpdateEmployeeWorkloadAssignedTasksAndIssues(addedEmployees.Select(x => x.EmployeeId).ToArray());
-
-                    if (!workloadUpdateResult.Success)
-                    {
-                        errors.Add($"Failed to update employee workload {workloadUpdateResult.Message}");
-                    }
+                    errors.Add($"Failed to update the workload of the employees. Error = {workloadUpdateResult.Message}");
                 }
 
-                // If its not the success response, then its an error
-                if (status != "All employees were added successfully" && !string.IsNullOrWhiteSpace(status))
+                if (employeeRowsAffected is 0)
                 {
-                    errors.Add(status);
+                    errors.Add("Failed to add the employees to the task");
                 }
             }
 

@@ -112,7 +112,7 @@ namespace Tests.Repository
             {
                 for (int j = 1; j < 3; j++)
                 {
-                    dbContext.Workload.Add(new Workload{ WorkloadId = j });
+                    dbContext.Workload.Add(new Workload { WorkloadId = j });
                 }
             }
 
@@ -129,33 +129,95 @@ namespace Tests.Repository
                 }
             }
 
+            if (!await dbContext.Tasks.AnyAsync())
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    dbContext.Tasks.Add(
+                        new CompanyPMO_.NET.Models.Task
+                        {
+                            Name = $"Task {i}",
+                            Description = $"Description {i}",
+                            Created = DateTime.Now.AddMinutes(i), // Increment on iteration
+                            StartedWorking = (i == 0 || i == 1) ? DateTime.UtcNow : null,
+                            ExpectedDeliveryDate = DateTime.Now.AddHours(-2),
+                            TaskCreatorId = 1,
+                            ProjectId = (i % 3) + 1
+                        });
+                }
+            }
+
+            if (!await dbContext.EmployeeTasks.AnyAsync())
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    dbContext.EmployeeTasks.Add(
+                        new EmployeeTask
+                        {
+                            EmployeeId = i,
+                            TaskId = i
+                        });
+                }
+            }
+
+            if (!await dbContext.Issues.AnyAsync())
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    dbContext.Issues.Add(
+                        new Issue
+                        {
+                            Name = $"Issue {i}",
+                            Description = $"Description {i}",
+                            Created = DateTime.Now,
+                            StartedWorking = DateTime.Now.AddMinutes(15),
+                            ExpectedDeliveryDate = DateTime.Now.AddHours(-2),
+                            IssueCreatorId = 1,
+                            TaskId = (i % 3) + 1
+                        });
+                }
+            }
+
+            if (!await dbContext.EmployeeIssues.AnyAsync())
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    dbContext.EmployeeIssues.Add(
+                        new EmployeeIssue
+                        {
+                            EmployeeId = i,
+                            IssueId = i
+                        });
+                }
+            }
+
             await dbContext.SaveChangesAsync();
 
             return dbContext;
         }
 
         [Fact]
-        public async void WorkloadRepository_UpdateEmployeeAssignedProjectsCount_ReturnsSuccess()
+        public async void WorkloadRepository_UpdateEmployeeAssignedProjects_ReturnsSuccess()
         {
             var dbContext = await GetDatabaseContext();
             var workloadRepository = new WorkloadRepository(dbContext);
 
-            var result = await workloadRepository.UpdateEmployeeAssignedProjectsCount([1, 2, 3]);
+            var result = await workloadRepository.UpdateEmployeeAssignedProjects([1, 2, 3]);
 
             result.Success.Should().BeTrue();
             result.Message.Should().Be("Employee assigned projects count updated successfully.");
         }
 
         [Fact]
-        public async void WorkloadRepository_UpdateEmployeeAssignedProjectsCount_ReturnsErrorNoWorkloadsToUpdate()
+        public async void WorkloadRepository_UpdateEmployeeAssignedProjects_ReturnsSomethingWentWrong()
         {
             var dbContext = await GetDatabaseContext();
             var workloadRepository = new WorkloadRepository(dbContext);
 
-            var result = await workloadRepository.UpdateEmployeeAssignedProjectsCount([4, 5, 6]);
+            var result = await workloadRepository.UpdateEmployeeAssignedProjects([4, 5, 6]);
 
             result.Success.Should().BeFalse();
-            result.Message.Should().Be("No workloads to update");
+            result.Message.Should().Be("Something went wrong");
         }
 
         [Fact]
@@ -171,7 +233,7 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void WorkloadRepository_UpdateEmployeeCompletedProjects_ReturnsErrorNoWorkloadsToUpdate()
+        public async void WorkloadRepository_UpdateEmployeeCompletedProjects_ReturnsSomethingWentWrong()
         {
             var dbContext = await GetDatabaseContext();
             var workloadRepository = new WorkloadRepository(dbContext);
@@ -179,7 +241,7 @@ namespace Tests.Repository
             var result = await workloadRepository.UpdateEmployeeCompletedProjects([4, 5, 6]);
 
             result.Success.Should().BeFalse();
-            result.Message.Should().Be("No workloads to update");
+            result.Message.Should().Be("Something went wrong");
         }
 
         [Fact]
@@ -195,7 +257,7 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void WorkloadRepository_UpdateEmployeeCompletedTasks_ReturnsErrorNoWorkloadsToUpdate()
+        public async void WorkloadRepository_UpdateEmployeeCompletedTasks_ReturnsSomethingWentWrong()
         {
             var dbContext = await GetDatabaseContext();
             var workloadRepository = new WorkloadRepository(dbContext);
@@ -203,38 +265,7 @@ namespace Tests.Repository
             var result = await workloadRepository.UpdateEmployeeCompletedTasks([4, 5, 6]);
 
             result.Success.Should().BeFalse();
-            result.Message.Should().Be("No workloads to update");
-        }
-
-        [Fact]
-        public async void WorkloadRepository_UpdateEmployeeWorkloadAssignedTasksAndIssues_ReturnsSuccess()
-        {
-            var dbContext = await GetDatabaseContext();
-            var workloadRepository = new WorkloadRepository(dbContext);
-
-            var result = await workloadRepository.UpdateEmployeeWorkloadAssignedTasksAndIssues([1, 2, 3]);
-
-            result.Success.Should().BeTrue();
-            result.Message.Should().Be("Employee workload assigned tasks and issues updated successfully.");
-            result.Data.Should().BeOfType<List<WorkloadDto>>();
-            result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
-            foreach (var workload in result.Data)
-            {
-                workload.WorkloadSum.Should().NotBeNullOrEmpty();
-                workload.WorkloadSum.Should().BeOneOf("Very High", "High", "Medium", "Low", "None");
-            }   
-        }
-
-        [Fact]
-        public async void WorkloadRepository_UpdateEmployeeWorkloadAssignedTasksAndIssues_ReturnsErrorNoWorkloadsToUpdate()
-        {
-            var dbContext = await GetDatabaseContext();
-            var workloadRepository = new WorkloadRepository(dbContext);
-
-            var result = await workloadRepository.UpdateEmployeeWorkloadAssignedTasksAndIssues([4, 5, 6]);
-
-            result.Success.Should().BeFalse();
-            result.Message.Should().Be("No workloads to update");
+            result.Message.Should().Be("Something went wrong");
         }
 
         [Fact]
@@ -271,6 +302,210 @@ namespace Tests.Repository
 
             result.Success.Should().BeFalse();
             result.Message.Should().Be("Employee not found.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_GetWorkloadByEmployee_ReturnsWorkload()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.GetWorkloadByEmployee("test0");
+
+            result.Should().NotBeNull();
+            result.WorkloadId.Should().Be(1);
+            result.Employee.EmployeeId.Should().Be(1);
+        }
+
+        [Fact]
+        public async void WorkloadRepository_GetWorkloadByEmployee_ReturnsNull()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.GetWorkloadByEmployee("test999");
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateEmployeeAssignedTasks_ReturnsSuccess()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeAssignedTasks([1, 2, 3]);
+
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Employee assigned tasks count updated successfully.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateEmployeeAssignedTasks_ReturnsSomethingWentWrong()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeAssignedTasks([4, 5, 6]);
+
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Something went wrong");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateEmployeeAssignedIssues_ReturnsSuccess()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeAssignedIssues([1, 2, 3]);
+
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Employee assigned issues count updated successfully.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateEmployeeAssignedIssues_ReturnsErrorNoWorkloadsToUpdate()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeAssignedIssues([4, 5, 6]);
+
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Something went wrong");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateEmployeeCompletedIssues_ReturnsSuccess()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeCompletedIssues([1, 2, 3]);
+
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Employee completed issues count updated successfully.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateEmployeeCompletedIssues_ReturnsErrorNoWorkloadsToUpdate()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeCompletedIssues([4, 5, 6]);
+
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Something went wrong");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateOverdueProjects_ReturnsSucess()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateOverdueProjects();
+
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Overdue projects updated successfully.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateOverdueTasks_ReturnsSucess()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateOverdueTasks();
+
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Overdue tasks updated successfully.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateOverdueIssues_ReturnsSucess()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateOverdueIssues();
+
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Overdue issues updated successfully.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateEmployeeCreatedTasks_ReturnsSuccess()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeCreatedTasks(1);
+
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Employee created tasks count updated successfully.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateEmployeeCreatedTasks_ReturnsNotFound()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeCreatedTasks(4);
+
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Workload entity not found.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateEmployeeCreatedIssues_ReturnsSuccess()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeCreatedIssues(1);
+
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Employee created issues count updated successfully.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateEmployeeCreatedIssues_ReturnsNotFound()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeCreatedIssues(4);
+
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Workload entity not found.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateEmployeeCreatedProjects_ReturnsSuccess()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeCreatedProjects(1);
+
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Employee created projects count updated successfully.");
+        }
+
+        [Fact]
+        public async void WorkloadRepository_UpdateEmployeeCreatedProjects_ReturnsNotFound()
+        {
+            var dbContext = await GetDatabaseContext();
+            var workloadRepository = new WorkloadRepository(dbContext);
+
+            var result = await workloadRepository.UpdateEmployeeCreatedProjects(4);
+
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Workload entity not found.");
         }
     }
 }

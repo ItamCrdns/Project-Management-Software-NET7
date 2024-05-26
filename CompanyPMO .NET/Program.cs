@@ -13,7 +13,6 @@ using CompanyPMO_.NET.Repository;
 using CompanyPMO_.NET.Services;
 using dotenv.net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
@@ -53,6 +52,10 @@ builder.Services.AddScoped<IResetPasswordRequest, ResetPasswordRequestRepository
 
 builder.Services.AddScoped<IWorkload, WorkloadRepository>();
 builder.Services.AddScoped<IWorkloadTask, WorkloadRepository>();
+builder.Services.AddScoped<IWorkloadOverdues, WorkloadRepository>();
+builder.Services.AddScoped<IWorkloadProject, WorkloadRepository>();
+builder.Services.AddScoped<IWorkloadIssue, WorkloadRepository>();
+builder.Services.AddScoped<IWorkloadEmployee, WorkloadRepository>();
 
 builder.Services.AddScoped<ITimeline, TimelineRepository>();
 builder.Services.AddScoped<ITimelineManagement, TimelineRepository>();   

@@ -91,28 +91,6 @@ namespace CompanyPMO_.NET.Controllers
         }
 
         [Authorize(Policy = "SupervisorOnly")]
-        [HttpPost("{projectId}/add/employees")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<EmployeeShowcaseDto>))]
-        public async Task<IActionResult> AddEmployeesToProject(int projectId, [FromForm] List<int> employees)
-        {
-            var (response, employeesAdded) = await _projectManagement.AddEmployeesToProject(projectId, employees);
-
-            if (response is null)
-            {
-                return BadRequest();
-            }
-
-            var toReturn = new
-            {
-                Status = response,
-                EmployeesAdded = employeesAdded
-            };
-
-            return Ok(toReturn);
-        }
-
-        [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("set/finished/bulk")]
         [ProducesResponseType(200, Type = typeof(OperationResult))]
         public async Task<IActionResult> SetProjectsFininishedBulk([FromBody] int[] projectIds)

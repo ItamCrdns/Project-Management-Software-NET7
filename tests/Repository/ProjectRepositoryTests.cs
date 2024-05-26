@@ -2,6 +2,7 @@
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Workload_interfaces;
 using CompanyPMO_.NET.Models;
 using CompanyPMO_.NET.Repository;
 using FakeItEasy;
@@ -17,12 +18,12 @@ namespace Tests.Repository
     {
         private readonly IImage _image;
         private readonly IUtility _utility;
-        private readonly IWorkload _workload;
+        private readonly IWorkloadProject _workload;
         public ProjectRepositoryTests()
         {
             _image = A.Fake<IImage>();
             _utility = A.Fake<IUtility>();
-            _workload = A.Fake<IWorkload>();
+            _workload = A.Fake<IWorkloadProject>();
         }
 
         private static DbContextOptions<ApplicationDbContext> CreateNewContextOptions
@@ -160,47 +161,6 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void ProjectRepository_AddEmployeesToProject_ReturnsAddedEmployees()
-        {
-            int projectId = 1;
-            List<int> fakeEmployeeIds = [1, 2, 3, 4, 5, 6, 7];
-
-            var fakeEmployeeProject = A.Fake<EmployeeProject>();
-            var fakeProject = A.Fake<Project>();
-            var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload);
-
-            IEnumerable<EmployeeShowcaseDto> fakeEmployeeDtos =
-            [
-                new() {
-                    EmployeeId = 1,
-                    Username = "Test",
-                    ProfilePicture = "Test"
-                },
-                new()
-                {
-                    EmployeeId = 2,
-                    Username = "Test2",
-                    ProfilePicture = "Test2"
-                }
-            ];
-
-            var tupleResult = ("Success", fakeEmployeeDtos);
-
-            A.CallTo(() => _utility.AddEmployeesToEntity<EmployeeProject, Project>
-            (A<List<int>>._, A<string>._, A<int>._, A<Func<int, int, Task<bool>>>._))
-                .Returns(tupleResult);
-
-            var result = await projectRepository.AddEmployeesToProject(projectId, fakeEmployeeIds);
-
-            result.Should().BeEquivalentTo(tupleResult);
-            result.Item2.Should().BeEquivalentTo(fakeEmployeeDtos);
-            result.Item2.Should().HaveCountGreaterThan(1);
-            result.Item2.Should().BeAssignableTo(typeof(IEnumerable<EmployeeShowcaseDto>));
-            result.status.Should().Be("Success").And.BeOfType<string>();
-        }
-
-        [Fact]
         public async void ProjectRepository_AddImagesToExistingProject_ReturnsAddedImages()
         {
             int projectId = 5;
@@ -323,6 +283,53 @@ namespace Tests.Repository
             result.Success.Should().BeFalse();
             result.Data.Should().BeOfType(typeof(int));
             result.Data.Should().Be(0);
+        }
+
+        [Fact]
+        public async void ProjectRepository_CreateProject_ReturnsSuccessWithErrors()
+        {
+            int supervisorId = 1;
+            int companyId = 1;
+            List<int> employees = [4, 5, 7];
+
+            List<IFormFile> fakeIFormFileList =
+                [
+                    new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test")), 0, 0, "Data", "test.jpg"),
+                    new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test 2")), 0, 0, "Data 2", "test2.jpg"),
+                    new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test 3")), 0, 0, "Data 3", "test3.jpg")
+                    ];
+
+            var newProject = new Project
+            {
+                Name = "FakeName",
+                Description = "FakeDescription",
+                Created = DateTime.UtcNow,
+                ProjectCreatorId = supervisorId,
+                Priority = 1,
+                CompanyId = companyId,
+                ExpectedDeliveryDate = DateTime.UtcNow
+            };
+
+            var dbContext = await GetDatabaseContext();
+            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload);
+
+            A.CallTo(() => _workload.UpdateEmployeeCreatedProjects(A<int>._))
+                .Returns(new OperationResult { Success = false, Message = "Error" });
+
+            A.CallTo(() => _workload.UpdateEmployeeAssignedProjects(A < int[]>._))
+                .Returns(new OperationResult { Success = false, Message = "Error2" });
+
+            var result = await projectRepository.CreateProject(newProject, supervisorId, fakeIFormFileList, companyId, employees, false);
+
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Project created successfully");
+            result.Success.Should().BeTrue();
+            result.Data.Should().BeOfType(typeof(int));
+            result.Data.Should().NotBe(0);
+            result.Errors.Should().NotBeNullOrEmpty();
+            result.Errors.Should().HaveCount(2);
+            result.Errors[0].Should().Be("Failed to update the workload of the project creator. Error = Error");
+            result.Errors[1].Should().Be("Failed to update the workload of the employees. Error = Error2");
         }
 
         [Fact]

@@ -130,45 +130,6 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void TaskRepository_AddEmployeesToTask_ReturnsAdded()
-        {
-            int taskId = 1;
-            List<int> employeeIds = [1, 2, 3];
-
-            IEnumerable<EmployeeShowcaseDto> employeesDto = new List<EmployeeShowcaseDto>
-            {
-                new()
-                {
-                    EmployeeId = 1,
-                    Username = "Test1",
-                    ProfilePicture = "profilepicture.jpg"
-                },
-                new()
-                {
-                    EmployeeId = 2,
-                    Username = "Test2",
-                    ProfilePicture = "profilepicture.jpg"
-                },
-            };
-
-            var tupleResult = ("Success", employeesDto);
-
-            A.CallTo(() => _utility.AddEmployeesToEntity<EmployeeTask, CompanyPMO_.NET.Models.Task>(
-                A<List<int>>._,
-                A<string>._,
-                A<int>._,
-                A<Func<int, int, Task<bool>>>._))
-                .Returns(tupleResult);
-
-            var taskRepository = new TaskRepository(await GetDatabaseContext(), _image, _utility, _workload);
-
-            var result = await taskRepository.AddEmployeesToTask(taskId, employeeIds);
-
-            result.Item2.Should().BeEquivalentTo(employeesDto);
-            result.status.Should().Be("Success");
-        }
-
-        [Fact]
         public async void TaskRepository_CreateTask_ReturnsSuccess()
         {
             int employeeId = 1;
@@ -245,6 +206,10 @@ namespace Tests.Repository
             fakeTask.Created = DateTime.Now;
             List<int> employeeIds = [1, 2, 3];
 
+            A.CallTo(() => _workload.UpdateEmployeeCreatedTasks(A<int>._)).Returns(new OperationResult { Success = true, Message = "Success" });
+
+            A.CallTo(() => _workload.UpdateEmployeeAssignedTasks(A<int[]>._)).Returns(new OperationResult { Success = true, Message = "Success" });
+
             var result = await taskRepository.CreateTask(fakeTask, employeeId, projectId, fakeIFormFileList, employeeIds, true);
 
             result.Should().NotBeNull();
@@ -255,6 +220,47 @@ namespace Tests.Repository
             result.Errors.Should().NotBeNullOrEmpty();
             result.Errors.Should().HaveCount(1);
             result.Errors.Should().Contain("You can't add yourself");
+        }
+
+        [Fact]
+        public async void TaskRepository_CreateTask_ReturnsSuccessWithErrors()
+        {
+            int employeeId = 1;
+            int projectId = 1;
+
+            List<IFormFile> fakeIFormFileList =
+                [
+                    new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test")), 0, 0, "Data", "test.jpg"),
+                    new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test 2")), 0, 0, "Data 2", "test2.jpg"),
+                    new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test 3")), 0, 0, "Data 3", "test3.jpg")
+                    ];
+
+            var dbContext = await GetDatabaseContext();
+
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+
+            var fakeTask = A.Fake<TaskDto>();
+            fakeTask.Name = "Test";
+            fakeTask.Description = "Test Description";
+            fakeTask.Created = DateTime.Now;
+
+            List<int> employeeIds = [2, 3];
+
+            A.CallTo(() => _workload.UpdateEmployeeCreatedTasks(A<int>._)).Returns(new OperationResult { Success = false, Message = "Error" });
+
+            A.CallTo(() => _workload.UpdateEmployeeAssignedTasks(A<int[]>._)).Returns(new OperationResult { Success = false, Message = "Error2" });
+
+            var result = await taskRepository.CreateTask(fakeTask, employeeId, projectId, fakeIFormFileList, employeeIds, true);
+
+            result.Should().NotBeNull();
+            result.Message.Should().Be("Task created successfully");
+            result.Success.Should().BeTrue();
+            result.Data.Should().BeOfType(typeof(int));
+            result.Data.Should().NotBe(0);
+            result.Errors.Should().NotBeNullOrEmpty();
+            result.Errors.Should().HaveCount(2);
+            result.Errors[0].Should().Be("Failed to update the workload of the task creator. Error = Error");
+            result.Errors[1].Should().Be("Failed to update the workload of the employees. Error = Error2");
         }
 
         [Fact]

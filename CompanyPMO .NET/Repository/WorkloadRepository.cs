@@ -1,6 +1,5 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Data;
-using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Interfaces.Workload_interfaces;
 using CompanyPMO_.NET.Models;
@@ -8,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CompanyPMO_.NET.Repository
 {
-    public class WorkloadRepository : IWorkload, IWorkloadTask
+    public class WorkloadRepository : IWorkload, IWorkloadTask, IWorkloadProject, IWorkloadIssue, IWorkloadEmployee, IWorkloadOverdues
     {
         private readonly ApplicationDbContext _context;
         public WorkloadRepository(ApplicationDbContext context)
@@ -52,189 +51,322 @@ namespace CompanyPMO_.NET.Repository
             }
         }
 
-        public async Task<OperationResult> UpdateEmployeeAssignedProjectsCount(int[] employees)
+        public async Task<Workload?> GetWorkloadByEmployee(string username)
         {
-            List<Workload> workloadsToUpdate = new();
-
-            foreach (int employee in employees.Distinct())
-            {
-                int ongoingProjectsCount = await _context.Projects
-                    .Where(x => x.Employees.Any(e => e.EmployeeId == employee) && x.Finished == null)
-                    .CountAsync();
-
-                var workload = await _context.Workload.FirstOrDefaultAsync(x => x.WorkloadId == employee);
-
-                if (workload != null)
-                {
-                    workload.AssignedProjects = ongoingProjectsCount;
-                    workloadsToUpdate.Add(workload);
-                }
-            }
-
-            if (workloadsToUpdate.Count > 0)
-            {
-                _context.Workload.UpdateRange(workloadsToUpdate);
-
-                int rowsAffected = await _context.SaveChangesAsync();
-
-                if (rowsAffected > 0)
-                {
-                    return new OperationResult { Success = true, Message = "Employee assigned projects count updated successfully." };
-                }
-                else
-                {
-                    return new OperationResult { Success = false, Message = "Something went wrong" };
-                }
-            }
-
-            return new OperationResult { Success = false, Message = "No workloads to update" };
+            return await _context.Workload
+                .FirstOrDefaultAsync(x => x.Employee.Username == username);
         }
 
         public async Task<OperationResult> UpdateEmployeeCompletedProjects(int[] employees)
         {
-            List<Workload> workloadsToUpdate = new();
+            var workloads = await _context.Workload
+                .Where(x => employees.Contains(x.WorkloadId))
+                .ToListAsync();
 
-            foreach (int employee in employees.Distinct())
+            foreach (var workload in workloads)
             {
-                int finishedProjectsCount = await _context.Projects
-                    .Where(x => x.Employees.Any(e => e.EmployeeId == employee) && x.Finished != null)
+                workload.CompletedProjects = await _context.Projects
+                    .Where(x => x.Employees.Any(e => e.EmployeeId == workload.WorkloadId) && x.Finished != null)
                     .CountAsync();
-
-                var workload = await _context.Workload.FirstOrDefaultAsync(x => x.WorkloadId == employee);
-
-                if (workload != null)
-                {
-                    workload.CompletedProjects = finishedProjectsCount;
-                    workloadsToUpdate.Add(workload);
-                }
             }
 
-            if (workloadsToUpdate.Count > 0)
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
             {
-                _context.Workload.UpdateRange(workloadsToUpdate);
-
-                int rowsAffected = await _context.SaveChangesAsync();
-
-                if (rowsAffected > 0)
-                {
-                    return new OperationResult { Success = true, Message = "Employee completed projects count updated successfully." };
-                }
-                else
-                {
-                    return new OperationResult { Success = false, Message = "Something went wrong" };
-                }
+                return new OperationResult { Success = true, Message = "Employee completed projects count updated successfully." };
             }
-
-            return new OperationResult { Success = false, Message = "No workloads to update" };
+            else
+            {
+                return new OperationResult { Success = false, Message = "Something went wrong" };
+            }
         }
 
         public async Task<OperationResult> UpdateEmployeeCompletedTasks(int[] employees)
         {
-            List<Workload> workloadsToUpdate = new();
+            var workloads = await _context.Workload
+                .Where(x => employees.Contains(x.WorkloadId))
+                .ToListAsync();
 
-            foreach (int employee in employees.Distinct())
+            foreach (var workload in workloads)
             {
-                int finishedTasksCount = await _context.Tasks
-                    .Where(x => x.Employees.Any(e => e.EmployeeId == employee) && x.Finished != null)
+                workload.CompletedTasks = await _context.Tasks
+                    .Where(x => x.Employees.Any(e => e.EmployeeId == workload.WorkloadId) && x.Finished != null)
                     .CountAsync();
-
-                var workload = await _context.Workload.FirstOrDefaultAsync(x => x.WorkloadId == employee);
-
-                if (workload != null)
-                {
-                    workload.CompletedTasks = finishedTasksCount;
-                    workloadsToUpdate.Add(workload);
-                }
             }
 
-            if (workloadsToUpdate.Count > 0)
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
             {
-                _context.Workload.UpdateRange(workloadsToUpdate);
-
-                int rowsAffected = await _context.SaveChangesAsync();
-
-                if (rowsAffected > 0)
-                {
-                    return new OperationResult { Success = true, Message = "Employee completed tasks count updated successfully." };
-                }
-                else
-                {
-                    return new OperationResult { Success = false, Message = "Something went wrong" };
-                }
+                return new OperationResult { Success = true, Message = "Employee completed tasks count updated successfully." };
             }
-
-            return new OperationResult { Success = false, Message = "No workloads to update" };
+            else
+            {
+                return new OperationResult { Success = false, Message = "Something went wrong" };
+            }
         }
 
-        public async Task<OperationResult<List<WorkloadDto>>> UpdateEmployeeWorkloadAssignedTasksAndIssues(int[] employees)
+        public async Task<OperationResult> UpdateEmployeeCompletedIssues(int[] employees)
         {
-            List<Workload> workloadsToUpdate = new();
+            var workloads = await _context.Workload
+                .Where(x => employees.Contains(x.WorkloadId))
+                .ToListAsync();
 
-            foreach (int employee in employees.Distinct())
+            foreach (var workload in workloads)
             {
-                // Count tasks employee is working on excluding finished
-                int ongoingTasksCount = await _context.Tasks
-                    .Where(x => x.Employees.Any(e => e.EmployeeId == employee) && x.Finished == null)
+                workload.CompletedIssues = await _context.Issues
+                    .Where(x => x.Employees.Any(e => e.EmployeeId == workload.WorkloadId) && x.Finished != null)
                     .CountAsync();
-
-                // Count issues employee is working on excluding finished
-                int ongoingIssuesCount = await _context.Issues
-                    .Where(x => x.Employees.Any(e => e.EmployeeId == employee) && x.Finished == null)
-                    .CountAsync();
-
-                // * To determine the workload:
-                // Each task count as 2 points and each issues as 1 point
-
-                int totalCount = (ongoingTasksCount * 2) + ongoingIssuesCount;
-
-                // Determine the workload string. Ex: "High", "Medium", "Low"
-                string workloadSum = totalCount switch
-                {
-                    > 20 => "Very High",
-                    > 10 => "High",
-                    > 5 => "Medium",
-                    > 2 => "Low",
-                    _ => "None"
-                };
-
-                Workload workload = await _context.Workload.FirstOrDefaultAsync(x => x.WorkloadId == employee);
-
-                if (workload != null)
-                {
-                    workload.WorkloadSum = workloadSum;
-                    workload.AssignedTasks = ongoingTasksCount;
-                    workload.AssignedIssues = ongoingIssuesCount;
-
-                    workloadsToUpdate.Add(workload);
-                }
             }
 
-            if (workloadsToUpdate.Count > 0)
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
             {
-                _context.Workload.UpdateRange(workloadsToUpdate);
+                return new OperationResult { Success = true, Message = "Employee completed issues count updated successfully." };
+            }
+            else
+            {
+                return new OperationResult { Success = false, Message = "Something went wrong" };
+            }
+        }
 
-                int rowsAffected = await _context.SaveChangesAsync();
+        public async Task<OperationResult> UpdateEmployeeAssignedProjects(int[] employeeIds)
+        {
+            var workloads = await _context.Workload
+                .Where(x => employeeIds.Contains(x.WorkloadId))
+                .ToListAsync();
 
-                if (rowsAffected > 0)
-                {
-                    return new OperationResult<List<WorkloadDto>>
-                    {
-                        Success = true,
-                        Message = "Employee workload assigned tasks and issues updated successfully.",
-                        Data = workloadsToUpdate.Select(x => new WorkloadDto
-                        {
-                            WorkloadId = x.WorkloadId,
-                            WorkloadSum = x.WorkloadSum,
-                        }).ToList()
-                    };
-                }
-                else
-                {
-                    return new OperationResult<List<WorkloadDto>> { Success = false, Message = "Something went wrong" };
-                }
+            foreach (var workload in workloads)
+            {
+                workload.AssignedProjects = await _context.Projects
+                    .Where(x => x.Employees.Any(e => e.EmployeeId == workload.WorkloadId) && x.Finished == null)
+                    .CountAsync();
             }
 
-            return new OperationResult<List<WorkloadDto>> { Success = false, Message = "No workloads to update" };
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                return new OperationResult { Success = true, Message = "Employee assigned projects count updated successfully." };
+            }
+            else
+            {
+                return new OperationResult { Success = false, Message = "Something went wrong" };
+            }
+        }
+
+        public async Task<OperationResult> UpdateEmployeeAssignedTasks(int[] employeeIds)
+        {
+            var workloads = await _context.Workload
+                .Where(x => employeeIds.Contains(x.WorkloadId))
+                .ToListAsync();
+
+            foreach (var workload in workloads)
+            {
+                workload.AssignedTasks = await _context.Tasks
+                    .Where(x => x.Employees.Any(e => e.EmployeeId == workload.WorkloadId) && x.Finished == null)
+                    .CountAsync();
+            }
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                return new OperationResult { Success = true, Message = "Employee assigned tasks count updated successfully." };
+            }
+            else
+            {
+                return new OperationResult { Success = false, Message = "Something went wrong" };
+            }
+        }
+
+        public async Task<OperationResult> UpdateEmployeeAssignedIssues(int[] employeeIds)
+        {
+            var workloads = await _context.Workload
+                .Where(x => employeeIds.Contains(x.WorkloadId))
+                .ToListAsync();
+
+            foreach (var workload in workloads)
+            {
+                workload.AssignedIssues = await _context.Issues
+                    .Where(x => x.Employees.Any(e => e.EmployeeId == workload.WorkloadId) && x.Finished == null)
+                    .CountAsync();
+            }
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                return new OperationResult { Success = true, Message = "Employee assigned issues count updated successfully." };
+            }
+            else
+            {
+                return new OperationResult { Success = false, Message = "Something went wrong" };
+            }
+        }
+
+        public async Task<OperationResult> UpdateOverdueProjects()
+        {
+            // retrieves a list of employee IDs for employees who are associated with projects that were expected to be delivered by now but are not yet finished
+            List<int> employeeIds = await _context.Projects
+                .Where(x => x.ExpectedDeliveryDate < DateTime.UtcNow && x.Finished == null)
+                .SelectMany(x => x.Employees.Select(e => e.EmployeeId))
+                .ToListAsync();
+
+            var workloads = await _context.Workload
+                .Where(x => employeeIds.Contains(x.WorkloadId))
+                .ToListAsync();
+
+            foreach (var workload in workloads)
+            {
+                workload.OverdueProjects = employeeIds.Count(id => id == workload.WorkloadId);
+            }
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                return new OperationResult { Success = true, Message = "Overdue projects updated successfully." };
+            }
+            else
+            {
+                return new OperationResult { Success = false, Message = "Something went wrong" };
+            }
+        }
+
+        public async Task<OperationResult> UpdateOverdueTasks()
+        {
+            // retrieves a list of employee IDs for employees who are associated with tasks that were expected to be delivered by now but are not yet finished
+            List<int> employeeIds = await _context.Tasks
+                .Where(x => x.ExpectedDeliveryDate < DateTime.UtcNow && x.Finished == null)
+                .SelectMany(x => x.Employees.Select(e => e.EmployeeId))
+                .ToListAsync();
+
+            var workloads = await _context.Workload
+                .Where(x => employeeIds.Contains(x.WorkloadId))
+                .ToListAsync();
+
+            foreach (var workload in workloads)
+            {
+                workload.OverdueTasks = employeeIds.Count(id => id == workload.WorkloadId);
+            }
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                return new OperationResult { Success = true, Message = "Overdue tasks updated successfully." };
+            }
+            else
+            {
+                return new OperationResult { Success = false, Message = "Something went wrong" };
+            }
+        }
+
+        public async Task<OperationResult> UpdateOverdueIssues()
+        {
+            // retrieves a list of employee IDs for employees who are associated with issues that were expected to be delivered by now but are not yet finished
+            List<int> employeeIds = await _context.Issues
+                .Where(x => x.ExpectedDeliveryDate < DateTime.UtcNow && x.Finished == null)
+                .SelectMany(x => x.Employees.Select(e => e.EmployeeId))
+                .ToListAsync();
+
+            var workloads = await _context.Workload
+                .Where(x => employeeIds.Contains(x.WorkloadId))
+                .ToListAsync();
+
+            foreach (var workload in workloads)
+            {
+                workload.OverdueIssues = employeeIds.Count(id => id == workload.WorkloadId);
+            }
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                return new OperationResult { Success = true, Message = "Overdue issues updated successfully." };
+            }
+            else
+            {
+                return new OperationResult { Success = false, Message = "Something went wrong" };
+            }
+        }
+
+        public async Task<OperationResult> UpdateEmployeeCreatedTasks(int employeeId)
+        {
+            var workload = await _context.Workload.FindAsync(employeeId);
+
+            if (workload == null)
+            {
+                return new OperationResult { Success = false, Message = "Workload entity not found." };
+            }
+
+            workload.CreatedTasks = await _context.Tasks
+                .Where(x => x.TaskCreatorId == employeeId)
+                .CountAsync();
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                return new OperationResult { Success = true, Message = "Employee created tasks count updated successfully." };
+            }
+            else
+            {
+                return new OperationResult { Success = false, Message = "Something went wrong" };
+            }
+        }
+
+        public async Task<OperationResult> UpdateEmployeeCreatedProjects(int employeeId)
+        {
+            var workload = await _context.Workload.FindAsync(employeeId);
+
+            if (workload == null)
+            {
+                return new OperationResult { Success = false, Message = "Workload entity not found." };
+            }
+
+            workload.CreatedProjects = await _context.Projects
+                .Where(x => x.ProjectCreatorId == employeeId)
+                .CountAsync();
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                return new OperationResult { Success = true, Message = "Employee created projects count updated successfully." };
+            }
+            else
+            {
+                return new OperationResult { Success = false, Message = "Something went wrong" };
+            }
+        }
+
+        public async Task<OperationResult> UpdateEmployeeCreatedIssues(int employeeId)
+        {
+            var workload = await _context.Workload.FindAsync(employeeId);
+
+            if (workload == null)
+            {
+                return new OperationResult { Success = false, Message = "Workload entity not found." };
+            }
+
+            workload.CreatedIssues = await _context.Issues
+                .Where(x => x.IssueCreatorId == employeeId)
+                .CountAsync();
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                return new OperationResult { Success = true, Message = "Employee created issues count updated successfully." };
+            }
+            else
+            {
+                return new OperationResult { Success = false, Message = "Something went wrong" };
+            }
         }
     }
 }

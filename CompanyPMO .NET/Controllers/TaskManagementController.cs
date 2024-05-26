@@ -55,27 +55,6 @@ namespace CompanyPMO_.NET.Controllers
         }
 
         [Authorize(Policy = "SupervisorOnly")]
-        [HttpPost("{taskId}/employees/add")]
-        [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
-        public async Task<IActionResult> AddEmployeesToTask(int taskId, [FromForm] List<int> employees)
-        {
-            var (response, employeesAdded) = await _taskManagement.AddEmployeesToTask(taskId, employees);
-
-            if (response is null)
-            {
-                return BadRequest();
-            }
-
-            var toReturn = new
-            {
-                Status = response,
-                EmployeesAdded = employeesAdded
-            };
-
-            return Ok(toReturn);
-        }
-
-        [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("set/finished/bulk")]
         [ProducesResponseType(200, Type = typeof(OperationResult))]
         public async Task<IActionResult> SetTasksFinishedBulk([FromBody] int[] taskIds)

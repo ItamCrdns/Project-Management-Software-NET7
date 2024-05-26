@@ -6,8 +6,7 @@ namespace CompanyPMO_.NET.Interfaces.Task_interfaces
     public interface ITaskManagement
     {
         // Fully implemented in Task Management Controller
-        Task<OperationResult<int>> CreateTask(TaskDto task, int employeeId, int projectId, List<IFormFile>? images, List<int>? employeeIds, bool shouldStartNow);
-        Task<(string status, IEnumerable<EmployeeShowcaseDto>)> AddEmployeesToTask(int taskId, List<int> employeeIds);
+        Task<OperationResult<int>> CreateTask(TaskDto task, int employeeSupervisorId, int projectId, List<IFormFile>? images, List<int>? employeeIds, bool shouldStartNow);
         Task<OperationResult> SetTasksStartBulk(int[] taskIds);
         Task<OperationResult> SetTaskStart(int taskId);
         Task<OperationResult> SetTasksFinishedBulk(int[] taskIds);
