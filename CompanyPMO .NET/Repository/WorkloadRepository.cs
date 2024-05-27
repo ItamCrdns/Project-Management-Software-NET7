@@ -63,11 +63,29 @@ namespace CompanyPMO_.NET.Repository
                 .Where(x => employees.Contains(x.WorkloadId))
                 .ToListAsync();
 
+            var projectsEmployeesParticipate = await _context.Projects
+                .Where(x => x.Employees.Any(e => employees.Contains(e.EmployeeId)))
+                .Select(x => new
+                {
+                    x.Finished,
+                    x.ExpectedDeliveryDate,
+                    EmployeeIds = x.Employees.Select(x => x.EmployeeId)
+                })
+                .ToListAsync();
+
             foreach (var workload in workloads)
             {
-                workload.CompletedProjects = await _context.Projects
-                    .Where(x => x.Employees.Any(e => e.EmployeeId == workload.WorkloadId) && x.Finished != null)
-                    .CountAsync();
+                workload.CompletedProjects = projectsEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished != null);
+
+                workload.AssignedProjects = projectsEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished == null && x.ExpectedDeliveryDate > DateTime.UtcNow);
+
+                workload.OverdueProjects = projectsEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.ExpectedDeliveryDate < DateTime.UtcNow && x.Finished == null);
             }
 
             int rowsAffected = await _context.SaveChangesAsync();
@@ -88,11 +106,29 @@ namespace CompanyPMO_.NET.Repository
                 .Where(x => employees.Contains(x.WorkloadId))
                 .ToListAsync();
 
+            var tasksEmployeesParticipate = await _context.Tasks
+                .Where(x => x.Employees.Any(e => employees.Contains(e.EmployeeId)))
+                .Select(x => new
+                {
+                    x.Finished,
+                    x.ExpectedDeliveryDate,
+                    EmployeeIds = x.Employees.Select(x => x.EmployeeId)
+                })
+                .ToListAsync();
+
             foreach (var workload in workloads)
             {
-                workload.CompletedTasks = await _context.Tasks
-                    .Where(x => x.Employees.Any(e => e.EmployeeId == workload.WorkloadId) && x.Finished != null)
-                    .CountAsync();
+                workload.CompletedTasks = tasksEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished != null);
+
+                workload.AssignedTasks = tasksEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished == null && x.ExpectedDeliveryDate > DateTime.UtcNow);
+
+                workload.OverdueTasks = tasksEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.ExpectedDeliveryDate < DateTime.UtcNow && x.Finished == null);
             }
 
             int rowsAffected = await _context.SaveChangesAsync();
@@ -113,11 +149,29 @@ namespace CompanyPMO_.NET.Repository
                 .Where(x => employees.Contains(x.WorkloadId))
                 .ToListAsync();
 
+            var issuesEmployeesParticipate = await _context.Issues
+                .Where(x => x.Employees.Any(e => employees.Contains(e.EmployeeId)))
+                .Select(x => new
+                {
+                    x.Finished,
+                    x.ExpectedDeliveryDate,
+                    EmployeeIds = x.Employees.Select(x => x.EmployeeId)
+                })
+                .ToListAsync();
+
             foreach (var workload in workloads)
             {
-                workload.CompletedIssues = await _context.Issues
-                    .Where(x => x.Employees.Any(e => e.EmployeeId == workload.WorkloadId) && x.Finished != null)
-                    .CountAsync();
+                workload.CompletedIssues = issuesEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished != null);
+
+                workload.AssignedIssues = issuesEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished == null && x.ExpectedDeliveryDate > DateTime.UtcNow);
+
+                workload.OverdueIssues = issuesEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.ExpectedDeliveryDate < DateTime.UtcNow && x.Finished == null);
             }
 
             int rowsAffected = await _context.SaveChangesAsync();
@@ -138,11 +192,21 @@ namespace CompanyPMO_.NET.Repository
                 .Where(x => employeeIds.Contains(x.WorkloadId))
                 .ToListAsync();
 
+            var projectsEmployeesParticipate = await _context.Projects
+                .Where(x => x.Employees.Any(e => employeeIds.Contains(e.EmployeeId)))
+                .Select(x => new
+                {
+                    x.Finished,
+                    x.ExpectedDeliveryDate,
+                    EmployeeIds = x.Employees.Select(x => x.EmployeeId)
+                })
+                .ToListAsync();
+
             foreach (var workload in workloads)
             {
-                workload.AssignedProjects = await _context.Projects
-                    .Where(x => x.Employees.Any(e => e.EmployeeId == workload.WorkloadId) && x.Finished == null)
-                    .CountAsync();
+                workload.AssignedProjects = projectsEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished == null && x.ExpectedDeliveryDate > DateTime.UtcNow);
             }
 
             int rowsAffected = await _context.SaveChangesAsync();
@@ -163,11 +227,21 @@ namespace CompanyPMO_.NET.Repository
                 .Where(x => employeeIds.Contains(x.WorkloadId))
                 .ToListAsync();
 
+            var tasksEmployeesParticipate = await _context.Tasks
+                .Where(x => x.Employees.Any(e => employeeIds.Contains(e.EmployeeId)))
+                .Select(x => new
+                {
+                    x.Finished,
+                    x.ExpectedDeliveryDate,
+                    EmployeeIds = x.Employees.Select(x => x.EmployeeId)
+                })
+                .ToListAsync();
+
             foreach (var workload in workloads)
             {
-                workload.AssignedTasks = await _context.Tasks
-                    .Where(x => x.Employees.Any(e => e.EmployeeId == workload.WorkloadId) && x.Finished == null)
-                    .CountAsync();
+                workload.AssignedTasks = tasksEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished == null && x.ExpectedDeliveryDate > DateTime.UtcNow);
             }
 
             int rowsAffected = await _context.SaveChangesAsync();
@@ -188,11 +262,21 @@ namespace CompanyPMO_.NET.Repository
                 .Where(x => employeeIds.Contains(x.WorkloadId))
                 .ToListAsync();
 
+            var issuesEmployeesParticipate = await _context.Issues
+                .Where(x => x.Employees.Any(e => employeeIds.Contains(e.EmployeeId)))
+                .Select(x => new
+                {
+                    x.Finished,
+                    x.ExpectedDeliveryDate,
+                    EmployeeIds = x.Employees.Select(x => x.EmployeeId)
+                })
+                .ToListAsync();
+
             foreach (var workload in workloads)
             {
-                workload.AssignedIssues = await _context.Issues
-                    .Where(x => x.Employees.Any(e => e.EmployeeId == workload.WorkloadId) && x.Finished == null)
-                    .CountAsync();
+                workload.AssignedIssues = issuesEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished == null && x.ExpectedDeliveryDate > DateTime.UtcNow);
             }
 
             int rowsAffected = await _context.SaveChangesAsync();
@@ -209,19 +293,33 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<OperationResult> UpdateOverdueProjects()
         {
-            // retrieves a list of employee IDs for employees who are associated with projects that were expected to be delivered by now but are not yet finished
-            List<int> employeeIds = await _context.Projects
+            // retrieves a list of employee IDs for employees who are associated with projects that were expected to be delivered by now but are not yet finished, and the projects
+            var employeeIds = await _context.Projects
                 .Where(x => x.ExpectedDeliveryDate < DateTime.UtcNow && x.Finished == null)
-                .SelectMany(x => x.Employees.Select(e => e.EmployeeId))
+                .SelectMany(x => x.Employees.Select(x => x.EmployeeId))
                 .ToListAsync();
 
             var workloads = await _context.Workload
                 .Where(x => employeeIds.Contains(x.WorkloadId))
                 .ToListAsync();
 
+            var projectsEmployeesParticipate = await _context.Projects
+                .Where(x => x.Employees.Any(e => employeeIds.Contains(e.EmployeeId)))
+                .Select(x => new
+                {
+                    x.Finished,
+                    x.ExpectedDeliveryDate,
+                    EmployeeIds = x.Employees.Select(x => x.EmployeeId)
+                })
+                .ToListAsync();
+
+
             foreach (var workload in workloads)
             {
                 workload.OverdueProjects = employeeIds.Count(id => id == workload.WorkloadId);
+                workload.AssignedProjects = projectsEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished == null && x.ExpectedDeliveryDate > DateTime.UtcNow);
             }
 
             int rowsAffected = await _context.SaveChangesAsync();
@@ -248,9 +346,22 @@ namespace CompanyPMO_.NET.Repository
                 .Where(x => employeeIds.Contains(x.WorkloadId))
                 .ToListAsync();
 
+            var tasksEmployeesParticipate = await _context.Tasks
+                .Where(x => x.Employees.Any(e => employeeIds.Contains(e.EmployeeId)))
+                .Select(x => new
+                {
+                    x.Finished,
+                    x.ExpectedDeliveryDate,
+                    EmployeeIds = x.Employees.Select(x => x.EmployeeId)
+                })
+                .ToListAsync();
+
             foreach (var workload in workloads)
             {
                 workload.OverdueTasks = employeeIds.Count(id => id == workload.WorkloadId);
+                workload.AssignedTasks = tasksEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished == null && x.ExpectedDeliveryDate > DateTime.UtcNow);
             }
 
             int rowsAffected = await _context.SaveChangesAsync();
@@ -277,9 +388,22 @@ namespace CompanyPMO_.NET.Repository
                 .Where(x => employeeIds.Contains(x.WorkloadId))
                 .ToListAsync();
 
+            var issuesEmployeesParticipate = await _context.Issues
+                .Where(x => x.Employees.Any(e => employeeIds.Contains(e.EmployeeId)))
+                .Select(x => new
+                {
+                    x.Finished,
+                    x.ExpectedDeliveryDate,
+                    EmployeeIds = x.Employees.Select(x => x.EmployeeId)
+                })
+                .ToListAsync();
+
             foreach (var workload in workloads)
             {
                 workload.OverdueIssues = employeeIds.Count(id => id == workload.WorkloadId);
+                workload.AssignedIssues = issuesEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished == null && x.ExpectedDeliveryDate > DateTime.UtcNow);
             }
 
             int rowsAffected = await _context.SaveChangesAsync();
