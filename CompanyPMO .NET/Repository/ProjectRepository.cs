@@ -217,6 +217,7 @@ namespace CompanyPMO_.NET.Repository
                         ProjectId = x.ProjectId,
                         Name = x.Name,
                         Description = x.Description,
+                        Lifecycle = x.Lifecycle,
                         Created = x.Created,
                         Finished = x.Finished,
                         StartedWorking = x.StartedWorking,
