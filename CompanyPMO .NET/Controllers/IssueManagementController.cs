@@ -1,5 +1,6 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
+using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces.Issue_interfaces;
 using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -48,7 +49,7 @@ namespace CompanyPMO_.NET.Controllers
                 IssueId = result.Data
             };
 
-            await _timelineManagement.CreateTimelineEvent(timelineEvent);
+            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
 
             return Ok(result);
         }

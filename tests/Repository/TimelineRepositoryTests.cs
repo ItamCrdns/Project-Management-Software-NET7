@@ -74,7 +74,7 @@ namespace Tests.Repository
                     dbContext.Tiers.Add(
                         new Tier
                         {
-                            Name = $"test{j}",
+                            Name = $"Supervisor",
                             Duty = $"test{j}",
                             Created = DateTime.UtcNow
                         });
@@ -134,12 +134,35 @@ namespace Tests.Repository
             };
 
             // Act
-            var result = await timelineRepository.CreateTimelineEvent(timelineDto);
+            var result = await timelineRepository.CreateTimelineEvent(timelineDto, UserRoles.Supervisor);
 
             // Assert
             result.Should().BeOfType<OperationResult>();
             result.Success.Should().BeTrue();
             result.Message.Should().Be("Timeline event created successfully.");
+        }
+
+        [Fact]
+        public async void CreateTimelineEvent_ShouldReturnError()
+        {
+            // Arrange
+            var dbContext = await GetDatabaseContext();
+            var timelineRepository = new TimelineRepository(dbContext, _hubContext);
+
+            var timelineDto = new TimelineDto
+            {
+                Event = "Test Event",
+                EmployeeId = 1,
+                Type = "Test Type"
+            };
+
+            // Act
+            var result = await timelineRepository.CreateTimelineEvent(timelineDto, "Invalid tier");
+
+            // Assert
+            result.Should().BeOfType<OperationResult>();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Tier not found.");
         }
 
         [Fact]

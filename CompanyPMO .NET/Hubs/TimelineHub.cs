@@ -1,14 +1,19 @@
 ﻿using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
 using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 
 namespace CompanyPMO_.NET.Hubs
 {
     public sealed class TimelineHub : Hub<ITimelineClient>
     {
-        public async Task SendTimelineEvent(TimelineShowcaseDto timelineEvent)
+        public override async Task OnConnectedAsync()
         {
-            await Clients.All.ReceiveTimelineEvent(timelineEvent);
+            var role = Context.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role)?.Value;
+
+            await Groups.AddToGroupAsync(Context.ConnectionId, role);
+
+            await base.OnConnectedAsync();
         }
     }
 }

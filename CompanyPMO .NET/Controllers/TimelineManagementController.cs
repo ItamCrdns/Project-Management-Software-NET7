@@ -1,5 +1,6 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
+using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,7 +40,7 @@ namespace CompanyPMO_.NET.Controllers
                 Type = TimelineType.Logout
             };
 
-            var result = await _timelineManagement.CreateTimelineEvent(timeline);
+            var result = await _timelineManagement.CreateTimelineEvent(timeline, UserRoles.Supervisor);
 
             if (result.Success)
             {

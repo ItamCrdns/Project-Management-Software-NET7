@@ -20,8 +20,22 @@ namespace CompanyPMO_.NET.Repository
             _context = context;
             _hubContext = hubContext;
         }
-        public async Task<OperationResult> CreateTimelineEvent(TimelineDto timeline)
+        public async Task<OperationResult> CreateTimelineEvent(TimelineDto timeline, string employeeTier)
         {
+            int tierId = await _context.Tiers
+                .Where(x => x.Name == employeeTier)
+                .Select(x => x.TierId)
+                .FirstOrDefaultAsync();
+
+            if (tierId == 0)
+            {
+                return new OperationResult
+                {
+                    Success = false,
+                    Message = "Tier not found."
+                };
+            }
+
             var newTimeline = new Timeline
             {
                 Event = timeline.Event,
@@ -30,7 +44,8 @@ namespace CompanyPMO_.NET.Repository
                 TaskId = timeline.TaskId,
                 IssueId = timeline.IssueId,
                 Type = timeline.Type,
-                Created = DateTime.UtcNow
+                Created = DateTime.UtcNow,
+                TierId = tierId
             };
 
             await _context.Timelines.AddAsync(newTimeline);
@@ -43,7 +58,7 @@ namespace CompanyPMO_.NET.Repository
                     .Where(x => x.TimelineId == newTimeline.TimelineId)
                     .Select(GetTimelinePredicate()).FirstOrDefaultAsync();
 
-                await _hubContext.Clients.All.ReceiveTimelineEvent(newTimelineEvent);
+                await _hubContext.Clients.Group(employeeTier).ReceiveTimelineEvent(newTimelineEvent);
             }
 
             return new OperationResult

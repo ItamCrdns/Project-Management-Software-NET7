@@ -1,5 +1,6 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
+using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces.Task_interfaces;
 using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -49,7 +50,7 @@ namespace CompanyPMO_.NET.Controllers
                 TaskId = result.Data
             };
 
-            await _timelineManagement.CreateTimelineEvent(timelineEvent);
+            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
 
             return Ok(result);
         }
@@ -82,7 +83,7 @@ namespace CompanyPMO_.NET.Controllers
                         TaskId = taskId
                     };
 
-                    await _timelineManagement.CreateTimelineEvent(timelineEvent);
+                    await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
                 }
             }
 
@@ -115,7 +116,7 @@ namespace CompanyPMO_.NET.Controllers
                     TaskId = taskId
                 };
 
-                await _timelineManagement.CreateTimelineEvent(timelineEvent);
+                await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
             }
 
             return Ok(result);
@@ -149,7 +150,7 @@ namespace CompanyPMO_.NET.Controllers
                         TaskId = taskId
                     };
 
-                    await _timelineManagement.CreateTimelineEvent(timelineEvent);
+                    await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
                 }
             }
 
@@ -182,7 +183,7 @@ namespace CompanyPMO_.NET.Controllers
                     TaskId = taskId
                 };
 
-                await _timelineManagement.CreateTimelineEvent(timelineEvent);
+                await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
             }
 
             return Ok(result);

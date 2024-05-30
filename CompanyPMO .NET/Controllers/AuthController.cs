@@ -1,5 +1,6 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
+using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Interfaces.Employee_interfaces;
 using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
@@ -53,7 +54,7 @@ namespace CompanyPMO_.NET.Controllers
                     Type = TimelineType.Login
                 };
 
-                await _timelineManagement.CreateTimelineEvent(timelineEvent);
+                await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
 
                 return Ok(loginResponse);
             }

@@ -82,6 +82,11 @@ namespace CompanyPMO_.NET.Data
                 .HasForeignKey(x => x.EmployeeId);
 
             modelBuilder.Entity<Timeline>()
+                .HasOne(x => x.Tier)
+                .WithMany()
+                .HasForeignKey(x => x.TierId);
+
+            modelBuilder.Entity<Timeline>()
                 .HasOne(x => x.Project)
                 .WithMany()
                 .HasForeignKey(x => x.ProjectId);

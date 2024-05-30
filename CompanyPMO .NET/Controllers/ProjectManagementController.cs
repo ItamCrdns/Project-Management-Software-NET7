@@ -1,5 +1,6 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
+using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces.Project_interfaces;
 using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using CompanyPMO_.NET.Models;
@@ -51,7 +52,7 @@ namespace CompanyPMO_.NET.Controllers
                 ProjectId = result.Data
             };
 
-            await _timelineManagement.CreateTimelineEvent(timelineEvent);
+            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
 
             return Ok(result);
         }
@@ -118,7 +119,7 @@ namespace CompanyPMO_.NET.Controllers
                         ProjectId = projectId
                     };
 
-                    await _timelineManagement.CreateTimelineEvent(timelineEvent);
+                    await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
                 }
             }
 
@@ -149,7 +150,7 @@ namespace CompanyPMO_.NET.Controllers
                 ProjectId = projectId
             };
 
-            await _timelineManagement.CreateTimelineEvent(timelineEvent);
+            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
 
             return Ok(result);
         }
@@ -182,7 +183,7 @@ namespace CompanyPMO_.NET.Controllers
                         ProjectId = projectId
                     };
 
-                    await _timelineManagement.CreateTimelineEvent(timelineEvent);
+                    await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
                 }
             }
 
@@ -215,7 +216,7 @@ namespace CompanyPMO_.NET.Controllers
                     ProjectId = projectId
                 };
 
-                await _timelineManagement.CreateTimelineEvent(timelineEvent);
+                await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
             }
 
             return Ok(result);
