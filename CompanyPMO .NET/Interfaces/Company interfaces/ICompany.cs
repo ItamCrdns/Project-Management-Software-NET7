@@ -9,6 +9,6 @@ namespace CompanyPMO_.NET.Interfaces
         // Fully implemented in Company Controller
         Task<Company> GetCompanyById(int companyId);
         Task<IEnumerable<CompanyShowcaseDto>> GetCompaniesThatHaveProjects();
-        Task<DataCountPages<CompanyShowcaseDto>> GetAllCompanies(int page, int pageSize);
+        Task<DataCountPages<CompanyAndCounts>> GetAllCompanies(int page, int pageSize);
     }
 }

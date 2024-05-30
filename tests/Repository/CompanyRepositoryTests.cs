@@ -319,15 +319,19 @@ namespace Tests.Repository
 
 
             // Act
-            var companies = await companyRepository.GetAllCompanies(page, pageSize);
+            var result = await companyRepository.GetAllCompanies(page, pageSize);
 
             // Assert
-            companies.Should().NotBeNull();
-            companies.Should().BeOfType(typeof(DataCountPages<CompanyShowcaseDto>));
-            companies.Data.Should().NotBeNullOrEmpty();
-            companies.Data.Should().HaveCountGreaterThanOrEqualTo(1);
-            companies.Count.Should().BeGreaterThan(0);
-            companies.Pages.Should().BeGreaterThan(0);
+            result.Should().NotBeNull();
+            result.Should().BeOfType(typeof(DataCountPages<CompanyAndCounts>));
+            result.Data.Should().NotBeNullOrEmpty();
+            result.Data.Should().HaveCountGreaterThanOrEqualTo(1);
+            foreach (var each in result.Data)
+            {
+                each.Company.Should().NotBeNull();
+            }
+            result.Count.Should().BeGreaterThan(0);
+            result.Pages.Should().BeGreaterThan(0);
         }
 
         [Fact]

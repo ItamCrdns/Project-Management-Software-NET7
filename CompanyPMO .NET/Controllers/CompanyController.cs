@@ -52,10 +52,10 @@ namespace CompanyPMO_.NET.Controllers
 
         [Authorize(Policy = "EmployeesAllowed")]
         [HttpGet("all")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<CompanyShowcaseDto>))]
-        public async Task<IActionResult> GetAllCompanies(int page, int pageSize)
+        [ProducesResponseType(200, Type = typeof(DataCountPages<CompanyAndCounts>))]
+        public async Task<IActionResult> GetAllCompanies([FromQuery] FilterParams filterParams)
         {
-            var companies = await _companyService.GetAllCompanies(page, pageSize);
+            var companies = await _companyService.GetAllCompanies(filterParams.Page, filterParams.PageSize);
 
             return Ok(companies);
         }

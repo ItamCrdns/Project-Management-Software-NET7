@@ -100,15 +100,17 @@ namespace CompanyPMO_.NET.Repository
 
         public async Task<bool> DoesCompanyExist(int companyId) => await _context.Companies.AnyAsync(c => c.CompanyId.Equals(companyId));
 
-        public async Task<DataCountPages<CompanyShowcaseDto>> GetAllCompanies(int page, int pageSize)
+        public async Task<DataCountPages<CompanyAndCounts>> GetAllCompanies(int page, int pageSize)
         {
             int toSkip = (page - 1) * pageSize;
 
-            IEnumerable<CompanyShowcaseDto> companies = await _context.Companies
-                .Select(company => new CompanyShowcaseDto
+            var companies = await _context.Companies
+                .OrderByDescending(x => x.LatestProjectCreation)
+                .Select(x => new CompanyAndCounts
                 {
-                    CompanyId = company.CompanyId,
-                    Name = company.Name,
+                    Company = x,
+                    EmployeeCount = x.Employees.Count,
+                    ProjectCount = x.Projects.Count
                 })
                 .Skip(toSkip)
                 .Take(pageSize)
@@ -118,7 +120,7 @@ namespace CompanyPMO_.NET.Repository
 
             int totalPages = (int)Math.Ceiling((double)totalCompaniesCount / pageSize);
 
-            return new DataCountPages<CompanyShowcaseDto>
+            return new DataCountPages<CompanyAndCounts>
             {
                 Data = companies,
                 Count = totalCompaniesCount,
