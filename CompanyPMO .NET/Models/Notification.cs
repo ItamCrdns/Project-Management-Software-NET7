@@ -17,5 +17,8 @@ namespace CompanyPMO_.NET.Models
         public int? SenderId { get; set; }
         [Column("receiver_id")]
         public int ReceiverId { get; set; }
+
+        public Employee? Sender { get; set; }
+        public Employee Receiver { get; set; }
     }
 }

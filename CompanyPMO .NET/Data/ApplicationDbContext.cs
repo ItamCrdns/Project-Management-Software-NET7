@@ -167,6 +167,16 @@ namespace CompanyPMO_.NET.Data
                 .HasOne(i => i.IssueCreator)
                 .WithMany()
                 .HasForeignKey(i => i.IssueCreatorId);
+
+            modelBuilder.Entity<Notification>()
+                .HasOne(x => x.Sender)
+                .WithMany()
+                .HasForeignKey(x => x.SenderId);
+
+            modelBuilder.Entity<Notification>()
+                .HasOne(x => x.Receiver)
+                .WithMany()
+                .HasForeignKey(x => x.ReceiverId);
         }
     }
 }
