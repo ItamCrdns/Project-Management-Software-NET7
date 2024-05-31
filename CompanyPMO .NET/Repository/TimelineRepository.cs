@@ -22,10 +22,7 @@ namespace CompanyPMO_.NET.Repository
         }
         public async Task<OperationResult> CreateTimelineEvent(TimelineDto timeline, string employeeTier)
         {
-            int tierId = await _context.Tiers
-                .Where(x => x.Name == employeeTier)
-                .Select(x => x.TierId)
-                .FirstOrDefaultAsync();
+            int tierId = await _context.Tiers.Where(x => x.Name == employeeTier).Select(x => x.TierId).FirstOrDefaultAsync();
 
             if (tierId == 0)
             {
@@ -236,6 +233,55 @@ namespace CompanyPMO_.NET.Repository
                     } : null
                 })
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<OperationResult> CreateTimelineEventsBulk(List<TimelineDto> timelines, string employeeTier)
+        {
+            int tierId = await _context.Tiers.Where(x => x.Name == employeeTier).Select(x => x.TierId).FirstOrDefaultAsync();
+
+            if (tierId == 0)
+            {
+                return new OperationResult
+                {
+                    Success = false,
+                    Message = "Tier not found."
+                };
+            }
+
+            var newTimelines = timelines.Select(timeline => new Timeline
+            {
+                Event = timeline.Event,
+                EmployeeId = timeline.EmployeeId,
+                ProjectId = timeline.ProjectId,
+                TaskId = timeline.TaskId,
+                IssueId = timeline.IssueId,
+                Type = timeline.Type,
+                Created = DateTime.UtcNow,
+                TierId = tierId
+            }).ToList();
+
+            await _context.Timelines.AddRangeAsync(newTimelines);
+
+            int rowsAffected = await _context.SaveChangesAsync();
+
+            if (rowsAffected > 0)
+            {
+                var newTimelineEvents = await _context.Timelines
+                    .Where(x => newTimelines.Select(t => t.TimelineId).Contains(x.TimelineId))
+                    .Select(GetTimelinePredicate())
+                    .ToListAsync();
+
+                foreach (var newTimelineEvent in newTimelineEvents)
+                {
+                    await _hubContext.Clients.Group(employeeTier).ReceiveTimelineEvent(newTimelineEvent);
+                }
+            }
+
+            return new OperationResult
+            {
+                Success = rowsAffected > 0,
+                Message = rowsAffected > 0 ? "Timeline events created successfully." : "Something went wrong while creating timeline events."
+            };
         }
     }
 }

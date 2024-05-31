@@ -5,6 +5,7 @@ using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Interfaces.Company_interfaces;
 using CompanyPMO_.NET.Interfaces.Employee_interfaces;
 using CompanyPMO_.NET.Interfaces.Issue_interfaces;
+using CompanyPMO_.NET.Interfaces.Notification_interfaces;
 using CompanyPMO_.NET.Interfaces.Project_interfaces;
 using CompanyPMO_.NET.Interfaces.Task_interfaces;
 using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
@@ -56,6 +57,8 @@ builder.Services.AddScoped<IWorkloadOverdues, WorkloadRepository>();
 builder.Services.AddScoped<IWorkloadProject, WorkloadRepository>();
 builder.Services.AddScoped<IWorkloadIssue, WorkloadRepository>();
 builder.Services.AddScoped<IWorkloadEmployee, WorkloadRepository>();
+
+builder.Services.AddScoped<INotificationManagement, NotificationRepository>();
 
 builder.Services.AddScoped<ITimeline, TimelineRepository>();
 builder.Services.AddScoped<ITimelineManagement, TimelineRepository>();   
@@ -165,6 +168,7 @@ if (args.Length == 1 && args[0].ToLower() == "seed")
 app.UseCors(MyAllowSpecificOrigins);
 
 app.MapHub<TimelineHub>("/timeline-hub");
+app.MapHub<NotificationHub>("/notifications-hub");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

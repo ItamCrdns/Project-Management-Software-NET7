@@ -166,6 +166,66 @@ namespace Tests.Repository
         }
 
         [Fact]
+        public async void CreateTimelineEventsBulk_ShouldReturnSuccess()
+        {
+            // Arrange
+            var dbContext = await GetDatabaseContext();
+            var timelineRepository = new TimelineRepository(dbContext, _hubContext);
+
+            var timelineDtos = new List<TimelineDto>
+            {
+                new() {
+                    Event = "Test Event",
+                    EmployeeId = 1,
+                    Type = "Test Type"
+                },
+                new() {
+                    Event = "Test Event",
+                    EmployeeId = 1,
+                    Type = "Test Type"
+                }
+            };
+
+            // Act
+            var result = await timelineRepository.CreateTimelineEventsBulk(timelineDtos, UserRoles.Supervisor);
+
+            // Assert
+            result.Should().BeOfType<OperationResult>();
+            result.Success.Should().BeTrue();
+            result.Message.Should().Be("Timeline events created successfully.");
+        }
+
+        [Fact]
+        public async void CreateTimelineEventsBulk_ShouldReturnError()
+        {
+            // Arrange
+            var dbContext = await GetDatabaseContext();
+            var timelineRepository = new TimelineRepository(dbContext, _hubContext);
+
+            var timelineDtos = new List<TimelineDto>
+            {
+                new() {
+                    Event = "Test Event",
+                    EmployeeId = 1,
+                    Type = "Test Type"
+                },
+                new() {
+                    Event = "Test Event",
+                    EmployeeId = 1,
+                    Type = "Test Type"
+                }
+            };
+
+            // Act
+            var result = await timelineRepository.CreateTimelineEventsBulk(timelineDtos, "Invalid tier");
+
+            // Assert
+            result.Should().BeOfType<OperationResult>();
+            result.Success.Should().BeFalse();
+            result.Message.Should().Be("Tier not found.");
+        }
+
+        [Fact]
         public async void DeleteTimelineEvents_ShouldReturnSuccess()
         {
             // Arrange

@@ -1,8 +1,11 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
+using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Notification_interfaces;
 using CompanyPMO_.NET.Interfaces.Project_interfaces;
+using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using CompanyPMO_.NET.Interfaces.Workload_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
@@ -16,13 +19,17 @@ namespace CompanyPMO_.NET.Repository
         private readonly IImage _imageService;
         private readonly IUtility _utilityService;
         private readonly IWorkloadProject _workloadService;
+        private readonly ITimelineManagement _timelineManagement;
+        private readonly INotificationManagement _notificationManagement;
 
-        public ProjectRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkloadProject workloadService)
+        public ProjectRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkloadProject workloadService, ITimelineManagement timelineManagement, INotificationManagement notificationManagement)
         {
             _context = context;
             _imageService = imageService;
             _utilityService = utilityService;
             _workloadService = workloadService;
+            _timelineManagement = timelineManagement;
+            _notificationManagement = notificationManagement;
         }
 
         public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images)
@@ -34,7 +41,7 @@ namespace CompanyPMO_.NET.Repository
             return await _imageService.AddImagesToExistingEntity(projectId, images, "Project", imageCountInProjectEntity);
         }
 
-        public async Task<OperationResult<int>> CreateProject(Project project, int employeeSupervisorId, List<IFormFile>? images, int companyId, List<int>? employeeIds, bool shouldStartNow)
+        public async Task<OperationResult<int>> CreateProject(Project project, EmployeeDto supervisor, List<IFormFile>? images, int companyId, List<int>? employeeIds, bool shouldStartNow)
         {
             if (string.IsNullOrWhiteSpace(project.Name) || string.IsNullOrWhiteSpace(project.Description))
             {
@@ -53,7 +60,7 @@ namespace CompanyPMO_.NET.Repository
                 Name = project.Name,
                 Description = project.Description,
                 Created = DateTime.UtcNow,
-                ProjectCreatorId = employeeSupervisorId,
+                ProjectCreatorId = supervisor.EmployeeId,
                 Priority = project.Priority,
                 CompanyId = companyId,
                 ExpectedDeliveryDate = project.ExpectedDeliveryDate,
@@ -80,22 +87,24 @@ namespace CompanyPMO_.NET.Repository
 
             List<string> errors = new();
 
-            var workloadCreatedProjectsResult = await _workloadService.UpdateEmployeeCreatedProjects(employeeSupervisorId);
+            var workloadCreatedProjectsResult = await _workloadService.UpdateEmployeeCreatedProjects(supervisor.EmployeeId);
 
             if (!workloadCreatedProjectsResult.Success)
             {
                 errors.Add($"Failed to update the workload of the project creator. Error = {workloadCreatedProjectsResult.Message}");
             }
 
+            IEnumerable<EmployeeProject> employeesToAdd = new List<EmployeeProject>();
+
             if (employeeIds is not null && employeeIds.Count > 0)
             {
-                var employeesToAdd = employeeIds.Where(employee => employee != employeeSupervisorId).Select(employee => new EmployeeProject
+                employeesToAdd = employeeIds.Where(employee => employee != supervisor.EmployeeId).Select(employee => new EmployeeProject
                 {
                     EmployeeId = employee,
                     ProjectId = newProject.ProjectId
                 });
 
-                if (employeeIds.Any(x => x == employeeSupervisorId))
+                if (employeeIds.Any(x => x == supervisor.EmployeeId))
                 {
                     errors.Add("You can't add yourself");
                 }
@@ -126,6 +135,18 @@ namespace CompanyPMO_.NET.Repository
                     errors.Add("Failed to add images to the project");
                 }
             }
+
+            await _timelineManagement.CreateTimelineEvent(new TimelineDto
+            {
+                Event = "created the project",
+                EmployeeId = supervisor.EmployeeId,
+                Type = TimelineType.Create,
+                ProjectId = newProject.ProjectId
+            }, UserRoles.Supervisor);
+
+            int[] addedEmployees = employeesToAdd.Select(x => x.EmployeeId).ToArray();
+
+            await _notificationManagement.SendNotificationsBulk("You got assigned a new project", $"{supervisor.Username} created a new project #{newProject.ProjectId} and added you and other {addedEmployees.Length - 1} employees ", supervisor.EmployeeId, addedEmployees);
 
             return new OperationResult<int>
             {
@@ -574,6 +595,18 @@ namespace CompanyPMO_.NET.Repository
                 _ = await _workloadService.UpdateEmployeeCompletedProjects(employeeIdsWorkingInProjects);
             }
 
+            List<TimelineDto> timelinesToAdd = new();
+
+            projects.ForEach(p => timelinesToAdd.Add(new TimelineDto
+            {
+                Event = "has set the following project as finished:",
+                EmployeeId = p.ProjectCreatorId,
+                Type = TimelineType.Finish,
+                ProjectId = p.ProjectId
+            }));
+
+            await _timelineManagement.CreateTimelineEventsBulk(timelinesToAdd, UserRoles.Supervisor);
+
             return new OperationResult
             {
                 Success = true,
@@ -635,6 +668,18 @@ namespace CompanyPMO_.NET.Repository
                 };
             }
 
+            List<TimelineDto> timelinesToAdd = new();
+
+            projects.ForEach(p => timelinesToAdd.Add(new TimelineDto
+            {
+                Event = "has set the following project as started:",
+                EmployeeId = p.ProjectCreatorId,
+                Type = TimelineType.Start,
+                ProjectId = p.ProjectId
+            }));
+
+            await _timelineManagement.CreateTimelineEventsBulk(timelinesToAdd, UserRoles.Supervisor);
+
             return new OperationResult
             {
                 Message = "Projects started successfully",
@@ -676,6 +721,14 @@ namespace CompanyPMO_.NET.Repository
                     Success = false
                 };
             }
+
+            await _timelineManagement.CreateTimelineEvent(new TimelineDto
+            {
+                Event = "has set the following project as started:",
+                EmployeeId = project.ProjectCreatorId,
+                Type = TimelineType.Start,
+                ProjectId = project.ProjectId
+            }, UserRoles.Supervisor);
 
             return new OperationResult
             {
@@ -727,6 +780,14 @@ namespace CompanyPMO_.NET.Repository
             {
                 _ = await _workloadService.UpdateEmployeeCompletedProjects(employeeIdsWorkingInProject);
             }
+
+            await _timelineManagement.CreateTimelineEvent(new TimelineDto
+            {
+                Event = "has set the following project as finished:",
+                EmployeeId = project.ProjectCreatorId,
+                Type = TimelineType.Finish,
+                ProjectId = project.ProjectId
+            }, UserRoles.Supervisor);
 
             return new OperationResult
             {

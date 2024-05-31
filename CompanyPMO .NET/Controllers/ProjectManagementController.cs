@@ -1,8 +1,6 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
-using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces.Project_interfaces;
-using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,11 +13,9 @@ namespace CompanyPMO_.NET.Controllers
     public class ProjectManagementController : ControllerBase
     {
         private readonly IProjectManagement _projectManagement;
-        private readonly ITimelineManagement _timelineManagement;
-        public ProjectManagementController(IProjectManagement projectManagement, ITimelineManagement timelineManagement)
+        public ProjectManagementController(IProjectManagement projectManagement)
         {
             _projectManagement = projectManagement;
-            _timelineManagement = timelineManagement;
         }
 
         [Authorize(Policy = "SupervisorOnly")]
@@ -29,30 +25,17 @@ namespace CompanyPMO_.NET.Controllers
         public async Task<IActionResult> CreateNewProject([FromForm] Project project, [FromForm] List<IFormFile>? images, [FromForm] int companyId, [FromForm] List<int> employees, [FromForm] bool shouldStartNow)
         {
             var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            var username = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
 
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
+            if (claim == null || username == null)
+                return Unauthorized("User ID or username claims are missing");
 
             int employeeId = int.Parse(claim.Value);
 
-            var result = await _projectManagement.CreateProject(project, employeeId, images, companyId, employees, shouldStartNow);
+            var result = await _projectManagement.CreateProject(project, new EmployeeDto { EmployeeId = employeeId, Username = username.Value.ToString() }, images, companyId, employees, shouldStartNow);
 
             if (!result.Success)
-            {
                 return BadRequest(result);
-            }
-
-            var timelineEvent = new TimelineDto
-            {
-                Event = "created the project",
-                EmployeeId = employeeId,
-                Type = TimelineType.Create,
-                ProjectId = result.Data
-            };
-
-            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
 
             return Ok(result);
         }
@@ -80,14 +63,6 @@ namespace CompanyPMO_.NET.Controllers
                 return BadRequest();
             }
 
-            var timelineEvent = new TimelineDto
-            {
-                Event = "updated the project #",
-                EmployeeId = employeeId,
-                Type = TimelineType.Update,
-                ProjectId = projectId
-            };
-
             return Ok(project);
         }
 
@@ -106,22 +81,6 @@ namespace CompanyPMO_.NET.Controllers
             int employeeId = int.Parse(claim.Value);
 
             var result = await _projectManagement.SetProjectsFininishedBulk(projectIds);
-
-            if (result.Success)
-            {
-                foreach (var projectId in projectIds)
-                {
-                    var timelineEvent = new TimelineDto
-                    {
-                        Event = "has set the following project as finished:",
-                        EmployeeId = employeeId,
-                        Type = TimelineType.Finish,
-                        ProjectId = projectId
-                    };
-
-                    await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
-                }
-            }
 
             return Ok(result);
         }
@@ -142,16 +101,6 @@ namespace CompanyPMO_.NET.Controllers
 
             var result = await _projectManagement.SetProjectFinished(projectId);
 
-            var timelineEvent = new TimelineDto
-            {
-                Event = "has set the following project as finished:",
-                EmployeeId = employeeId,
-                Type = TimelineType.Finish,
-                ProjectId = projectId
-            };
-
-            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
-
             return Ok(result);
         }
 
@@ -171,22 +120,6 @@ namespace CompanyPMO_.NET.Controllers
 
             var result = await _projectManagement.SetProjectsStartBulk(projectIds);
 
-            if (result.Success)
-            {
-                foreach (var projectId in projectIds)
-                {
-                    var timelineEvent = new TimelineDto
-                    {
-                        Event = "has set the following project as started:",
-                        EmployeeId = employeeId,
-                        Type = TimelineType.Start,
-                        ProjectId = projectId
-                    };
-
-                    await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
-                }
-            }
-
             return Ok(result);
         }
 
@@ -205,19 +138,6 @@ namespace CompanyPMO_.NET.Controllers
             int employeeId = int.Parse(claim.Value);
 
             var result = await _projectManagement.SetProjectStart(projectId);
-
-            if (result.Success)
-            {
-                var timelineEvent = new TimelineDto
-                {
-                    Event = "has set the following project as started:",
-                    EmployeeId = employeeId,
-                    Type = TimelineType.Start,
-                    ProjectId = projectId
-                };
-
-                await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
-            }
 
             return Ok(result);
         }

@@ -6,6 +6,7 @@ namespace CompanyPMO_.NET.Interfaces.Timeline_interfaces
     public interface ITimelineManagement
     {
         Task<OperationResult> CreateTimelineEvent(TimelineDto timeline, string employeeTier);
+        Task<OperationResult> CreateTimelineEventsBulk(List<TimelineDto> timelines, string employeeTier);
         Task<OperationResult> DeleteTimelineEvents(int[] timelineIds);
     }
 }
