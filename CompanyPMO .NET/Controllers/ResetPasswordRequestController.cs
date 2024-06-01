@@ -45,14 +45,7 @@ namespace CompanyPMO_.NET.Controllers
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var result = await _resetPasswordRequestService.ResetPasswordWithCurrentPassword(employeeId, currentPassword, newPassword);
 

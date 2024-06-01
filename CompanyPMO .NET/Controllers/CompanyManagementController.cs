@@ -23,14 +23,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(400)]
         public async Task<IActionResult> NewCompany([FromForm] CompanyDto newCompany, [FromForm] List<IFormFile>? images, IFormFile? logoFile)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             if (images is not null && images.Count > 10)
             {
@@ -54,14 +47,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> CreateNewClientWithNameOnly([FromBody] CompanyDto newCompany)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             if (newCompany.Name is null)
             {
@@ -86,14 +72,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> UpdateCompany(int companyId, [FromForm] CompanyDto companyDto, [FromForm] List<IFormFile>? images)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             // To do: handle the case when the entity has for example 7 values and you pass 5, only the first 3 will be uploaded and the other 2 will not, no error will be given (and it should be an error!)
             if (images is not null && images.Count > 10)

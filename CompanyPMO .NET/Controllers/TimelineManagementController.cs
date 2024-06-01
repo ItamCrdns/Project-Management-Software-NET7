@@ -24,14 +24,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(400)]
         public async Task<IActionResult> AddTimelineEventOnUserLogout()
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var timeline = new TimelineDto
             {

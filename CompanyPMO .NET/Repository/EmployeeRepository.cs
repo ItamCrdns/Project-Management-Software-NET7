@@ -1,8 +1,10 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
+using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Interfaces.Employee_interfaces;
+using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,62 +16,112 @@ namespace CompanyPMO_.NET.Repository
         private readonly IImage _imageService;
         private readonly IUtility _utilityService;
         private readonly IWorkload _workloadService;
+        private readonly IJwt _jwt;
+        private readonly ITimelineManagement _timelineManagement;
 
-        public EmployeeRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkload workloadService)
+        public EmployeeRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkload workloadService, IJwt jwt, ITimelineManagement timelineManagement)
         {
             _context = context;
             _imageService = imageService;
             _utilityService = utilityService;
             _workloadService = workloadService;
+            _jwt = jwt;
+            _timelineManagement = timelineManagement;
         }
 
-        public async Task<(AuthenticationResult result, string message, EmployeeDto employee)> AuthenticateEmployee(string username, string password)
+        public async Task<LoginResponseDto> AuthenticateEmployee(string username, string password)
         {
+            var employee = await _context.Employees.Include(x => x.Tier).FirstOrDefaultAsync(u => u.Username == username);
+
             bool? isAccountLocked = await IsAccountLocked(username);
 
-            var employee = await _context.Employees
-                .FirstOrDefaultAsync(u => u.Username.Equals(username));
+            if (employee == null)
+            {
+                return new LoginResponseDto
+                {
+                    Result = new AuthenticationResult { DoesntExist = true },
+                    Message = "Apparently, this user does not exist.",
+                    Employee = null
+                };
+            }
 
             if (isAccountLocked is true)
             {
                 var minutes = _utilityService.MinutesUntilTimeArrival(employee.LockedUntil);
-                return (new AuthenticationResult { Blocked = true }, $"Your account has been blocked for {minutes} minutes.", null);
+
+                var timelineEvent = new TimelineDto
+                {
+                    Event = "account was blocked due to multiple loggin attempts",
+                    EmployeeId = employee.EmployeeId,
+                    Type = TimelineType.Login
+                };
+
+                await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
+
+                return new LoginResponseDto
+                {
+                    Result = new AuthenticationResult { Blocked = true },
+                    Message = $"Your account has been blocked for {minutes} minutes.",
+                    Employee = null
+                };
             }
 
             if (!string.IsNullOrEmpty(password))
             {
-                if (employee is null)
-                {
-                    return (new AuthenticationResult { DoesntExist = true }, "Apparently, this user does not exist.", null);
-                }
-
                 if (BCrypt.Net.BCrypt.Verify(password, employee.Password))
                 {
                     if (employee.LoginAttempts > 0)
                     {
                         employee.LoginAttempts = 0;
-                        _ = await _context.SaveChangesAsync();
+                        await _context.SaveChangesAsync();
                     }
 
-                    var employeeReturn = new EmployeeDto
+                    var loggedInEmployee = new EmployeeDto
                     {
                         EmployeeId = employee.EmployeeId,
                         Username = employee.Username,
                         ProfilePicture = employee.ProfilePicture
                     };
 
-                    return (new AuthenticationResult { Authenticated = true }, $"Welcome, {employeeReturn.Username}", employeeReturn);
+                    string token = _jwt.JwtTokenGenerator(employee);
+
+                    var timelineEvent = new TimelineDto
+                    {
+                        Event = "logged in",
+                        EmployeeId = employee.EmployeeId,
+                        Type = TimelineType.Login
+                    };
+
+                    await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
+
+                    return new LoginResponseDto
+                    {
+                        Result = new AuthenticationResult { Authenticated = true },
+                        Message = $"Welcome, {loggedInEmployee.Username}",
+                        Employee = loggedInEmployee,
+                        Token = token
+                    };
                 }
                 else
                 {
                     employee.LoginAttempts++;
-                    _ = await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync();
 
-                    return (new AuthenticationResult { WrongCreds = true }, $"Wrong credentials. You have tried {employee.LoginAttempts} times", null);
+                    return new LoginResponseDto
+                    {
+                        Result = new AuthenticationResult { WrongCreds = true },
+                        Message = $"Wrong credentials. You have tried {employee.LoginAttempts} times",
+                        Employee = null
+                    };
                 }
             }
 
-            return (new AuthenticationResult { SomethingWrong = true }, "Something went wrong.", null);
+            return new LoginResponseDto
+            {
+                Result = new AuthenticationResult { SomethingWrong = true },
+                Message = "Something went wrong.",
+                Employee = null
+            };
         }
 
         public async Task<Employee> GetEmployeeById(int employeeId)
@@ -289,7 +341,7 @@ namespace CompanyPMO_.NET.Repository
             var employee = await _context.Employees
                 .FirstOrDefaultAsync(u => u.Username.Equals(username));
 
-            if (employee is null)
+            if (employee == null)
             {
                 return null;
             }

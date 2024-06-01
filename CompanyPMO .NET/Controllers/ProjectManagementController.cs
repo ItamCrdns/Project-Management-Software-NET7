@@ -24,15 +24,10 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(400, Type = typeof(OperationResult<int>))]
         public async Task<IActionResult> CreateNewProject([FromForm] Project project, [FromForm] List<IFormFile>? images, [FromForm] int companyId, [FromForm] List<int> employees, [FromForm] bool shouldStartNow)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            var username = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
+            var username = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
 
-            if (claim == null || username == null)
-                return Unauthorized("User ID or username claims are missing");
-
-            int employeeId = int.Parse(claim.Value);
-
-            var result = await _projectManagement.CreateProject(project, new EmployeeDto { EmployeeId = employeeId, Username = username.Value.ToString() }, images, companyId, employees, shouldStartNow);
+            var result = await _projectManagement.CreateProject(project, new EmployeeDto { EmployeeId = employeeId, Username = username }, images, companyId, employees, shouldStartNow);
 
             if (!result.Success)
                 return BadRequest(result);
@@ -47,14 +42,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> UpdateProject(int projectId, [FromForm] ProjectDto projectDto, [FromForm] List<IFormFile>? images)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var (updated, project) = await _projectManagement.UpdateProject(employeeId, projectId, projectDto, images);
 
@@ -71,14 +59,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(OperationResult))]
         public async Task<IActionResult> SetProjectsFininishedBulk([FromBody] int[] projectIds)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var result = await _projectManagement.SetProjectsFininishedBulk(projectIds);
 
@@ -90,14 +71,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(OperationResult))]
         public async Task<IActionResult> SetProjectFinished(int projectId)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var result = await _projectManagement.SetProjectFinished(projectId);
 
@@ -109,14 +83,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(OperationResult))]
         public async Task<IActionResult> SetProjectsStartBulk([FromBody] int[] projectIds)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var result = await _projectManagement.SetProjectsStartBulk(projectIds);
 
@@ -128,14 +95,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(OperationResult))]
         public async Task<IActionResult> SetProjectStart(int projectId)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var result = await _projectManagement.SetProjectStart(projectId);
 

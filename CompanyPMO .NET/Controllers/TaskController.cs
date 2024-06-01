@@ -55,14 +55,7 @@ namespace CompanyPMO_.NET.Controllers
         [HttpGet("grouped")]
         public async Task<IActionResult> GetTasksGroupedByProject([FromQuery] FilterParams filterParams, [FromQuery] int tasksPage = 1, [FromQuery] int tasksPageSize = 5)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var tasks = await _taskService.GetTasksGroupedByProject(filterParams, tasksPage, tasksPageSize, employeeId);
 
@@ -73,14 +66,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
         public async Task<IActionResult> GetIssuesByTaskId(int taskId, [FromQuery] FilterParams filterParams)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var issues = await _issueTaskQueries.GetIssuesByTaskId(taskId, filterParams);
 

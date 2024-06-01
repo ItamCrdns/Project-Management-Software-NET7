@@ -27,14 +27,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(400, Type = typeof(OperationResult<int>))]
         public async Task<IActionResult> CreateIssue([FromBody] IssueDto issue, [FromQuery] int taskId, [FromQuery] bool shouldStartNow)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var result = await _issueManagement.CreateIssue(issue, employeeId, taskId, shouldStartNow);
 

@@ -50,14 +50,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(DataCountPages<CompanyProjectGroup>))]
         public async Task<IActionResult> GetProjectsGroupedByCompany([FromQuery] FilterParams filterParams, [FromQuery] int projectsPage = 1, [FromQuery] int projectsPageSize = 5)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var projects = await _projectQueries.GetProjectsGroupedByCompany(filterParams, projectsPage, projectsPageSize, employeeId);
 
@@ -70,21 +63,11 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetProjectById(int projectId)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var project = await _projectQueries.GetProjectById(projectId, employeeId);
 
-            if (project is null)
-            {
-                return NotFound();
-            }
+            if (project is null) return NotFound();
 
             return Ok(project);
         }
@@ -95,21 +78,11 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetTaskById(int projectId, int taskId)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var task = await _taskProjectQueries.GetTaskById(taskId, projectId, employeeId);
 
-            if (task is null)
-            {
-                return NotFound();
-            }
+            if (task is null) return NotFound();
 
             return Ok(task);
         }
@@ -120,14 +93,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetProjectNameCreatorAndTeam(int projectId)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var project = await _projectQueries.GetProjectNameCreatorLifecyclePriorityAndTeam(projectId);
 
@@ -179,14 +145,7 @@ namespace CompanyPMO_.NET.Controllers
         [ProducesResponseType(200, Type = typeof(Dictionary<string, object>))]
         public async Task<IActionResult> GetTasksByProjectId(int projectId, [FromQuery] FilterParams filterParams)
         {
-            var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-            {
-                return Unauthorized("User ID claim is missing");
-            }
-
-            int employeeId = int.Parse(claim.Value);
+            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
             var tasks = await _taskProjectQueries.GetTasksByProjectId(projectId, filterParams);
 
