@@ -1,8 +1,6 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
-using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces.Issue_interfaces;
-using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -14,11 +12,9 @@ namespace CompanyPMO_.NET.Controllers
     public class IssueManagementController : ControllerBase
     {
         private readonly IIssueManagement _issueManagement;
-        private readonly ITimelineManagement _timelineManagement;
-        public IssueManagementController(IIssueManagement issueManagement, ITimelineManagement timelineManagement)
+        public IssueManagementController(IIssueManagement issueManagement)
         {
             _issueManagement = issueManagement;
-            _timelineManagement = timelineManagement;
         }
 
         [Authorize(Policy = "SupervisorOnly")]
@@ -33,16 +29,6 @@ namespace CompanyPMO_.NET.Controllers
 
             if (!result.Success)
                 return BadRequest(result);
-
-            var timelineEvent = new TimelineDto
-            {
-                Event = "reported the issue",
-                EmployeeId = employeeId,
-                Type = TimelineType.Report,
-                IssueId = result.Data
-            };
-
-            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
 
             return Ok(result);
         }

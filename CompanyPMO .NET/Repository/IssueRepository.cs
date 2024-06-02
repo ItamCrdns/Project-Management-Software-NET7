@@ -1,8 +1,10 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
+using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Interfaces.Issue_interfaces;
+using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -13,10 +15,12 @@ namespace CompanyPMO_.NET.Repository
     {
         private readonly ApplicationDbContext _context;
         private readonly IUtility _utilityService;
-        public IssueRepository(ApplicationDbContext context, IUtility utilityService)
+        private readonly ITimelineManagement _timelineManagement;
+        public IssueRepository(ApplicationDbContext context, IUtility utilityService, ITimelineManagement timelineManagement)
         {
             _context = context;
             _utilityService = utilityService;
+            _timelineManagement = timelineManagement;
         }
 
         public async Task<OperationResult<int>> CreateIssue(IssueDto issue, int employeeId, int taskId, bool shouldStartNow)
@@ -51,21 +55,31 @@ namespace CompanyPMO_.NET.Repository
 
             int rowsAffected = await _context.SaveChangesAsync();
 
-            if (rowsAffected is 0)
+            if (rowsAffected > 0)
             {
+                var timelineEvent = new TimelineDto
+                {
+                    Event = "reported the issue",
+                    EmployeeId = employeeId,
+                    Type = TimelineType.Report,
+                    IssueId = newIssue.IssueId
+                };
+
+                await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
+
                 return new OperationResult<int>
                 {
-                    Success = false,
-                    Message = "Failed to create issue",
-                    Data = 0
+                    Success = true,
+                    Message = "Issue created successfully",
+                    Data = newIssue.IssueId
                 };
             }
 
             return new OperationResult<int>
             {
-                Success = true,
-                Message = "Issue created successfully",
-                Data = newIssue.IssueId
+                Success = false,
+                Message = "Failed to create issue",
+                Data = 0
             };
         }
 

@@ -21,7 +21,6 @@ namespace tests.Repository
         private readonly IWorkload _workload;
         private readonly IJwt _jwt;
         private readonly ITimelineManagement _timelineManagement;
-
         public EmployeeRepositoryTests()
         {
             _image = A.Fake<IImage>();

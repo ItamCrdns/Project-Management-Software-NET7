@@ -61,7 +61,7 @@ namespace CompanyPMO_.NET.Controllers
         {
             var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
-            var result = await _projectManagement.SetProjectsFininishedBulk(projectIds);
+            var result = await _projectManagement.SetProjectsFininishedBulk(projectIds, employeeId);
 
             return Ok(result);
         }
@@ -73,7 +73,7 @@ namespace CompanyPMO_.NET.Controllers
         {
             var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
-            var result = await _projectManagement.SetProjectFinished(projectId);
+            var result = await _projectManagement.SetProjectFinished(projectId, employeeId);
 
             return Ok(result);
         }
@@ -85,7 +85,7 @@ namespace CompanyPMO_.NET.Controllers
         {
             var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
-            var result = await _projectManagement.SetProjectsStartBulk(projectIds);
+            var result = await _projectManagement.SetProjectsStartBulk(projectIds, employeeId);
 
             return Ok(result);
         }
@@ -97,7 +97,7 @@ namespace CompanyPMO_.NET.Controllers
         {
             var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
-            var result = await _projectManagement.SetProjectStart(projectId);
+            var result = await _projectManagement.SetProjectStart(projectId, employeeId);
 
             return Ok(result);
         }

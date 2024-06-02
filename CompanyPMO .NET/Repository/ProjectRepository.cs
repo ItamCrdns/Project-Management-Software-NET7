@@ -546,7 +546,7 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<OperationResult> SetProjectsFininishedBulk(int[] projectIds)
+        public async Task<OperationResult> SetProjectsFininishedBulk(int[] projectIds, int employeeId)
         {
             var projects = await _context.Projects
                 .Include(x => x.Employees)
@@ -600,7 +600,7 @@ namespace CompanyPMO_.NET.Repository
             projects.ForEach(p => timelinesToAdd.Add(new TimelineDto
             {
                 Event = "has set the following project as finished:",
-                EmployeeId = p.ProjectCreatorId,
+                EmployeeId = employeeId,
                 Type = TimelineType.Finish,
                 ProjectId = p.ProjectId
             }));
@@ -614,7 +614,7 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<OperationResult> SetProjectsStartBulk(int[] projectIds)
+        public async Task<OperationResult> SetProjectsStartBulk(int[] projectIds, int employeeId)
         {
             var projects = await _context.Projects
                 .Where(p => projectIds.Contains(p.ProjectId))
@@ -673,7 +673,7 @@ namespace CompanyPMO_.NET.Repository
             projects.ForEach(p => timelinesToAdd.Add(new TimelineDto
             {
                 Event = "has set the following project as started:",
-                EmployeeId = p.ProjectCreatorId,
+                EmployeeId = employeeId,
                 Type = TimelineType.Start,
                 ProjectId = p.ProjectId
             }));
@@ -687,7 +687,7 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<OperationResult> SetProjectStart(int projectId)
+        public async Task<OperationResult> SetProjectStart(int projectId, int employeeId)
         {
             var project = await _context.Projects.FindAsync(projectId);
 
@@ -725,7 +725,7 @@ namespace CompanyPMO_.NET.Repository
             await _timelineManagement.CreateTimelineEvent(new TimelineDto
             {
                 Event = "has set the following project as started:",
-                EmployeeId = project.ProjectCreatorId,
+                EmployeeId = employeeId,
                 Type = TimelineType.Start,
                 ProjectId = project.ProjectId
             }, UserRoles.Supervisor);
@@ -737,7 +737,7 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<OperationResult> SetProjectFinished(int projectId)
+        public async Task<OperationResult> SetProjectFinished(int projectId, int employeeId)
         {
             var project = await _context.Projects
                 .Include(x => x.Employees)
@@ -784,7 +784,7 @@ namespace CompanyPMO_.NET.Repository
             await _timelineManagement.CreateTimelineEvent(new TimelineDto
             {
                 Event = "has set the following project as finished:",
-                EmployeeId = project.ProjectCreatorId,
+                EmployeeId = employeeId,
                 Type = TimelineType.Finish,
                 ProjectId = project.ProjectId
             }, UserRoles.Supervisor);

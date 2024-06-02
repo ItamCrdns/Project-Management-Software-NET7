@@ -804,11 +804,12 @@ namespace Tests.Repository
         public async void ProjectRepository_SetProjectsFininishedBulk_ReturnsSuccess()
         {
             int[] projectIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
 
-            var result = await projectRepository.SetProjectsFininishedBulk(projectIds);
+            var result = await projectRepository.SetProjectsFininishedBulk(projectIds, employeeId);
 
             result.Should().NotBeNull();
             result.Message.Should().Be("Projects finished successfully");
@@ -819,11 +820,12 @@ namespace Tests.Repository
         public async void ProjectRepository_SetProjectsFininishedBulk_ReturnsFailure()
         {
             int[] projectIds = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
 
-            var result = await projectRepository.SetProjectsFininishedBulk(projectIds);
+            var result = await projectRepository.SetProjectsFininishedBulk(projectIds, employeeId);
 
             result.Should().NotBeNull();
             result.Message.Should().Be("No projects found");
@@ -834,11 +836,12 @@ namespace Tests.Repository
         public async void ProjectRepository_SetProjectsFininishedBulk_ReturnsFailureAllProjectsAlreadyFinished()
         {
             int[] projectIds = [7, 8];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
 
-            var result = await projectRepository.SetProjectsFininishedBulk(projectIds);
+            var result = await projectRepository.SetProjectsFininishedBulk(projectIds, employeeId);
 
             result.Should().NotBeNull();
             result.Success.Should().BeFalse();
@@ -849,11 +852,12 @@ namespace Tests.Repository
         public async void ProjectRepository_SetProjectsStartBulk_ReturnsSuccess()
         {
             int[] projectIds = [3, 4, 5, 6, 7, 8, 9, 10];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
 
-            var result = await projectRepository.SetProjectsStartBulk(projectIds);
+            var result = await projectRepository.SetProjectsStartBulk(projectIds, employeeId);
 
             result.Should().NotBeNull();
             result.Message.Should().Be("Projects started successfully");
@@ -864,11 +868,12 @@ namespace Tests.Repository
         public async void ProjectRepository_SetProjectsStartBulk_ReturnsSuccessButSomeProjectsAlreadyStarted()
         {
             int[] projectIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
 
-            var result = await projectRepository.SetProjectsStartBulk(projectIds);
+            var result = await projectRepository.SetProjectsStartBulk(projectIds, employeeId);
 
             result.Should().NotBeNull();
             result.Message.Should().Be("Projects started successfully, however some projects were already started");
@@ -887,11 +892,12 @@ namespace Tests.Repository
         public async void ProjectRepository_SetProjectsStartBulk_ReturnsFailureProjectsNotFound()
         {
             int[] projectIds = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
 
-            var result = await projectRepository.SetProjectsStartBulk(projectIds);
+            var result = await projectRepository.SetProjectsStartBulk(projectIds, employeeId);
 
             result.Should().NotBeNull();
             result.Message.Should().Be("No projects found");
@@ -902,11 +908,12 @@ namespace Tests.Repository
         public async void ProjectRepository_SetProjectsStartBulk_ReturnsFailureAllProjectsAlreadyStarted()
         {
             int[] projectIds = [1, 2];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
 
-            var result = await projectRepository.SetProjectsStartBulk(projectIds);
+            var result = await projectRepository.SetProjectsStartBulk(projectIds, employeeId);
 
             result.Should().NotBeNull();
             result.Message.Should().Be("All projects are already started");
@@ -917,11 +924,12 @@ namespace Tests.Repository
         public async void ProjectRepository_SetProjectStart_ReturnsSuccess()
         {
             int projectId = 5;
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
 
-            var result = await projectRepository.SetProjectStart(projectId);
+            var result = await projectRepository.SetProjectStart(projectId, employeeId);
 
             result.Should().BeOfType(typeof(OperationResult));
             result.Message.Should().Be("Project started successfully");
@@ -932,11 +940,12 @@ namespace Tests.Repository
         public async void ProjectRepository_SetProjectStart_ReturnsFailureProjectNotFound()
         {
             int projectId = 100;
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
 
-            var result = await projectRepository.SetProjectStart(projectId);
+            var result = await projectRepository.SetProjectStart(projectId, employeeId);
 
             result.Should().BeOfType(typeof(OperationResult));
             result.Message.Should().Be("Project not found");
@@ -947,11 +956,12 @@ namespace Tests.Repository
         public async void ProjectRepository_SetProjectStart_ReturnsFailureProjectAlreadyStarted()
         {
             int projectId = 2;
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
 
-            var result = await projectRepository.SetProjectStart(projectId);
+            var result = await projectRepository.SetProjectStart(projectId, employeeId);
 
             result.Should().BeOfType(typeof(OperationResult));
             result.Message.Should().Be("Project is already started");
@@ -962,11 +972,12 @@ namespace Tests.Repository
         public async void ProjectRepository_SetProjectFinished_ReturnsSuccess()
         {
             int projectId = 1;
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
 
-            var result = await projectRepository.SetProjectFinished(projectId);
+            var result = await projectRepository.SetProjectFinished(projectId, employeeId);
 
             result.Should().BeOfType(typeof(OperationResult));
             result.Message.Should().Be("Project finished successfully");
@@ -977,11 +988,12 @@ namespace Tests.Repository
         public async void ProjectRepository_SetProjectFinished_ReturnsFailureProjectNotFound()
         {
             int projectId = 100;
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
 
-            var result = await projectRepository.SetProjectFinished(projectId);
+            var result = await projectRepository.SetProjectFinished(projectId, employeeId);
 
             result.Should().BeOfType(typeof(OperationResult));
             result.Message.Should().Be("Project not found");
@@ -992,11 +1004,12 @@ namespace Tests.Repository
         public async void ProjectRepository_SetProjectFinished_ReturnsFailureProjectAlreadyFinished()
         {
             int projectId = 7;
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
             var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
 
-            var result = await projectRepository.SetProjectFinished(projectId);
+            var result = await projectRepository.SetProjectFinished(projectId, employeeId);
 
             result.Should().BeOfType(typeof(OperationResult));
             result.Message.Should().Be("Project is already finished");

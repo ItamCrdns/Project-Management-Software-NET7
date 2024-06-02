@@ -1,8 +1,6 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
-using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces.Task_interfaces;
-using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -14,11 +12,9 @@ namespace CompanyPMO_.NET.Controllers
     public class TaskManagementController : ControllerBase
     {
         private readonly ITaskManagement _taskManagement;
-        private readonly ITimelineManagement _timelineManagement;
-        public TaskManagementController(ITaskManagement taskManagement, ITimelineManagement timelineManagement)
+        public TaskManagementController(ITaskManagement taskManagement)
         {
             _taskManagement = taskManagement;
-            _timelineManagement = timelineManagement;
         }
 
         [HttpPost("create")]
@@ -35,16 +31,6 @@ namespace CompanyPMO_.NET.Controllers
                 return BadRequest(result);
             }
 
-            var timelineEvent = new TimelineDto
-            {
-                Event = "created the task",
-                EmployeeId = employeeId,
-                Type = TimelineType.Create,
-                TaskId = result.Data
-            };
-
-            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
-
             return Ok(result);
         }
 
@@ -55,23 +41,7 @@ namespace CompanyPMO_.NET.Controllers
         {
             var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
-            var result = await _taskManagement.SetTasksFinishedBulk(taskIds);
-
-            if (result.Success)
-            {
-                foreach (var taskId in taskIds)
-                {
-                    var timelineEvent = new TimelineDto
-                    {
-                        Event = "has set the following task as finished:",
-                        EmployeeId = employeeId,
-                        Type = TimelineType.Finish,
-                        TaskId = taskId
-                    };
-
-                    await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
-                }
-            }
+            var result = await _taskManagement.SetTasksFinishedBulk(taskIds, employeeId);
 
             return Ok(result);
         }
@@ -83,20 +53,7 @@ namespace CompanyPMO_.NET.Controllers
         {
             var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
-            var result = await _taskManagement.SetTaskFinished(taskId);
-
-            if (result.Success)
-            {
-                var timelineEvent = new TimelineDto
-                {
-                    Event = "has set the following task as finished:",
-                    EmployeeId = employeeId,
-                    Type = TimelineType.Finish,
-                    TaskId = taskId
-                };
-
-                await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
-            }
+            var result = await _taskManagement.SetTaskFinished(taskId, employeeId);
 
             return Ok(result);
         }
@@ -108,23 +65,7 @@ namespace CompanyPMO_.NET.Controllers
         {
             var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
-            var result = await _taskManagement.SetTasksStartBulk(taskIds);
-
-            if (result.Success)
-            {
-                foreach (var taskId in taskIds)
-                {
-                    var timelineEvent = new TimelineDto
-                    {
-                        Event = "has set the following task as started:",
-                        EmployeeId = employeeId,
-                        Type = TimelineType.Start,
-                        TaskId = taskId
-                    };
-
-                    await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
-                }
-            }
+            var result = await _taskManagement.SetTasksStartBulk(taskIds, employeeId);
 
             return Ok(result);
         }
@@ -136,20 +77,7 @@ namespace CompanyPMO_.NET.Controllers
         {
             var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
-            var result = await _taskManagement.SetTaskStart(taskId);
-
-            if (result.Success)
-            {
-                var timelineEvent = new TimelineDto
-                {
-                    Event = "has set the following task as started:",
-                    EmployeeId = employeeId,
-                    Type = TimelineType.Start,
-                    TaskId = taskId
-                };
-
-                await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
-            }
+            var result = await _taskManagement.SetTaskStart(taskId, employeeId);
 
             return Ok(result);
         }

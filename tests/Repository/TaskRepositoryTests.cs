@@ -2,6 +2,7 @@
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using CompanyPMO_.NET.Interfaces.Workload_interfaces;
 using CompanyPMO_.NET.Models;
 using CompanyPMO_.NET.Repository;
@@ -20,11 +21,13 @@ namespace Tests.Repository
         private readonly IImage _image;
         private readonly IUtility _utility;
         private readonly IWorkloadTask _workload;
+        private readonly ITimelineManagement _timelineManagement;
         public TaskRepositoryTests()
         {
             _image = A.Fake<IImage>();
             _utility = A.Fake<IUtility>();
             _workload = A.Fake<IWorkloadTask>();
+            _timelineManagement = A.Fake<ITimelineManagement>();
         }
 
         private static DbContextOptions<ApplicationDbContext> CreateNewContextOptions
@@ -144,7 +147,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var fakeTask = A.Fake<TaskDto>();
             fakeTask.Name = "Test";
@@ -172,7 +175,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var fakeTask = A.Fake<TaskDto>();
             fakeTask.Name = "";
@@ -198,7 +201,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var fakeTask = A.Fake<TaskDto>();
             fakeTask.Name = "Test";
@@ -237,7 +240,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var fakeTask = A.Fake<TaskDto>();
             fakeTask.Name = "Test";
@@ -270,7 +273,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.DoesTaskExist(taskId);
 
@@ -284,7 +287,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.DoesTaskExist(taskId);
 
@@ -298,7 +301,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.GetEmployeesWorkingOnTask(taskId);
 
@@ -314,7 +317,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.GetEmployeesWorkingOnTask(taskId);
 
@@ -329,7 +332,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.GetTaskById(taskId, 1, 1);
 
@@ -364,7 +367,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.GetTaskById(taskId, 2, 1);
 
@@ -379,7 +382,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.GetTasks(page, pageSize);
 
@@ -401,7 +404,7 @@ namespace Tests.Repository
             dbContext.Tasks.RemoveRange(dbContext.Tasks);
             await dbContext.SaveChangesAsync();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.GetTasks(page, pageSize);
 
@@ -417,7 +420,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             int[] tasksIds = [1, 2, 3];
 
@@ -450,7 +453,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             int[] tasksIds = [];
 
@@ -480,7 +483,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             Expression<Func<Task, bool>> fakeBoolExpression = x => true; // Just evaluate to true
             Expression<Func<Task, object>> fakeObjectExpression = x => x.Name;
@@ -510,7 +513,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             Expression<Func<Task, bool>> fakeBoolExpression = x => x.Name == "DOES NOT EXIST"; // Just evaluate to true
             Expression<Func<Task, object>> fakeObjectExpression = x => x.Name;
@@ -568,7 +571,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = taskRepository.SelectImages(images);
 
@@ -588,7 +591,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             int[] tasksIds = [1, 2, 3];
 
@@ -619,7 +622,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.GetAllTasksShowcase(page, pageSize);
 
@@ -642,7 +645,7 @@ namespace Tests.Repository
             dbContext.Tasks.RemoveRange(dbContext.Tasks);
             await dbContext.SaveChangesAsync();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.GetAllTasksShowcase(page, pageSize);
 
@@ -660,7 +663,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             ICollection<TaskDto> tasksCollection = [.. dbContext.Tasks.Select(x => new TaskDto
             {
@@ -693,7 +696,7 @@ namespace Tests.Repository
             dbContext.Tasks.RemoveRange(dbContext.Tasks);
             await dbContext.SaveChangesAsync();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             ICollection<TaskDto> tasksCollection = [.. dbContext.Tasks.Select(x => new TaskDto
             {
@@ -720,7 +723,7 @@ namespace Tests.Repository
         {
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             FilterParams filterParams = new()
             {
@@ -749,7 +752,7 @@ namespace Tests.Repository
         {
             var dbContext = await GetDatabaseContext();
 
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.GetTasksShowcaseByProjectId(1, 1, 10);
 
@@ -778,7 +781,7 @@ namespace Tests.Repository
             int employeeId = 7;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.IsParticipant(taskId, employeeId);
 
@@ -792,7 +795,7 @@ namespace Tests.Repository
             int employeeId = 100;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.IsParticipant(taskId, employeeId);
 
@@ -806,7 +809,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.IsOwner(taskId, employeeId);
 
@@ -820,7 +823,7 @@ namespace Tests.Repository
             int employeeId = 100;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var result = await taskRepository.IsOwner(taskId, employeeId);
 
@@ -831,11 +834,12 @@ namespace Tests.Repository
         public async void TaskRepository_SetTasksStartBulk_ReturnsSuccess()
         {
             int[] taskIds = [7, 8, 9];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
-            var result = await taskRepository.SetTasksStartBulk(taskIds);
+            var result = await taskRepository.SetTasksStartBulk(taskIds, employeeId);
 
             result.Should().NotBeNull();
             result.Success.Should().BeTrue();
@@ -846,11 +850,12 @@ namespace Tests.Repository
         public async void TaskRepository_SetTasksStartBulk_ReturnsSucessButSomeTasksAlreadyStarted()
         {
             int[] taskIds = [1, 2, 3];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
-            var result = await taskRepository.SetTasksStartBulk(taskIds);
+            var result = await taskRepository.SetTasksStartBulk(taskIds, employeeId);
 
             result.Should().NotBeNull();
             result.Message.Should().Be("Tasks started successfully, however some tasks were already started");
@@ -869,11 +874,12 @@ namespace Tests.Repository
         public async void TaskRepository_SetTasksStartBulk_ReturnsFailureTasksNotFound()
         {
             int[] taskIds = [100, 200, 300];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
-            var result = await taskRepository.SetTasksStartBulk(taskIds);
+            var result = await taskRepository.SetTasksStartBulk(taskIds, employeeId);
 
             result.Should().NotBeNull();
             result.Success.Should().BeFalse();
@@ -884,9 +890,10 @@ namespace Tests.Repository
         public async void TaskRepository_SetTasksStartBulk_ReturnsFailureAllTasksAlreadyStarted()
         {
             int[] taskIds = [1, 2, 3];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             foreach (var taskId in taskIds)
             {
@@ -896,7 +903,7 @@ namespace Tests.Repository
 
             await dbContext.SaveChangesAsync();
 
-            var result = await taskRepository.SetTasksStartBulk(taskIds);
+            var result = await taskRepository.SetTasksStartBulk(taskIds, employeeId);
 
             result.Should().NotBeNull();
             result.Success.Should().BeFalse();
@@ -907,11 +914,12 @@ namespace Tests.Repository
         public async void TaskRepository_SetTaskStart_ReturnsSuccess()
         {
             int taskId = 7;
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
-            var result = await taskRepository.SetTaskStart(taskId);
+            var result = await taskRepository.SetTaskStart(taskId, employeeId);
 
             result.Should().NotBeNull();
             result.Success.Should().BeTrue();
@@ -922,11 +930,12 @@ namespace Tests.Repository
         public async void TaskRepository_SetTaskStart_ReturnsFailureTaskNotFound()
         {
             int taskId = 100;
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
-            var result = await taskRepository.SetTaskStart(taskId);
+            var result = await taskRepository.SetTaskStart(taskId, employeeId);
 
             result.Should().NotBeNull();
             result.Success.Should().BeFalse();
@@ -937,16 +946,17 @@ namespace Tests.Repository
         public async void TaskRepository_SetTaskStart_ReturnsFailureTaskAlreadyStarted()
         {
             int taskId = 1;
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var task = await dbContext.Tasks.FindAsync(taskId);
             task.StartedWorking = DateTime.Now;
 
             await dbContext.SaveChangesAsync();
 
-            var result = await taskRepository.SetTaskStart(taskId);
+            var result = await taskRepository.SetTaskStart(taskId, employeeId);
 
             result.Should().NotBeNull();
             result.Success.Should().BeFalse();
@@ -957,11 +967,12 @@ namespace Tests.Repository
         public async void TaskRepository_SetTasksFinishedBulk_ReturnsSuccess()
         {
             int[] taskIds = [1, 5, 9];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
-            var result = await taskRepository.SetTasksFinishedBulk(taskIds);
+            var result = await taskRepository.SetTasksFinishedBulk(taskIds, employeeId);
 
             result.Should().NotBeNull();
             result.Message.Should().Be("Tasks finished successfully");
@@ -972,11 +983,12 @@ namespace Tests.Repository
         public async void TaskRepository_SetTasksFinishedBulk_ReturnsSucessButSomeTasksAlreadyFinished()
         {
             int[] taskIds = [5, 7, 8];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
-            var result = await taskRepository.SetTasksFinishedBulk(taskIds);
+            var result = await taskRepository.SetTasksFinishedBulk(taskIds, employeeId);
 
             result.Should().NotBeNull();
             result.Message.Should().Be("Tasks finished successfully, however some tasks were already finished");
@@ -995,11 +1007,12 @@ namespace Tests.Repository
         public async void TaskRepository_SetTasksFinishedBulk_ReturnsFailureTasksNotFound()
         {
             int[] taskIds = [100, 200, 300];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
-            var result = await taskRepository.SetTasksFinishedBulk(taskIds);
+            var result = await taskRepository.SetTasksFinishedBulk(taskIds, employeeId);
 
             result.Should().NotBeNull();
             result.Success.Should().BeFalse();
@@ -1010,11 +1023,12 @@ namespace Tests.Repository
         public async void TaskRepository_SetTasksFinishedBulk_ReturnsFailureAllTasksAlreadyFinished()
         {
             int[] taskIds = [7, 8];
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
-            var result = await taskRepository.SetTasksFinishedBulk(taskIds);
+            var result = await taskRepository.SetTasksFinishedBulk(taskIds, employeeId);
 
             result.Should().NotBeNull();
             result.Success.Should().BeFalse();
@@ -1025,11 +1039,12 @@ namespace Tests.Repository
         public async void TaskRepository_SetTaskFinished_ReturnsSuccess()
         {
             int taskId = 1;
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
-            var result = await taskRepository.SetTaskFinished(taskId);
+            var result = await taskRepository.SetTaskFinished(taskId, employeeId);
 
             result.Should().NotBeNull();
             result.Success.Should().BeTrue();
@@ -1040,11 +1055,12 @@ namespace Tests.Repository
         public async void TaskRepository_SetTaskFinished_ReturnsFailureTaskNotFound()
         {
             int taskId = 100;
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
-            var result = await taskRepository.SetTaskFinished(taskId);
+            var result = await taskRepository.SetTaskFinished(taskId, employeeId);
 
             result.Should().NotBeNull();
             result.Success.Should().BeFalse();
@@ -1055,16 +1071,17 @@ namespace Tests.Repository
         public async void TaskRepository_SetTaskFinished_ReturnsFailureTaskAlreadyStarted()
         {
             int taskId = 7;
+            int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload);
+            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
 
             var task = await dbContext.Tasks.FindAsync(taskId);
             task.StartedWorking = DateTime.Now;
 
             await dbContext.SaveChangesAsync();
 
-            var result = await taskRepository.SetTaskFinished(taskId);
+            var result = await taskRepository.SetTaskFinished(taskId, employeeId);
 
             result.Should().NotBeNull();
             result.Success.Should().BeFalse();

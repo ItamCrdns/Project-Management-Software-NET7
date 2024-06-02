@@ -1,8 +1,10 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
+using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces;
 using CompanyPMO_.NET.Interfaces.Task_interfaces;
+using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using CompanyPMO_.NET.Interfaces.Workload_interfaces;
 using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
@@ -17,13 +19,15 @@ namespace CompanyPMO_.NET.Repository
         private readonly IImage _imageService;
         private readonly IUtility _utilityService;
         private readonly IWorkloadTask _workloadService;
+        private readonly ITimelineManagement _timelineManagement;
 
-        public TaskRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkloadTask workloadService)
+        public TaskRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkloadTask workloadService, ITimelineManagement timelineManagement)
         {
             _context = context;
             _imageService = imageService;
             _utilityService = utilityService;
             _workloadService = workloadService;
+            _timelineManagement = timelineManagement;
         }
 
         public async Task<OperationResult<int>> CreateTask(TaskDto task, int employeeSupervisorId, int projectId, List<IFormFile>? images, List<int>? employeeIds, bool shouldStartNow)
@@ -124,6 +128,16 @@ namespace CompanyPMO_.NET.Repository
                     errors.Add("Failed to add the employees to the task");
                 }
             }
+
+            var timelineEvent = new TimelineDto
+            {
+                Event = "created the task",
+                EmployeeId = employeeSupervisorId,
+                Type = TimelineType.Create,
+                TaskId = newTask.TaskId
+            };
+
+            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
 
             return new OperationResult<int>
             {
@@ -496,7 +510,7 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<OperationResult> SetTasksStartBulk(int[] taskIds)
+        public async Task<OperationResult> SetTasksStartBulk(int[] taskIds, int employeeId)
         {
             var tasks = await _context.Tasks
                 .Where(x => taskIds.Contains(x.TaskId))
@@ -550,6 +564,18 @@ namespace CompanyPMO_.NET.Repository
                 };
             }
 
+            List<TimelineDto> timelinesToAdd = new();
+
+            tasks.ForEach(p => timelinesToAdd.Add(new TimelineDto
+            {
+                Event = "has set the following task as started:",
+                EmployeeId = employeeId,
+                Type = TimelineType.Finish,
+                TaskId = p.TaskId
+            }));
+
+            await _timelineManagement.CreateTimelineEventsBulk(timelinesToAdd, UserRoles.Supervisor);
+
             return new OperationResult
             {
                 Message = "Tasks started successfully",
@@ -557,7 +583,7 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<OperationResult> SetTaskStart(int taskId)
+        public async Task<OperationResult> SetTaskStart(int taskId, int employeeId)
         {
             var task = await _context.Tasks.FindAsync(taskId);
 
@@ -592,6 +618,16 @@ namespace CompanyPMO_.NET.Repository
                 };
             }
 
+            var timelineEvent = new TimelineDto
+            {
+                Event = "has set the following task as started:",
+                EmployeeId = employeeId,
+                Type = TimelineType.Start,
+                TaskId = taskId
+            };
+
+            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
+
             return new OperationResult
             {
                 Message = "Task started successfully",
@@ -599,7 +635,7 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<OperationResult> SetTasksFinishedBulk(int[] taskIds)
+        public async Task<OperationResult> SetTasksFinishedBulk(int[] taskIds, int employeeId)
         {
             var tasks = await _context.Tasks
                 .Include(t => t.Employees)
@@ -661,6 +697,18 @@ namespace CompanyPMO_.NET.Repository
                 };
             }
 
+            List<TimelineDto> timelinesToAdd = new();
+
+            tasks.ForEach(p => timelinesToAdd.Add(new TimelineDto
+            {
+                Event = "has set the following task as finished:",
+                EmployeeId = employeeId,
+                Type = TimelineType.Finish,
+                TaskId = p.TaskId
+            }));
+
+            await _timelineManagement.CreateTimelineEventsBulk(timelinesToAdd, UserRoles.Supervisor);
+
             return new OperationResult
             {
                 Message = "Tasks finished successfully",
@@ -669,7 +717,7 @@ namespace CompanyPMO_.NET.Repository
             };
         }
 
-        public async Task<OperationResult> SetTaskFinished(int taskId)
+        public async Task<OperationResult> SetTaskFinished(int taskId, int employeeId)
         {
             var task = await _context.Tasks
                 .Include(t => t.Employees)
@@ -712,6 +760,16 @@ namespace CompanyPMO_.NET.Repository
             {
                 _ = await _workloadService.UpdateEmployeeCompletedTasks(employeeIdsWorkingOnTask);
             }
+
+            var timelineEvent = new TimelineDto
+            {
+                Event = "has set the following task as finished:",
+                EmployeeId = employeeId,
+                Type = TimelineType.Finish,
+                TaskId = taskId
+            };
+
+            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
 
             return new OperationResult
             {

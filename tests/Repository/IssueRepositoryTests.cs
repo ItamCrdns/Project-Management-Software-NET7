@@ -2,6 +2,7 @@
 using CompanyPMO_.NET.Data;
 using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Interfaces;
+using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using CompanyPMO_.NET.Models;
 using CompanyPMO_.NET.Repository;
 using FakeItEasy;
@@ -14,9 +15,11 @@ namespace Tests.Repository
     public class IssueRepositoryTests
     {
         private readonly IUtility _utility;
+        private readonly ITimelineManagement _timelineManagement;
         public IssueRepositoryTests()
         {
             _utility = A.Fake<IUtility>();
+            _timelineManagement = A.Fake<ITimelineManagement>();
         }
         private static DbContextOptions<ApplicationDbContext> CreateNewContextOptions
         {
@@ -166,7 +169,7 @@ namespace Tests.Repository
         public async void IssueRepository_GetAllIssues_ReturnsAllIssues()
         {
             var dbContext = await GetDatabaseContext();
-            var issueRepository = new IssueRepository(dbContext, _utility);
+            var issueRepository = new IssueRepository(dbContext, _utility, _timelineManagement);
 
             var filterParams = A.Fake<FilterParams>();
 
@@ -195,7 +198,7 @@ namespace Tests.Repository
         public async void IssueRepository_GetAllIssuesShowcase_ReturnsAllIssuesShowcase()
         {
             var dbContext = await GetDatabaseContext();
-            var issueRepository = new IssueRepository(dbContext, _utility);
+            var issueRepository = new IssueRepository(dbContext, _utility, _timelineManagement);
 
             int page = 1;
             int pageSize = 5;
@@ -214,7 +217,7 @@ namespace Tests.Repository
         public async void IssueRepository_GetIssuesShowcaseByEmployeeUsername_ReturnsIssuesShowcaseByEmployeeUsername()
         {
             var dbContext = await GetDatabaseContext();
-            var issueRepository = new IssueRepository(dbContext, _utility);
+            var issueRepository = new IssueRepository(dbContext, _utility, _timelineManagement);
 
             string username = "test0";
             int page = 1;
@@ -241,7 +244,7 @@ namespace Tests.Repository
         public async void IssueRepository_GetIssuesShowcaseByEmployeeUsername_ReturnsNoIssuesShowcase()
         {
             var dbContext = await GetDatabaseContext();
-            var issueRepository = new IssueRepository(dbContext, _utility);
+            var issueRepository = new IssueRepository(dbContext, _utility, _timelineManagement);
 
             string username = "test300";
             int page = 1;
@@ -273,7 +276,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var issueRepository = new IssueRepository(dbContext, _utility);
+            var issueRepository = new IssueRepository(dbContext, _utility, _timelineManagement);
 
             int[] issuesIds = [1, 2, 3];
 
@@ -315,7 +318,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var issueRepository = new IssueRepository(dbContext, _utility);
+            var issueRepository = new IssueRepository(dbContext, _utility, _timelineManagement);
 
             int[] issuesIds = [];
 
@@ -365,7 +368,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var issueRepository = new IssueRepository(dbContext, _utility);
+            var issueRepository = new IssueRepository(dbContext, _utility, _timelineManagement);
 
             var result = await issueRepository.CreateIssue(newIssues, supervisorId, taskId, true);
 
@@ -391,7 +394,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var issueRepository = new IssueRepository(dbContext, _utility);
+            var issueRepository = new IssueRepository(dbContext, _utility, _timelineManagement);
 
             var result = await issueRepository.CreateIssue(newIssues, supervisorId, taskId, false);
 
@@ -410,7 +413,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var issueRepository = new IssueRepository(dbContext, _utility);
+            var issueRepository = new IssueRepository(dbContext, _utility, _timelineManagement);
 
             var result = await issueRepository.GetIssueById(issueId, taskId, projectId, userId);
 

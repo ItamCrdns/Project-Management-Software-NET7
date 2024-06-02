@@ -446,6 +446,15 @@ namespace CompanyPMO_.NET.Repository
                 return ("Employee was created, but something went wrong when creating their Workload entity", true, newlyCreatedEmployee);
             }
 
+            var timelineEvent = new TimelineDto
+            {
+                Event = "registered",
+                EmployeeId = newEmployee.EmployeeId,
+                Type = TimelineType.Register
+            };
+
+            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
+
             return ("Employee created", true, newlyCreatedEmployee);
         }
 
@@ -759,6 +768,15 @@ namespace CompanyPMO_.NET.Repository
                     Username = employeeToUpdate.Username,
                     ProfilePicture = employeeToUpdate.ProfilePicture
                 };
+
+                var timelineEvent = new TimelineDto
+                {
+                    Event = "updated their profile",
+                    EmployeeId = employeeId,
+                    Type = TimelineType.Update
+                };
+
+                await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
 
                 return new OperationResult<EmployeeShowcaseDto> { Success = true, Message = "Employee updated", Data = returnEmployee };
             }

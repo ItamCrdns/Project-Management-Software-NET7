@@ -1,8 +1,6 @@
 ﻿using CompanyPMO_.NET.Common;
 using CompanyPMO_.NET.Dto;
-using CompanyPMO_.NET.Hubs;
 using CompanyPMO_.NET.Interfaces.Employee_interfaces;
-using CompanyPMO_.NET.Interfaces.Timeline_interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -14,11 +12,9 @@ namespace CompanyPMO_.NET.Controllers
     public class EmployeeManagementController : ControllerBase
     {
         private readonly IEmployeeManagement _employeeManagement;
-        private readonly ITimelineManagement _timelineManagement;
-        public EmployeeManagementController(IEmployeeManagement employeeManagement, ITimelineManagement timelineManagement)
+        public EmployeeManagementController(IEmployeeManagement employeeManagement)
         {
             _employeeManagement = employeeManagement;
-            _timelineManagement = timelineManagement;
         }
 
         [AllowAnonymous]
@@ -33,15 +29,6 @@ namespace CompanyPMO_.NET.Controllers
             {
                 return BadRequest(new { Created = status, Message = "Employee could not be created" });
             }
-
-            var timelineEvent = new TimelineDto
-            {
-                Event = "registered",
-                EmployeeId = newEmployee.EmployeeId,
-                Type = TimelineType.Register
-            };
-
-            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
 
             return Ok(new { Created = status, Message = result, newEmployee });
         }
@@ -67,15 +54,6 @@ namespace CompanyPMO_.NET.Controllers
             {
                 return BadRequest(result);
             }
-
-            var timelineEvent = new TimelineDto
-            {
-                Event = "updated their profile",
-                EmployeeId = employeeId,
-                Type = TimelineType.Update
-            };
-
-            await _timelineManagement.CreateTimelineEvent(timelineEvent, UserRoles.Supervisor);
 
             return Ok(result);
         }
