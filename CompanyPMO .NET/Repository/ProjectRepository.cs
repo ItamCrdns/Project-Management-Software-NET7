@@ -32,15 +32,6 @@ namespace CompanyPMO_.NET.Repository
             _notificationManagement = notificationManagement;
         }
 
-        public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images)
-        {
-            var project = await GetProjectEntityById(projectId);
-
-            int imageCountInProjectEntity = project.Images.Count;
-
-            return await _imageService.AddImagesToExistingEntity(projectId, images, "Project", imageCountInProjectEntity);
-        }
-
         public async Task<OperationResult<int>> CreateProject(Project project, EmployeeDto supervisor, List<IFormFile>? images, int companyId, List<int>? employeeIds, bool shouldStartNow)
         {
             if (string.IsNullOrWhiteSpace(project.Name) || string.IsNullOrWhiteSpace(project.Description))
@@ -71,7 +62,6 @@ namespace CompanyPMO_.NET.Repository
             _context.Add(newProject);
 
             company.LatestProjectCreation = DateTime.UtcNow;
-            _context.Update(company);
 
             int rowsAffected = await _context.SaveChangesAsync();
 
@@ -128,12 +118,7 @@ namespace CompanyPMO_.NET.Repository
 
             if (images is not null && images.Any(i => i.Length > 0))
             {
-                var newImages = await _imageService.AddImagesToNewEntity(images, newProject.ProjectId, "Project", null);
-
-                if (newImages.Count is 0)
-                {
-                    errors.Add("Failed to add images to the project");
-                }
+                // NOT IMPLEMENTED YET
             }
 
             await _timelineManagement.CreateTimelineEvent(new TimelineDto
@@ -275,7 +260,7 @@ namespace CompanyPMO_.NET.Repository
         {
             return await _context.Projects
                 .Where(p => p.ProjectId.Equals(projectId))
-                .Include(t => t.Images)
+                .Include(t => t.Pictures)
                 .FirstOrDefaultAsync();
         }
 
@@ -335,36 +320,6 @@ namespace CompanyPMO_.NET.Repository
                 Count = totalCompaniesWithProjects,
                 Pages = totalPages
             };
-        }
-
-        public ICollection<Image> SelectImages(ICollection<Image> images)
-        {
-            var projectImages = images
-                .Where(et => et.EntityType.Equals("Project"))
-                .Select(i => new Image
-                {
-                    ImageId = i.ImageId,
-                    EntityType = i.EntityType,
-                    EntityId = i.EntityId,
-                    ImageUrl = i.ImageUrl,
-                    PublicId = i.PublicId,
-                    Created = i.Created
-                }).ToList();
-
-            return projectImages;
-        }
-
-        public async Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images)
-        {
-            bool projectExists = await DoesProjectExist(projectId);
-
-            if (!projectExists)
-            {
-                return (false, null);
-            }
-
-            // TODO: Test it
-            return await _utilityService.UpdateEntity(employeeId, projectId, projectDto, images, AddImagesToExistingProject, GetProjectEntityById);
         }
 
         public async Task<DataCountPages<ProjectDto>> GetProjectsByEmployeeUsername(string username, FilterParams filterParams)

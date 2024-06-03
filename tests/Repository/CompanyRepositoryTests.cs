@@ -170,50 +170,50 @@ namespace Tests.Repository
                 new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a dummy file 2")), 0, 0, "Data 2", "dummy2.webp")
             ];
 
-            List<Image> imageList =
-            [
-                new()
-                {
-                    ImageId = 1,
-                    EntityType = "Company",
-                    ImageUrl = "Dummy image",
-                    PublicId = string.Empty,
-                    Created = DateTime.Now
-                },
-                new()
-                {
-                    ImageId = 2,
-                    EntityType = "Company",
-                    ImageUrl = "Dummy image",
-                    PublicId = string.Empty,
-                    Created = DateTime.Now
-                }
-            ];
+            //List<Image> imageList =
+            //[
+            //    new()
+            //    {
+            //        ImageId = 1,
+            //        EntityType = "Company",
+            //        ImageUrl = "Dummy image",
+            //        PublicId = string.Empty,
+            //        Created = DateTime.Now
+            //    },
+            //    new()
+            //    {
+            //        ImageId = 2,
+            //        EntityType = "Company",
+            //        ImageUrl = "Dummy image",
+            //        PublicId = string.Empty,
+            //        Created = DateTime.Now
+            //    }
+            //];
 
-            A.CallTo(() => _image.AddImagesToNewEntity(A<List<IFormFile>>._, A<int>._, A<string>._, A<int?>._))
-                .ReturnsLazily((List<IFormFile> images, int entityId, string entityType, int? imagesInEntity) =>
-                {
-                    // Simulate the behavior of adding images to the entity here based on inputs
-                    var imageList = new List<Image>();
-                    var imageUrl = "Fake Url";
-                    var publicId = "Fake publicId";
+            //A.CallTo(() => _image.AddImagesToNewEntity(A<List<IFormFile>>._, A<int>._, A<string>._, A<int?>._))
+            //    .ReturnsLazily((List<IFormFile> images, int entityId, string entityType, int? imagesInEntity) =>
+            //    {
+            //        // Simulate the behavior of adding images to the entity here based on inputs
+            //        var imageList = new List<Image>();
+            //        var imageUrl = "Fake Url";
+            //        var publicId = "Fake publicId";
 
-                    foreach (var image in images)
-                    {
-                        var newImage = new Image
-                        {
-                            EntityType = entityType,
-                            EntityId = entityId,
-                            ImageUrl = imageUrl,
-                            PublicId = publicId,
-                            Created = DateTime.Now
-                        };
+            //        foreach (var image in images)
+            //        {
+            //            var newImage = new Image
+            //            {
+            //                EntityType = entityType,
+            //                EntityId = entityId,
+            //                ImageUrl = imageUrl,
+            //                PublicId = publicId,
+            //                Created = DateTime.Now
+            //            };
 
-                        imageList.Add(newImage);
-                    }
+            //            imageList.Add(newImage);
+            //        }
 
-                    return imageList;
-                });
+            //        return imageList;
+            //    });
 
 
             // Act
@@ -228,56 +228,8 @@ namespace Tests.Repository
             company.AddressId.Should().Be(companyDto.AddressId);
             company.ContactEmail.Should().Be(companyDto.ContactEmail);
             company.ContactPhoneNumber.Should().Be(companyDto.ContactPhoneNumber);
-            company.Images.Should().NotBeNullOrEmpty();
-            company.Images.Should().HaveCountGreaterThanOrEqualTo(1);
-        }
-
-        [Fact]
-        public async void CompanyRepository_AddImagesToExistingCompany_ReturnsImagesDto()
-        {
-            // Arrange
-            var dbContext = await GetDatabaseContext();
-            var companyRepository = new CompanyRepository(dbContext, _image, _utility);
-
-            List<IFormFile> fakeImages = [
-                new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a dummy file")), 0, 0, "Data", "dummy.webp"),
-                new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a dummy file 2")), 0, 0, "Data 2", "dummy2.webp")
-            ];
-
-            List<ImageDto> imageDtos = [
-                new()
-                {
-                    ImageId = 1,
-                    EntityType = "Company",
-                    EntityId = 1,
-                    ImageUrl = "Dummy image",
-                    PublicId = string.Empty,
-                    Created = DateTime.Now
-                },
-                new()
-                {
-                    ImageId = 2,
-                    EntityType = "Company",
-                    EntityId = 1,
-                    ImageUrl = "Dummy image",
-                    PublicId = string.Empty,
-                    Created = DateTime.Now
-                }
-            ];
-
-            var tupleReturn = ("Sucess", imageDtos);
-
-            A.CallTo(() => _image.AddImagesToExistingEntity(A<int>._, A<List<IFormFile>>._, A<string>._, A<int>._)).Returns(tupleReturn);
-
-            // Act
-            var (status, images) = await companyRepository.AddImagesToExistingCompany(1, fakeImages);
-
-            // Assert
-            status.Should().NotBeNullOrEmpty();
-            images.Should().NotBeNullOrEmpty();
-            images.Should().HaveCountGreaterThanOrEqualTo(1);
-            images.Should().BeEquivalentTo(imageDtos);
-            images.Should().BeOfType(typeof(List<ImageDto>));
+            company.Pictures.Should().NotBeNullOrEmpty();
+            company.Pictures.Should().HaveCountGreaterThanOrEqualTo(1);
         }
 
         [Fact]

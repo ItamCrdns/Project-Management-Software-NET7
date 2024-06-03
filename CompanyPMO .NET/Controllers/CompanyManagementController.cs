@@ -64,31 +64,5 @@ namespace CompanyPMO_.NET.Controllers
 
             return Ok(companyId);
         }
-
-        [Authorize(Policy = "SupervisorOnly")]
-        [HttpPatch("{companyId}/update")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Company>))]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> UpdateCompany(int companyId, [FromForm] CompanyDto companyDto, [FromForm] List<IFormFile>? images)
-        {
-            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-
-            // To do: handle the case when the entity has for example 7 values and you pass 5, only the first 3 will be uploaded and the other 2 will not, no error will be given (and it should be an error!)
-            if (images is not null && images.Count > 10)
-            {
-                ModelState.AddModelError("Images", "The request contains too many images (maximum allowed is 10).");
-                return StatusCode(400, ModelState);
-            }
-
-            var (updated, company) = await _companyManagement.UpdateCompany(employeeId, companyId, companyDto, images);
-
-            if (!updated)
-            {
-                return BadRequest();
-            }
-
-            return Ok(company);
-        }
     }
 }

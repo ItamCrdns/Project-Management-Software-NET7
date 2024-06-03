@@ -1,11 +1,12 @@
-﻿namespace CompanyPMO_.NET.Dto
+﻿using CompanyPMO_.NET.Models;
+
+namespace CompanyPMO_.NET.Dto
 {
     public class ProjectDto
     {
         public int ProjectId { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
-        public PatchEntityImagesDto? Images { get; set; }
         public DateTime Created { get; set; }
         public DateTime? Finished { get; set; }
         public DateTime? ExpectedDeliveryDate { get; set; }
@@ -17,7 +18,7 @@
         public int EmployeeCount { get; set; }
         public int TasksCount { get; set; }
         public IEnumerable<EmployeeShowcaseDto>? Team { get; set; }
-        public IEnumerable<ImageDto>? ImagesCollection { get; set; }
+        public IEnumerable<ProjectPicture>? ImagesCollection { get; set; }
     }
 
     public class ProjectSomeInfoDto

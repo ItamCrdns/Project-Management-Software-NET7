@@ -84,11 +84,11 @@ namespace CompanyPMO_.NET.Repository
                 };
             }
 
-            List<Image> imageCollection = new();
+            List<TaskPicture> imageCollection = new();
 
             if (images is not null && images.Count > 0)
             {
-                imageCollection = await _imageService.AddImagesToNewEntity(images, newTask.TaskId, "Task", null);
+                // Not implemented yet
             }
 
             List<string> errors = new();
@@ -203,15 +203,10 @@ namespace CompanyPMO_.NET.Repository
 
             var tasks = await _context.Tasks
                 .OrderByDescending(p => p.Created)
-                .Include(t => t.Images)
+                .Include(t => t.Pictures)
                 .Skip(postsToSkip)
                 .Take(pageSize)
                 .ToListAsync();
-
-            foreach (var task in tasks)
-            {
-                task.Images = SelectImages(task.Images);
-            }
 
             return tasks;
         }
@@ -284,24 +279,6 @@ namespace CompanyPMO_.NET.Repository
                 Count = totalTasksCount,
                 Pages = totalPages
             };
-        }
-
-        public ICollection<Image> SelectImages(ICollection<Image> images)
-        {
-            var projectImages = images
-                .Where(et => et.EntityType.Equals("Task"))
-                .Select(i => new Image
-                {
-                    ImageId = i.ImageId,
-                    EntityType = i.EntityType,
-                    EntityId = i.EntityId,
-                    ImageUrl = i.ImageUrl,
-                    PublicId = i.PublicId,
-                    Created = i.Created,
-                    UploaderId = i.UploaderId
-                }).ToList();
-
-            return projectImages;
         }
 
         public async Task<DataCountPages<TaskDto>> GetTasksByEmployeeUsername(string username, int page, int pageSize)

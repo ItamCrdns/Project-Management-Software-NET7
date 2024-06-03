@@ -144,19 +144,18 @@ namespace Tests.Repository
                 }
             }
 
-            if (!await dbContext.Images.AnyAsync())
+            if (!await dbContext.ProjectPictures.AnyAsync())
             {
                 for (int i = 1; i < 3; i++)
                 {
-                    dbContext.Images.Add(
-                        new Image
+                    dbContext.ProjectPictures.Add(
+                        new ProjectPicture
                         {
-                            EntityType = "Project",
-                            EntityId = i,
-                            ImageUrl = $"test{i}",
-                            PublicId = $"test{i}",
+                            ProjectId = i,
+                            ImageUrl = $"Test{i}",
+                            CloudinaryPublicId = $"Test{i}",
                             Created = DateTime.UtcNow,
-                            UploaderId = i
+                            EmployeeId = i
                         });
                 }
             }
@@ -164,58 +163,6 @@ namespace Tests.Repository
             await dbContext.SaveChangesAsync();
 
             return dbContext;
-        }
-
-        [Fact]
-        public async void ProjectRepository_AddImagesToExistingProject_ReturnsAddedImages()
-        {
-            int projectId = 5;
-            List<IFormFile> fakeIFormFileList =
-            [
-                new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test")), 0, 0, "Data", "test.jpg"),
-                new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test 2")), 0, 0, "Data 2", "test2.jpg"),
-                new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a test 3")), 0, 0, "Data 3", "test3.jpg")
-                ];
-
-            var dbContext = await GetDatabaseContext();
-            var fakeProject = A.Fake<Project>();
-
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
-
-            IEnumerable<ImageDto> fakeImages =
-            [
-                new()
-                {
-                    ImageId = 1,
-                    EntityType = "Test",
-                    EntityId = 1,
-                    ImageUrl = "Test",
-                    PublicId = "Test",
-                    Created = DateTime.UtcNow
-                },
-                new()
-                {
-                    ImageId = 2,
-                    EntityType = "Test2",
-                    EntityId = 2,
-                    ImageUrl = "Test2",
-                    PublicId = "Test2",
-                    Created = DateTime.UtcNow
-                }
-            ];
-
-            var tupleResult = ("Success", fakeImages);
-
-            A.CallTo(() => _image.AddImagesToExistingEntity(A<int>._, A<List<IFormFile>>._, A<string>._, A<int>._))
-                .Returns(tupleResult);
-
-            var result = await projectRepository.AddImagesToExistingProject(projectId, fakeIFormFileList);
-
-            result.Should().BeEquivalentTo(tupleResult);
-            result.Item2.Should().BeEquivalentTo(fakeImages);
-            result.Item2.Should().HaveCountGreaterThan(1);
-            result.Item2.Should().BeAssignableTo(typeof(IEnumerable<ImageDto>));
-            result.status.Should().Be("Success").And.BeOfType<string>();
         }
 
         [Fact]
@@ -550,22 +497,6 @@ namespace Tests.Repository
                 data.Pages.Should().BeGreaterThanOrEqualTo(1);
                 data.Projects.Should().BeOfType<List<ProjectDto>>();
             }
-        }
-
-        [Fact]
-        public async void ProjectRepository_SelectImages_ReturnsImageCollection()
-        {
-            var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
-
-            var fakeImages = dbContext.Images.ToList();
-
-            var result = projectRepository.SelectImages(fakeImages);
-
-            result.Should().HaveCountGreaterThanOrEqualTo(1);
-            result.Should().NotBeNull();
-            result.Should().NotBeEmpty();
-            result.Should().BeOfType(typeof(List<Image>));
         }
 
         [Fact]

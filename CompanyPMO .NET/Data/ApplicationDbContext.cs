@@ -1,5 +1,6 @@
 ﻿using CompanyPMO_.NET.Models;
 using Microsoft.EntityFrameworkCore;
+using Task = CompanyPMO_.NET.Models.Task;
 
 namespace CompanyPMO_.NET.Data
 {
@@ -19,15 +20,17 @@ namespace CompanyPMO_.NET.Data
         public DbSet<Issue> Issues { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Project> Projects { get; set; }
-        public DbSet<Models.Task> Tasks { get; set; }
+        public DbSet<Task> Tasks { get; set; }
         public DbSet<Tier> Tiers { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<Image> Images { get; set; }
         public DbSet<Changelog> Changelog { get; set; }
         public DbSet<ResetPasswordRequest> ResetPasswordRequests { get; set; }
         public DbSet<Workload> Workload { get; set; }
         public DbSet<Timeline> Timelines { get; set; }
-  
+        public DbSet<CompanyPicture> CompanyPictures { get; set; }
+        public DbSet<ProjectPicture> ProjectPictures { get; set; }
+        public DbSet<TaskPicture> TaskPictures { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Primary key definition
@@ -40,13 +43,16 @@ namespace CompanyPMO_.NET.Data
             modelBuilder.Entity<Issue>().HasKey(i => i.IssueId);
             modelBuilder.Entity<Notification>().HasKey(n => n.NotificationId);
             modelBuilder.Entity<Project>().HasKey(p => p.ProjectId);
-            modelBuilder.Entity<Models.Task>().HasKey(t => t.TaskId);
+            modelBuilder.Entity<Task>().HasKey(t => t.TaskId);
             modelBuilder.Entity<Tier>().HasKey(t => t.TierId);
             modelBuilder.Entity<User>().HasKey(u => u.UserId);
-            modelBuilder.Entity<Image>().HasKey(i => i.ImageId);
             modelBuilder.Entity<Changelog>().HasKey(c => c.LogId);
             modelBuilder.Entity<ResetPasswordRequest>().HasKey(r => r.RequestId);
             modelBuilder.Entity<Workload>().HasKey(w => w.WorkloadId);
+            modelBuilder.Entity<Timeline>().HasKey(t => t.TimelineId);
+            modelBuilder.Entity<CompanyPicture>().HasKey(c => c.CompanyPictureId);
+            modelBuilder.Entity<ProjectPicture>().HasKey(p => p.ProjectPictureId);
+            modelBuilder.Entity<TaskPicture>().HasKey(t => t.TaskPictureId);
 
             // Relationships
 
@@ -118,25 +124,25 @@ namespace CompanyPMO_.NET.Data
                 .WithMany(e => e.Employees)
                 .UsingEntity<EmployeeIssue>();
 
+            modelBuilder.Entity<Company>()
+                .HasMany(x => x.Pictures)
+                .WithOne(p => p.Company)
+                .HasForeignKey(x => x.CompanyId);
+
             modelBuilder.Entity<Project>()
-                .HasMany(i => i.Images)
+                .HasMany(x => x.Pictures)
                 .WithOne(p => p.Project)
-                .HasForeignKey(i => i.EntityId);
+                .HasForeignKey(x => x.ProjectId);
 
-            modelBuilder.Entity<Models.Task>()
-                .HasMany(i => i.Images)
-                .WithOne(t => t.Task)
-                .HasForeignKey(i => i.EntityId);
+            modelBuilder.Entity<Task>()
+                .HasMany(x => x.Pictures)
+                .WithOne(p => p.Task)
+                .HasForeignKey(x => x.TaskId);
 
-            modelBuilder.Entity<Models.Task>()
+            modelBuilder.Entity<Task>()
                 .HasMany(t => t.Issues)
                 .WithOne(t => t.Task)
                 .HasForeignKey(i => i.TaskId);
-
-            modelBuilder.Entity<Company>()
-                .HasMany(i => i.Images)
-                .WithOne(c => c.Company)
-                .HasForeignKey(i => i.EntityId);
 
             modelBuilder.Entity<Company>()
                 .HasMany(e => e.Employees)

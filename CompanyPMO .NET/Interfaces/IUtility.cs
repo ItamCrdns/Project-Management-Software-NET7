@@ -1,5 +1,4 @@
-﻿using CompanyPMO_.NET.Dto;
-using CompanyPMO_.NET.Models;
+﻿using CompanyPMO_.NET.Models;
 using System.Linq.Expressions;
 
 namespace CompanyPMO_.NET.Interfaces
@@ -11,17 +10,6 @@ namespace CompanyPMO_.NET.Interfaces
 
     public interface IUtility
     {
-        // TEntity = Generic method so it can work (update) different of my database entities.
-        // TDto = generic method, will be used to update the entity.
-        Task<(bool updated, TDto)> UpdateEntity<TEntity, TDto>(
-            int employeeId, // Represents the employee doing the patch request
-            int entityId, // Represents the id of the entity we are going to update
-            TDto dto,
-            List<IFormFile>? images,
-            Func<int, List<IFormFile>, Task<(string result, IEnumerable<ImageDto>)>> addImagesMethod,
-            Func<int, Task<TEntity?>> findEntityMethod)
-            where TEntity : class;
-
         int MinutesUntilTimeArrival(DateTimeOffset? time); // Relative time function to get how many minutes are there until a certain date
 
         Task<(IEnumerable<int> entityIds, int totalEntitiesCount, int totalPages)> GetEntitiesByEmployeeUsername<TEntity>(

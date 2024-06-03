@@ -32,7 +32,7 @@ namespace CompanyPMO_.NET.Models
 
         // Navigation properties
 
-        public ICollection<Image>? Images { get; set; }
+        public List<ProjectPicture>? Pictures { get; set; }
         public List<Employee>? Employees { get; set; }
         public Company? Company { get; set; }
         public Employee? ProjectCreator { get; set; }

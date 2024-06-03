@@ -28,7 +28,7 @@ namespace CompanyPMO_.NET.Models
 
         // Navigation properties
 
-        public ICollection<Image>? Images { get; set; }
+        public ICollection<TaskPicture>? Pictures { get; set; }
         public ICollection<Issue>? Issues { get; set; }
         public List<Employee>? Employees { get; set; }
         public Employee? TaskCreator { get; set; }

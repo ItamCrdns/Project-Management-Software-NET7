@@ -7,6 +7,5 @@
         public int AddressId { get; set; }
         public string? ContactEmail { get; set; }
         public string? ContactPhoneNumber { get; set; }
-        public PatchEntityImagesDto? Images { get; set; }
     }
 }

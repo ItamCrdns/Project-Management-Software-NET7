@@ -36,25 +36,6 @@ namespace CompanyPMO_.NET.Controllers
         }
 
         [Authorize(Policy = "SupervisorOnly")]
-        [HttpPatch("{projectId}/update")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Project>))]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> UpdateProject(int projectId, [FromForm] ProjectDto projectDto, [FromForm] List<IFormFile>? images)
-        {
-            var employeeId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-
-            var (updated, project) = await _projectManagement.UpdateProject(employeeId, projectId, projectDto, images);
-
-            if (!updated)
-            {
-                return BadRequest();
-            }
-
-            return Ok(project);
-        }
-
-        [Authorize(Policy = "SupervisorOnly")]
         [HttpPost("set/finished/bulk")]
         [ProducesResponseType(200, Type = typeof(OperationResult))]
         public async Task<IActionResult> SetProjectsFininishedBulk([FromBody] int[] projectIds)

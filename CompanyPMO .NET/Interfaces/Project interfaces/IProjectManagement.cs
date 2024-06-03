@@ -8,8 +8,6 @@ namespace CompanyPMO_.NET.Interfaces.Project_interfaces
     {
         // PENDING: Implement AddImagesToExistingProject in Project Management Controller
         Task<OperationResult<int>> CreateProject(Project project, EmployeeDto supervisor, List<IFormFile>? images, int companyId, List<int>? employeeIds, bool shouldStartNow);
-        Task<(bool updated, ProjectDto)> UpdateProject(int employeeId, int projectId, ProjectDto projectDto, List<IFormFile>? images);
-        Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingProject(int projectId, List<IFormFile>? images);
         Task<OperationResult> SetProjectsStartBulk(int[] projectIds, int employeeId);
         Task<OperationResult> SetProjectStart(int projectId, int employeeId);
         Task<OperationResult> SetProjectsFininishedBulk(int[] projectIds, int employeeId);

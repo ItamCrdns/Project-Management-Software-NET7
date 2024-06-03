@@ -533,56 +533,6 @@ namespace Tests.Repository
         }
 
         [Fact]
-        public async void TaskRepository_SelectImages_ReturnsImages()
-        {
-            ICollection<Image> images = new List<Image>
-            {
-                new()
-                {
-                    ImageId = 1,
-                    EntityType = "Task",
-                    EntityId = 1,
-                    ImageUrl = "test.jpg",
-                    PublicId = "test",
-                    Created = DateTime.Now,
-                    UploaderId = 1
-                },
-                new()
-                {
-                    ImageId = 2,
-                    EntityType = "Task",
-                    EntityId = 1,
-                    ImageUrl = "test2.jpg",
-                    PublicId = "test2",
-                    Created = DateTime.Now,
-                    UploaderId = 1
-                },
-                new()
-                {
-                    ImageId = 3,
-                    EntityType = "Project",
-                    EntityId = 1,
-                    ImageUrl = "test3.jpg",
-                    PublicId = "test3",
-                    Created = DateTime.Now,
-                    UploaderId = 1
-                }
-            };
-
-            var dbContext = await GetDatabaseContext();
-
-            var taskRepository = new TaskRepository(dbContext, _image, _utility, _workload, _timelineManagement);
-
-            var result = taskRepository.SelectImages(images);
-
-            result.Should().BeEquivalentTo(images.Where(x => x.EntityType == "Task"));
-            result.Should().BeOfType<List<Image>>();
-            result.Should().NotBeEmpty();
-            result.Should().HaveCountGreaterThanOrEqualTo(1);
-            result.Should().NotBeEquivalentTo(images.Where(x => x.EntityType == "Project"));
-        }
-
-        [Fact]
         public async void TaskRepository_GetTasksByEmployeeUsername_ReturnsTasks()
         {
             string username = "test1";

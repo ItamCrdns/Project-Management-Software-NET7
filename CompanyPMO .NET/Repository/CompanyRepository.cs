@@ -44,11 +44,11 @@ namespace CompanyPMO_.NET.Repository
             _context.Add(company);
             _ = await _context.SaveChangesAsync();
 
-            List<Image> imageCollection = new();
+            List<CompanyPicture> imageCollection = new();
 
             if (images is not null && images.Any())
             {
-                imageCollection = await _imageService.AddImagesToNewEntity(images, company.CompanyId, "Company", null);
+                // Not implemented
             }
 
             var returnedCompany = new Company
@@ -59,19 +59,10 @@ namespace CompanyPMO_.NET.Repository
                 ContactEmail = company.ContactEmail,
                 ContactPhoneNumber = company.ContactPhoneNumber,
                 Logo = company.Logo,
-                Images = imageCollection
+                Pictures = imageCollection
             };
 
             return (true, returnedCompany);
-        }
-
-        public async Task<(string status, IEnumerable<ImageDto>)> AddImagesToExistingCompany(int companyId, List<IFormFile>? images)
-        {
-            var company = await GetCompanyById(companyId);
-
-            int imageCountInCompanyEntity = company.Images.Count;
-
-            return await _imageService.AddImagesToExistingEntity(companyId, images, "Company", imageCountInCompanyEntity);
         }
 
         public async Task<int> CreateNewCompany(int supervisorId, string name)
@@ -156,43 +147,12 @@ namespace CompanyPMO_.NET.Repository
             return companiesDto;
         }
 
-        public async Task<Company> GetCompanyById(int companyId)
+        public async Task<Company?> GetCompanyById(int companyId)
         {
-            var company = await _context.Companies
+            return await _context.Companies
                 .Where(c => c.CompanyId.Equals(companyId))
-                .Include(i => i.Images)
+                .Include(i => i.Pictures)
                 .FirstOrDefaultAsync();
-
-            if (company?.Images is not null && company.Images.Count > 0)
-            {
-                var companyImages = company?.Images?
-                    .Where(et => et.EntityType.Equals("Company"))
-                    .Select(i => new Image
-                    {
-                        ImageId = i.ImageId,
-                        EntityType = i.EntityType,
-                        EntityId = i.EntityId,
-                        ImageUrl = i.ImageUrl,
-                        PublicId = i.PublicId,
-                        Created = i.Created,
-                    }).ToList();
-
-                company.Images = companyImages;
-            }
-
-            return company;
-        }
-
-        public async Task<(bool updated, CompanyDto)> UpdateCompany(int employeeId, int companyId, CompanyDto companyDto, List<IFormFile>? images)
-        {
-            bool companyExists = await DoesCompanyExist(companyId);
-
-            if (!companyExists)
-            {
-                return (false, null);
-            }
-
-            return await _utilityService.UpdateEntity(employeeId, companyId, companyDto, images, AddImagesToExistingCompany, GetCompanyById);
         }
     }
 }
