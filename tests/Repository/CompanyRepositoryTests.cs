@@ -14,11 +14,11 @@ namespace Tests.Repository
 {
     public class CompanyRepositoryTests
     {
-        private readonly IImage _image;
+        private readonly ICloudinary _image;
         private readonly IUtility _utility;
         public CompanyRepositoryTests()
         {
-            _image = A.Fake<IImage>();
+            _image = A.Fake<ICloudinary>();
             _utility = A.Fake<IUtility>();
         }
 

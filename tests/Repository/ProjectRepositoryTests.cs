@@ -18,14 +18,14 @@ namespace Tests.Repository
 {
     public class ProjectRepositoryTests
     {
-        private readonly IImage _image;
+        private readonly ICloudinary _image;
         private readonly IUtility _utility;
         private readonly IWorkloadProject _workload;
         private readonly ITimelineManagement _timelineManagement;
         private readonly INotificationManagement _notificationManagement;
         public ProjectRepositoryTests()
         {
-            _image = A.Fake<IImage>();
+            _image = A.Fake<ICloudinary>();
             _utility = A.Fake<IUtility>();
             _workload = A.Fake<IWorkloadProject>();
             _timelineManagement = A.Fake<ITimelineManagement>();

@@ -4,10 +4,10 @@ using CompanyPMO_.NET.Interfaces;
 
 namespace CompanyPMO_.NET.Services
 {
-    public class ImageService : IImage
+    public class CloudinaryService : ICloudinary
     {
         private readonly Cloudinary _cloudinary;
-        public ImageService(Cloudinary cloudinary)
+        public CloudinaryService(Cloudinary cloudinary)
         {
             _cloudinary = cloudinary;
         }

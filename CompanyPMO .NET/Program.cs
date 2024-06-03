@@ -63,7 +63,7 @@ builder.Services.AddScoped<INotificationManagement, NotificationRepository>();
 builder.Services.AddScoped<ITimeline, TimelineRepository>();
 builder.Services.AddScoped<ITimelineManagement, TimelineRepository>();   
 
-builder.Services.AddScoped<IImage, ImageService>();
+builder.Services.AddScoped<ICloudinary, CloudinaryService>();
 builder.Services.AddScoped<IUtility, UtilityService>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 

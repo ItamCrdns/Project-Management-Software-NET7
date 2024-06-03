@@ -11,10 +11,10 @@ namespace CompanyPMO_.NET.Repository
     public class CompanyRepository : ICompany, ICompanyManagement
     {
         private readonly ApplicationDbContext _context;
-        private readonly IImage _imageService;
+        private readonly ICloudinary _imageService;
         private readonly IUtility _utilityService;
 
-        public CompanyRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService)
+        public CompanyRepository(ApplicationDbContext context, ICloudinary imageService, IUtility utilityService)
         {
             _context = context;
             _imageService = imageService;

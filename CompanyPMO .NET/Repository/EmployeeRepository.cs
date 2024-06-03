@@ -13,13 +13,13 @@ namespace CompanyPMO_.NET.Repository
     public class EmployeeRepository : IEmployeeAuthentication, IEmployeeCompanyQueries, IEmployeeManagement, IEmployeeProjectQueries, IEmployeeQueries
     {
         private readonly ApplicationDbContext _context;
-        private readonly IImage _imageService;
+        private readonly ICloudinary _imageService;
         private readonly IUtility _utilityService;
         private readonly IWorkload _workloadService;
         private readonly IJwt _jwt;
         private readonly ITimelineManagement _timelineManagement;
 
-        public EmployeeRepository(ApplicationDbContext context, IImage imageService, IUtility utilityService, IWorkload workloadService, IJwt jwt, ITimelineManagement timelineManagement)
+        public EmployeeRepository(ApplicationDbContext context, ICloudinary imageService, IUtility utilityService, IWorkload workloadService, IJwt jwt, ITimelineManagement timelineManagement)
         {
             _context = context;
             _imageService = imageService;

@@ -16,14 +16,14 @@ namespace tests.Repository
 {
     public class EmployeeRepositoryTests
     {
-        private readonly IImage _image;
+        private readonly ICloudinary _image;
         private readonly IUtility _utility;
         private readonly IWorkload _workload;
         private readonly IJwt _jwt;
         private readonly ITimelineManagement _timelineManagement;
         public EmployeeRepositoryTests()
         {
-            _image = A.Fake<IImage>();
+            _image = A.Fake<ICloudinary>();
             _utility = A.Fake<IUtility>();
             _workload = A.Fake<IWorkload>();
             _jwt = A.Fake<IJwt>();

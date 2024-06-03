@@ -18,13 +18,13 @@ namespace Tests.Repository
 {
     public class TaskRepositoryTests
     {
-        private readonly IImage _image;
+        private readonly ICloudinary _image;
         private readonly IUtility _utility;
         private readonly IWorkloadTask _workload;
         private readonly ITimelineManagement _timelineManagement;
         public TaskRepositoryTests()
         {
-            _image = A.Fake<IImage>();
+            _image = A.Fake<ICloudinary>();
             _utility = A.Fake<IUtility>();
             _workload = A.Fake<IWorkloadTask>();
             _timelineManagement = A.Fake<ITimelineManagement>();
