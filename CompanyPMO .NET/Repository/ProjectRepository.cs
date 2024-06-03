@@ -16,16 +16,14 @@ namespace CompanyPMO_.NET.Repository
     public class ProjectRepository : IProjectCompanyQueries, IProjectEmployeeQueries, IProjectManagement, IProjectQueries
     {
         private readonly ApplicationDbContext _context;
-        private readonly ICloudinary _imageService;
         private readonly IUtility _utilityService;
         private readonly IWorkloadProject _workloadService;
         private readonly ITimelineManagement _timelineManagement;
         private readonly INotificationManagement _notificationManagement;
 
-        public ProjectRepository(ApplicationDbContext context, ICloudinary imageService, IUtility utilityService, IWorkloadProject workloadService, ITimelineManagement timelineManagement, INotificationManagement notificationManagement)
+        public ProjectRepository(ApplicationDbContext context, IUtility utilityService, IWorkloadProject workloadService, ITimelineManagement timelineManagement, INotificationManagement notificationManagement)
         {
             _context = context;
-            _imageService = imageService;
             _utilityService = utilityService;
             _workloadService = workloadService;
             _timelineManagement = timelineManagement;

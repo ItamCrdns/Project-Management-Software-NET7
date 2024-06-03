@@ -18,14 +18,12 @@ namespace Tests.Repository
 {
     public class ProjectRepositoryTests
     {
-        private readonly ICloudinary _image;
         private readonly IUtility _utility;
         private readonly IWorkloadProject _workload;
         private readonly ITimelineManagement _timelineManagement;
         private readonly INotificationManagement _notificationManagement;
         public ProjectRepositoryTests()
         {
-            _image = A.Fake<ICloudinary>();
             _utility = A.Fake<IUtility>();
             _workload = A.Fake<IWorkloadProject>();
             _timelineManagement = A.Fake<ITimelineManagement>();
@@ -192,7 +190,7 @@ namespace Tests.Repository
             };
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.CreateProject(newProject, new EmployeeDto { EmployeeId = supervisorId, Username = supervisorUsername }, fakeIFormFileList, companyId, employees, false);
 
@@ -229,7 +227,7 @@ namespace Tests.Repository
             };
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.CreateProject(newProject, new EmployeeDto { EmployeeId = supervisorId, Username = supervisorUsername }, fakeIFormFileList, companyId, employees, false);
 
@@ -267,7 +265,7 @@ namespace Tests.Repository
             };
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             A.CallTo(() => _workload.UpdateEmployeeCreatedProjects(A<int>._))
                 .Returns(new OperationResult { Success = false, Message = "Error" });
@@ -294,7 +292,7 @@ namespace Tests.Repository
             int projectId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext,  _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.DoesProjectExist(projectId);
 
@@ -307,7 +305,7 @@ namespace Tests.Repository
             int projectId = 100;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext,  _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.DoesProjectExist(projectId);
 
@@ -318,7 +316,7 @@ namespace Tests.Repository
         public async void ProjectRepository_GetAllProjects_ReturnsAllProjects()
         {
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext,  _utility, _workload, _timelineManagement, _notificationManagement);
 
             var filterParams = A.Fake<FilterParams>();
 
@@ -345,7 +343,7 @@ namespace Tests.Repository
         public async void ProjectRepository_GetProjectsByCompanyName_ReturnsProjects()
         {
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext,  _utility, _workload, _timelineManagement, _notificationManagement);
 
             int companyId = 1;
             var filterParams = A.Fake<FilterParams>();
@@ -374,7 +372,7 @@ namespace Tests.Repository
         public async void ProjectRepository_GetProjectsByCompanyName_ReturnsNoProjects()
         {
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             int companyId = 100;
             var filterParams = A.Fake<FilterParams>();
@@ -405,7 +403,7 @@ namespace Tests.Repository
             int projectId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.GetProjectById(projectId, 1);
 
@@ -437,7 +435,7 @@ namespace Tests.Repository
             int projectId = 100;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.GetProjectById(projectId, 2);
 
@@ -450,7 +448,7 @@ namespace Tests.Repository
             int projectId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.GetProjectEntityById(projectId);
 
@@ -465,7 +463,7 @@ namespace Tests.Repository
             int projectId = 100;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.GetProjectEntityById(projectId);
 
@@ -480,7 +478,7 @@ namespace Tests.Repository
 
             var dbContext = await GetDatabaseContext();
 
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var fakeFilterParams = A.Fake<FilterParams>();
 
@@ -504,7 +502,7 @@ namespace Tests.Repository
         {
             string username = "test1";
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var filterParams = A.Fake<FilterParams>();
 
@@ -537,7 +535,7 @@ namespace Tests.Repository
         {
             string username = "test100";
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var filterParams = A.Fake<FilterParams>();
 
@@ -573,7 +571,7 @@ namespace Tests.Repository
             int pageSize = 10;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var tupleEntitiesResult = (new List<int> { 1, 2, 3, 4 }, 1, 1);
 
@@ -597,7 +595,7 @@ namespace Tests.Repository
             int pageSize = 10;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var tupleEntitiesResult = (new List<int> { 777, 7778, 67676, 12312312 }, 0, 0);
 
@@ -620,7 +618,7 @@ namespace Tests.Repository
             int pageSize = 10;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.GetAllProjectsShowcase(page, pageSize);
 
@@ -638,7 +636,7 @@ namespace Tests.Repository
             int employeeId = 7;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.IsParticipant(projectId, employeeId);
 
@@ -652,7 +650,7 @@ namespace Tests.Repository
             int employeeId = 100;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.IsParticipant(projectId, employeeId);
 
@@ -666,7 +664,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.IsOwner(projectId, employeeId);
 
@@ -680,7 +678,7 @@ namespace Tests.Repository
             int employeeId = 100;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.IsOwner(projectId, employeeId);
 
@@ -693,7 +691,7 @@ namespace Tests.Repository
             int projectId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.GetProjectNameCreatorLifecyclePriorityAndTeam(projectId);
 
@@ -709,7 +707,7 @@ namespace Tests.Repository
             int projectId = 100;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement); ;
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement); ;
 
             var result = await projectRepository.GetProjectNameCreatorLifecyclePriorityAndTeam(projectId);
 
@@ -722,7 +720,7 @@ namespace Tests.Repository
             int projectId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.GetProjectShowcase(projectId);
 
@@ -738,7 +736,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.SetProjectsFininishedBulk(projectIds, employeeId);
 
@@ -754,7 +752,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.SetProjectsFininishedBulk(projectIds, employeeId);
 
@@ -770,7 +768,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.SetProjectsFininishedBulk(projectIds, employeeId);
 
@@ -786,7 +784,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.SetProjectsStartBulk(projectIds, employeeId);
 
@@ -802,7 +800,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.SetProjectsStartBulk(projectIds, employeeId);
 
@@ -826,7 +824,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.SetProjectsStartBulk(projectIds, employeeId);
 
@@ -842,7 +840,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.SetProjectsStartBulk(projectIds, employeeId);
 
@@ -858,7 +856,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.SetProjectStart(projectId, employeeId);
 
@@ -874,7 +872,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.SetProjectStart(projectId, employeeId);
 
@@ -890,7 +888,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.SetProjectStart(projectId, employeeId);
 
@@ -906,7 +904,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.SetProjectFinished(projectId, employeeId);
 
@@ -922,7 +920,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.SetProjectFinished(projectId, employeeId);
 
@@ -938,7 +936,7 @@ namespace Tests.Repository
             int employeeId = 1;
 
             var dbContext = await GetDatabaseContext();
-            var projectRepository = new ProjectRepository(dbContext, _image, _utility, _workload, _timelineManagement, _notificationManagement);
+            var projectRepository = new ProjectRepository(dbContext, _utility, _workload, _timelineManagement, _notificationManagement);
 
             var result = await projectRepository.SetProjectFinished(projectId, employeeId);
 

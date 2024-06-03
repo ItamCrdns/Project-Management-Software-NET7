@@ -12,13 +12,11 @@ namespace CompanyPMO_.NET.Repository
     {
         private readonly ApplicationDbContext _context;
         private readonly ICloudinary _imageService;
-        private readonly IUtility _utilityService;
 
-        public CompanyRepository(ApplicationDbContext context, ICloudinary imageService, IUtility utilityService)
+        public CompanyRepository(ApplicationDbContext context, ICloudinary imageService)
         {
             _context = context;
             _imageService = imageService;
-            _utilityService = utilityService;
         }
 
         public async Task<(bool created, Company)> AddCompany(int supervisorId, CompanyDto companyDto, List<IFormFile>? images, IFormFile? logoFile)

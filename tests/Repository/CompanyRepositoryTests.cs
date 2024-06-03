@@ -15,11 +15,9 @@ namespace Tests.Repository
     public class CompanyRepositoryTests
     {
         private readonly ICloudinary _image;
-        private readonly IUtility _utility;
         public CompanyRepositoryTests()
         {
             _image = A.Fake<ICloudinary>();
-            _utility = A.Fake<IUtility>();
         }
 
         private static DbContextOptions<ApplicationDbContext> CreateNewContextOptions
@@ -89,7 +87,7 @@ namespace Tests.Repository
         {
             // Arrange
             var dbContext = await GetDatabaseContext();
-            var companyRepository = new CompanyRepository(dbContext, _image, _utility);
+            var companyRepository = new CompanyRepository(dbContext, _image);
             var companyDto = new CompanyDto
             {
                 Name = "Company 1",
@@ -118,7 +116,7 @@ namespace Tests.Repository
         {
             // Arrange
             var dbContext = await GetDatabaseContext();
-            var companyRepository = new CompanyRepository(dbContext, _image, _utility);
+            var companyRepository = new CompanyRepository(dbContext, _image);
             var companyDto = new CompanyDto
             {
                 Name = "Company 1",
@@ -155,7 +153,7 @@ namespace Tests.Repository
         {
             // Arrange
             var dbContext = await GetDatabaseContext();
-            var companyRepository = new CompanyRepository(dbContext, _image, _utility);
+            var companyRepository = new CompanyRepository(dbContext, _image);
             var companyDto = new CompanyDto
             {
                 Name = "Company 1",
@@ -237,7 +235,7 @@ namespace Tests.Repository
         {
             // Arrange
             var dbContext = await GetDatabaseContext();
-            var companyRepository = new CompanyRepository(dbContext, _image, _utility);
+            var companyRepository = new CompanyRepository(dbContext, _image);
 
             // Act
             var companyId = await companyRepository.CreateNewCompany(1, "Company 1");
@@ -251,7 +249,7 @@ namespace Tests.Repository
         {
             // Arrange
             var dbContext = await GetDatabaseContext();
-            var companyRepository = new CompanyRepository(dbContext, _image, _utility);
+            var companyRepository = new CompanyRepository(dbContext, _image);
 
             // Act
             var companyId = await companyRepository.CreateNewCompany(0, string.Empty);
@@ -267,7 +265,7 @@ namespace Tests.Repository
             int page = 1;
             int pageSize = 10;
             var dbContext = await GetDatabaseContext();
-            var companyRepository = new CompanyRepository(dbContext, _image, _utility);
+            var companyRepository = new CompanyRepository(dbContext, _image);
 
 
             // Act
@@ -291,7 +289,7 @@ namespace Tests.Repository
         {
             // Arrange
             var dbContext = await GetDatabaseContext();
-            var companyRepository = new CompanyRepository(dbContext, _image, _utility);
+            var companyRepository = new CompanyRepository(dbContext, _image);
 
             // Act
             var companies = await companyRepository.GetCompaniesThatHaveProjects();
@@ -309,7 +307,7 @@ namespace Tests.Repository
             int companyId = 1;
             var dbContext = await GetDatabaseContext();
 
-            var companyRepository = new CompanyRepository(dbContext, _image, _utility);
+            var companyRepository = new CompanyRepository(dbContext, _image);
 
             // Act
             var company = await companyRepository.GetCompanyById(companyId);
@@ -327,7 +325,7 @@ namespace Tests.Repository
             int companyId = 1000;
             var dbContext = await GetDatabaseContext();
 
-            var companyRepository = new CompanyRepository(dbContext, _image, _utility);
+            var companyRepository = new CompanyRepository(dbContext, _image);
 
             // Act
             var company = await companyRepository.GetCompanyById(companyId);
@@ -335,11 +333,5 @@ namespace Tests.Repository
             // Assert
             company.Should().BeNull();
         }
-
-        //    [Fact]
-        //    public async void CompanyRepository_UpdateCompany_ReturnsUpdatedTrue()
-        //    {
-        //        // Not implemented yet.
-        //    }
     }
 }

@@ -16,15 +16,13 @@ namespace CompanyPMO_.NET.Repository
     public class TaskRepository : ITask, ITaskEmployeeQueries, ITaskProjectQueries, ITaskManagement
     {
         private readonly ApplicationDbContext _context;
-        private readonly ICloudinary _imageService;
         private readonly IUtility _utilityService;
         private readonly IWorkloadTask _workloadService;
         private readonly ITimelineManagement _timelineManagement;
 
-        public TaskRepository(ApplicationDbContext context, ICloudinary imageService, IUtility utilityService, IWorkloadTask workloadService, ITimelineManagement timelineManagement)
+        public TaskRepository(ApplicationDbContext context, IUtility utilityService, IWorkloadTask workloadService, ITimelineManagement timelineManagement)
         {
             _context = context;
-            _imageService = imageService;
             _utilityService = utilityService;
             _workloadService = workloadService;
             _timelineManagement = timelineManagement;
