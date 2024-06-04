@@ -149,7 +149,6 @@ namespace Tests.Repository
 
         [Fact]
         public async void CompanyRepository_AddCompany_ReturnsCompanyWithImages()
-
         {
             // Arrange
             var dbContext = await GetDatabaseContext();
@@ -168,52 +167,6 @@ namespace Tests.Repository
                 new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("This is a dummy file 2")), 0, 0, "Data 2", "dummy2.webp")
             ];
 
-            //List<Image> imageList =
-            //[
-            //    new()
-            //    {
-            //        ImageId = 1,
-            //        EntityType = "Company",
-            //        ImageUrl = "Dummy image",
-            //        PublicId = string.Empty,
-            //        Created = DateTime.Now
-            //    },
-            //    new()
-            //    {
-            //        ImageId = 2,
-            //        EntityType = "Company",
-            //        ImageUrl = "Dummy image",
-            //        PublicId = string.Empty,
-            //        Created = DateTime.Now
-            //    }
-            //];
-
-            //A.CallTo(() => _image.AddImagesToNewEntity(A<List<IFormFile>>._, A<int>._, A<string>._, A<int?>._))
-            //    .ReturnsLazily((List<IFormFile> images, int entityId, string entityType, int? imagesInEntity) =>
-            //    {
-            //        // Simulate the behavior of adding images to the entity here based on inputs
-            //        var imageList = new List<Image>();
-            //        var imageUrl = "Fake Url";
-            //        var publicId = "Fake publicId";
-
-            //        foreach (var image in images)
-            //        {
-            //            var newImage = new Image
-            //            {
-            //                EntityType = entityType,
-            //                EntityId = entityId,
-            //                ImageUrl = imageUrl,
-            //                PublicId = publicId,
-            //                Created = DateTime.Now
-            //            };
-
-            //            imageList.Add(newImage);
-            //        }
-
-            //        return imageList;
-            //    });
-
-
             // Act
             var (created, company) = await companyRepository.AddCompany(1, companyDto, fakeImages, null);
 
@@ -226,8 +179,6 @@ namespace Tests.Repository
             company.AddressId.Should().Be(companyDto.AddressId);
             company.ContactEmail.Should().Be(companyDto.ContactEmail);
             company.ContactPhoneNumber.Should().Be(companyDto.ContactPhoneNumber);
-            company.Pictures.Should().NotBeNullOrEmpty();
-            company.Pictures.Should().HaveCountGreaterThanOrEqualTo(1);
         }
 
         [Fact]

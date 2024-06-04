@@ -65,6 +65,9 @@ builder.Services.AddScoped<ITimelineManagement, TimelineRepository>();
 
 builder.Services.AddScoped<ICloudinary, CloudinaryService>();
 builder.Services.AddScoped<IUtility, UtilityService>();
+
+builder.Services.AddScoped<IProjectPicture, ProjectPictureRepository>();
+
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 // Add services to the container.

@@ -20,14 +20,16 @@ namespace CompanyPMO_.NET.Repository
         private readonly IWorkloadProject _workloadService;
         private readonly ITimelineManagement _timelineManagement;
         private readonly INotificationManagement _notificationManagement;
+        private readonly IProjectPicture _projectPicture;
 
-        public ProjectRepository(ApplicationDbContext context, IUtility utilityService, IWorkloadProject workloadService, ITimelineManagement timelineManagement, INotificationManagement notificationManagement)
+        public ProjectRepository(ApplicationDbContext context, IUtility utilityService, IWorkloadProject workloadService, ITimelineManagement timelineManagement, INotificationManagement notificationManagement, IProjectPicture projectPicture)
         {
             _context = context;
             _utilityService = utilityService;
             _workloadService = workloadService;
             _timelineManagement = timelineManagement;
             _notificationManagement = notificationManagement;
+            _projectPicture = projectPicture;
         }
 
         public async Task<OperationResult<int>> CreateProject(Project project, EmployeeDto supervisor, List<IFormFile>? images, int companyId, List<int>? employeeIds, bool shouldStartNow)
@@ -116,7 +118,12 @@ namespace CompanyPMO_.NET.Repository
 
             if (images is not null && images.Any(i => i.Length > 0))
             {
-                // NOT IMPLEMENTED YET
+                var picUploadResult = await _projectPicture.AddPicturesToProject(newProject.ProjectId, supervisor.EmployeeId, images);
+
+                if (!picUploadResult.Success)
+                {
+                    errors.Add(picUploadResult.Message);
+                }
             }
 
             await _timelineManagement.CreateTimelineEvent(new TimelineDto
