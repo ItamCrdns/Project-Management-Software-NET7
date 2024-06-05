@@ -254,6 +254,19 @@ namespace CompanyPMO_.NET.Repository
                             Username = p.Username,
                             ProfilePicture = p.ProfilePicture
                         }).Take(5).ToList(),
+                        Pictures = x.Pictures.Select(p => new ProjectPictureDto
+                        {
+                            ProjectPictureId = p.ProjectPictureId,
+                            ImageUrl = p.ImageUrl,
+                            CloudinaryPublicId = p.CloudinaryPublicId,
+                            Created = p.Created,
+                            Employee = new EmployeeShowcaseDto
+                            {
+                                EmployeeId = p.Employee.EmployeeId,
+                                Username = p.Employee.Username,
+                                ProfilePicture = p.Employee.ProfilePicture
+                            }
+                        }).ToList()
                     },
                     IsOwner = x.ProjectCreatorId == userId,
                     IsParticipant = x.Employees.Any(e => e.EmployeeId == userId)

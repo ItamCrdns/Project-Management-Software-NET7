@@ -19,6 +19,7 @@ namespace CompanyPMO_.NET.Dto
         public int TasksCount { get; set; }
         public IEnumerable<EmployeeShowcaseDto>? Team { get; set; }
         public IEnumerable<ProjectPicture>? ImagesCollection { get; set; }
+        public List<ProjectPictureDto>? Pictures { get; set; }
     }
 
     public class ProjectSomeInfoDto
