@@ -9,6 +9,8 @@ namespace CompanyPMO_.NET.Models
         public int WorkloadId { get; set; }
         [Column("workload_sum")]
         public string? WorkloadSum { get; set; } // Store a string "Low", "Medium", "High" to represent the workload of an employee
+        [Column("workload_sum_id")]
+        public int WorkloadSumId { get; set; } // Store the id of the workload sum
         [Column("assigned_projects")]
         public int? AssignedProjects { get; set; }
         [Column("completed_projects")]

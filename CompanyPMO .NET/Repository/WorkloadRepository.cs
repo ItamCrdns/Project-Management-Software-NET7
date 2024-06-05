@@ -199,14 +199,33 @@ namespace CompanyPMO_.NET.Repository
                     x.Finished,
                     x.ExpectedDeliveryDate,
                     EmployeeIds = x.Employees.Select(x => x.EmployeeId)
-                })
-                .ToListAsync();
+                }).ToListAsync();
+
+            var tasksEmployeesParticipate = await _context.Tasks
+                .Where(x => x.Employees.Any(e => employeeIds.Contains(e.EmployeeId)))
+                .Select(x => new
+                {
+                    x.Finished,
+                    x.ExpectedDeliveryDate,
+                    EmployeeIds = x.Employees.Select(x => x.EmployeeId)
+                }).ToListAsync();
 
             foreach (var workload in workloads)
             {
-                workload.AssignedProjects = projectsEmployeesParticipate
+                int assignedProjects = projectsEmployeesParticipate
                     .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
                     .Count(x => x.Finished == null && x.ExpectedDeliveryDate > DateTime.UtcNow);
+
+                int assignedTasks = tasksEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished == null && x.ExpectedDeliveryDate > DateTime.UtcNow);
+
+                workload.AssignedProjects = assignedProjects;
+
+                var (workloadSum, workloadSumId) = CalculateWorkload(assignedTasks, assignedProjects);
+
+                workload.WorkloadSum = workloadSum;
+                workload.WorkloadSumId = workloadSumId;
             }
 
             int rowsAffected = await _context.SaveChangesAsync();
@@ -234,14 +253,33 @@ namespace CompanyPMO_.NET.Repository
                     x.Finished,
                     x.ExpectedDeliveryDate,
                     EmployeeIds = x.Employees.Select(x => x.EmployeeId)
-                })
-                .ToListAsync();
+                }).ToListAsync();
+
+            var projectsEmployeesParticipate = await _context.Projects
+                .Where(x => x.Employees.Any(e => employeeIds.Contains(e.EmployeeId)))
+                .Select(x => new
+                {
+                    x.Finished,
+                    x.ExpectedDeliveryDate,
+                    EmployeeIds = x.Employees.Select(x => x.EmployeeId)
+                }).ToListAsync();
 
             foreach (var workload in workloads)
             {
-                workload.AssignedTasks = tasksEmployeesParticipate
+                int assignedTasks = tasksEmployeesParticipate
                     .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
                     .Count(x => x.Finished == null && x.ExpectedDeliveryDate > DateTime.UtcNow);
+
+                int assignedProjects = projectsEmployeesParticipate
+                    .Where(x => x.EmployeeIds.Contains(workload.WorkloadId))
+                    .Count(x => x.Finished == null && x.ExpectedDeliveryDate > DateTime.UtcNow);
+
+                workload.AssignedTasks = assignedTasks;
+
+                var (workloadSum, workloadSumId) = CalculateWorkload(assignedTasks, assignedProjects);
+
+                workload.WorkloadSum = workloadSum;
+                workload.WorkloadSumId = workloadSumId;
             }
 
             int rowsAffected = await _context.SaveChangesAsync();
@@ -491,6 +529,21 @@ namespace CompanyPMO_.NET.Repository
             {
                 return new OperationResult { Success = false, Message = "Something went wrong" };
             }
+        }
+        private static (string workloadSum, int workloadSumId) CalculateWorkload(int assignedTasks, int assignedProjects)
+        {
+            int workloadNumber = (assignedTasks * 2) + assignedProjects;
+
+            return workloadNumber switch
+            {
+                <= 2 => ("Very Low", 1),
+                <= 4 => ("Low", 2),
+                <= 6 => ("Moderate", 3),
+                <= 8 => ("Medium", 4),
+                <= 10 => ("High", 5),
+                <= 12 => ("Very High", 6),
+                _ => ("Overwhelming", 7)
+            };
         }
     }
 }

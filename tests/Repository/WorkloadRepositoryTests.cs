@@ -1,9 +1,9 @@
 ﻿using CompanyPMO_.NET.Data;
-using CompanyPMO_.NET.Dto;
 using CompanyPMO_.NET.Models;
 using CompanyPMO_.NET.Repository;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Task = CompanyPMO_.NET.Models.Task;
 
 namespace Tests.Repository
 {
@@ -30,7 +30,7 @@ namespace Tests.Repository
 
             if (!await dbContext.Employees.AnyAsync())
             {
-                for (int i = 0; i < 10; i++)
+                for (int i = 1; i < 5; i++)
                 {
                     dbContext.Employees.Add(
                         new Employee
@@ -90,7 +90,7 @@ namespace Tests.Repository
 
             if (!await dbContext.Projects.AnyAsync())
             {
-                for (int j = 1; j < 3; j++)
+                for (int j = 1; j < 20; j++)
                 {
                     dbContext.Projects.Add(
                         new Project
@@ -102,7 +102,7 @@ namespace Tests.Repository
                             ProjectCreatorId = j,
                             CompanyId = j,
                             Priority = j,
-                            ExpectedDeliveryDate = DateTime.UtcNow,
+                            ExpectedDeliveryDate = j < 5 ? DateTime.UtcNow.AddDays(1) : DateTime.UtcNow.AddHours(-5),
                             Lifecycle = $"test{j}"
                         });
                 }
@@ -118,12 +118,12 @@ namespace Tests.Repository
 
             if (!await dbContext.EmployeeProjects.AnyAsync())
             {
-                for (int j = 1; j < 3; j++)
+                for (int j = 1; j < 20; j++)
                 {
                     dbContext.EmployeeProjects.Add(
                         new EmployeeProject
                         {
-                            EmployeeId = j,
+                            EmployeeId = j < 5 ? j : 1,
                             ProjectId = j
                         });
                 }
@@ -131,16 +131,17 @@ namespace Tests.Repository
 
             if (!await dbContext.Tasks.AnyAsync())
             {
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 20; i++)
                 {
                     dbContext.Tasks.Add(
-                        new CompanyPMO_.NET.Models.Task
+                        new Task
                         {
                             Name = $"Task {i}",
                             Description = $"Description {i}",
-                            Created = DateTime.Now.AddMinutes(i), // Increment on iteration
-                            StartedWorking = (i == 0 || i == 1) ? DateTime.UtcNow : null,
-                            ExpectedDeliveryDate = DateTime.Now.AddHours(-2),
+                            Created = DateTime.Now,
+                            //StartedWorking = (i == 0 || i == 1) ? DateTime.UtcNow : null,
+                            ExpectedDeliveryDate = i < 5 ? DateTime.UtcNow.AddDays(1) : DateTime.UtcNow.AddHours(-5),
+                            Finished = null,
                             TaskCreatorId = 1,
                             ProjectId = (i % 3) + 1
                         });
@@ -149,12 +150,12 @@ namespace Tests.Repository
 
             if (!await dbContext.EmployeeTasks.AnyAsync())
             {
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 20; i++)
                 {
                     dbContext.EmployeeTasks.Add(
                         new EmployeeTask
                         {
-                            EmployeeId = i,
+                            EmployeeId = i < 5 ? i : 1,
                             TaskId = i
                         });
                 }
@@ -199,13 +200,25 @@ namespace Tests.Repository
         [Fact]
         public async void WorkloadRepository_UpdateEmployeeAssignedProjects_ReturnsSuccess()
         {
+            int[] workloadIds = [1, 2];
+
             var dbContext = await GetDatabaseContext();
             var workloadRepository = new WorkloadRepository(dbContext);
 
-            var result = await workloadRepository.UpdateEmployeeAssignedProjects([1, 2, 3]);
+            var result = await workloadRepository.UpdateEmployeeAssignedProjects(workloadIds);
 
             result.Success.Should().BeTrue();
             result.Message.Should().Be("Employee assigned projects count updated successfully.");
+
+            var updatedWorkloads = await dbContext.Workload.Where(w => workloadIds.Contains(w.WorkloadId)).ToListAsync();
+
+            updatedWorkloads.Should().NotBeNullOrEmpty();
+            updatedWorkloads.Should().HaveCount(2);
+
+            foreach (var workload in updatedWorkloads)
+            {
+                workload.AssignedProjects.Should().Be(1);
+            }
         }
 
         [Fact]
@@ -310,7 +323,7 @@ namespace Tests.Repository
             var dbContext = await GetDatabaseContext();
             var workloadRepository = new WorkloadRepository(dbContext);
 
-            var result = await workloadRepository.GetWorkloadByEmployee("test0");
+            var result = await workloadRepository.GetWorkloadByEmployee("test1");
 
             result.Should().NotBeNull();
             result.WorkloadId.Should().Be(1);
@@ -333,11 +346,23 @@ namespace Tests.Repository
         {
             var dbContext = await GetDatabaseContext();
             var workloadRepository = new WorkloadRepository(dbContext);
+            int[] workloadIds = [1, 2];
 
-            var result = await workloadRepository.UpdateEmployeeAssignedTasks([1, 2, 3]);
+            var result = await workloadRepository.UpdateEmployeeAssignedTasks(workloadIds);
 
             result.Success.Should().BeTrue();
             result.Message.Should().Be("Employee assigned tasks count updated successfully.");
+
+            var updatedWorkloads = await dbContext.Workload.Where(w => workloadIds.Contains(w.WorkloadId)).ToListAsync();
+
+            updatedWorkloads.Should().NotBeNullOrEmpty();
+            updatedWorkloads.Should().HaveCount(2);
+
+            foreach (var workload in updatedWorkloads)
+            {
+                updatedWorkloads[0].AssignedTasks.Should().Be(2);
+                updatedWorkloads[1].AssignedTasks.Should().Be(1);
+            }
         }
 
         [Fact]
